@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mixed Review — Human Body</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #7c2d12; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #7c2d12; }
+  .header .sub { font-size: 12px; color: #a98274; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #7c2d12;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #7c2d12; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #fdf4ee; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #7c2d12;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #f3d5c4;
+  }
+  .teach .step b { color: #7c2d12; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #fdf4ee; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #7c2d12; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #f3d5c4;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #7c2d12; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #7c2d12; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #7c2d12; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #a98274; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #f3d5c4;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #fdf4ee;
+    border-left: 3px solid #ea580c;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #7c2d12; }
+
+  .key h1 { color: #7c2d12; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #f5e0d3; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #7c2d12; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #7c2d12; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ==== MUSA ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🫀 Mixed Review</h1>
+      <div class="sub">Every kind of problem, all shuffled — you decide what each one needs</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid1</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A clinic has 8 shelves of first-aid kits with 7 kits on each shelf. During a busy week 23 kits are used. How many kits are left?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Your body makes about 2 million new red blood cells every second.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">69 students need to be seen by the school nurse in groups of 8. Every student must be seen. How many groups are needed, and how many students are in the last group?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The smallest bone in your body is in your ear and is about the size of a grain of rice.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A hospital ward starts with 254 bandages, uses 137, then restocks 88. How many bandages are on the ward now?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A cut heals from the edges inward, which is why a long thin cut closes faster than a round one the same size.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A first-aid class starts at 10:20 a.m. It runs 40 minutes, breaks for 15, then runs 35 more. What time does it finish?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> CPR chest compressions are done at about 100 beats a minute — the same tempo as a lot of pop songs.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A box of 45 gloves is shared out at 6 gloves per station. How many stations get a <b>complete</b> set, and how many gloves are left over?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Doctors didn't routinely wash their hands between patients until the mid-1800s, and the doctor who suggested it was mocked for it.</div>
+  </div>
+
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🫀 Mixed Review</h1>
+      <div class="sub">Every kind of problem, all shuffled — you decide what each one needs</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid2</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A lab receives 18 trays of 24 test tubes each and shares them equally among 12 benches. How many test tubes does each bench get?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Your blood vessels laid end to end would stretch about 60,000 miles — more than twice around the Earth.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">kid2 drinks 1/3 of a water bottle at breakfast and 2/5 of it at lunch. What fraction has he drunk, and what fraction is left?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> You lose about a cup of water a day just by breathing it out.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A hospital wing is a rectangle 42 metres long and 18 metres wide. What is its floor area? If each ward takes up 54 square metres, how many wards fit?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Hospital corridors are built wide enough for two beds to pass, which is why they feel so oversized.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A heart beats about 4,200 times an hour. How many times does it beat in 6 hours? If a monitor can store 30,000 beats before it fills up, how many more beats will fit?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Your heart beats roughly 100,000 times a day without you thinking about it once.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A nurse works 9 hours a day for 14 days. She takes 26 hours of that as training and 15 hours as meetings. How many hours were spent with patients?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Nurses walk about 4–5 miles in a typical hospital shift.</div>
+  </div>
+
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — this sheet tells you Solid vs Locked</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — kid1 (mixed)</div>
+
+  <div class="watch"><b>Watch for:</b> this is the real test. The problems are shuffled and nothing says which method to use. Getting a remainder problem right HERE — sitting between a multiplication and an elapsed-time problem — is what moves the skill from Solid to Locked. Errors here after a clean week mean he learned the sheet, not the skill.</div>
+
+  <div class="ans"><b>1. 33 kits left.</b>
+    <div class="steps">8 × 7 = 56. Then 56 − 23 = <b>33</b>.</div>
+  </div>
+  <div class="ans"><b>2. 9 groups; 5 students in the last.</b>
+    <div class="steps">69 ÷ 8 = 8 r 5. Everyone must be seen → <b>9</b> groups, last has <b>5</b>.</div>
+  </div>
+  <div class="ans"><b>3. 205 bandages.</b>
+    <div class="steps">254 − 137 = 117. Then 117 + 88 = <b>205</b>.</div>
+  </div>
+  <div class="ans"><b>4. 11:50 a.m.</b>
+    <div class="steps">40 + 15 + 35 = 90 minutes = 1 hr 30. 10:20 + 1:30 = <b>11:50 a.m.</b></div>
+  </div>
+  <div class="ans"><b>5. 7 complete stations, 3 gloves left.</b>
+    <div class="steps">45 ÷ 6 = 7 r 3. <b>Complete</b> sets only → <b>7</b>, with <b>3</b> gloves spare.</div>
+  </div>
+
+  <div class="section-title">4th Grade — kid2 (mixed)</div>
+
+  <div class="watch"><b>Watch for:</b> problem 2 is the fraction one, buried between a division and an area problem on purpose. If he handles it here without a running start, unlike denominators is Locked.</div>
+
+  <div class="ans"><b>1. 36 test tubes per bench.</b>
+    <div class="steps">18 × 24 = 432. Then 432 ÷ 12 = <b>36</b>.</div>
+  </div>
+  <div class="ans"><b>2. Drunk 11/15; 4/15 left.</b>
+    <div class="steps">Common bottom 15. 1/3 = 5/15, 2/5 = 6/15. 5/15 + 6/15 = <b>11/15</b>. Left: 15/15 − 11/15 = <b>4/15</b>.</div>
+  </div>
+  <div class="ans"><b>3. Area 756 sq m; 14 wards.</b>
+    <div class="steps">42 × 18 = 756. Then 756 ÷ 54 = <b>14</b>.</div>
+  </div>
+  <div class="ans"><b>4. 25,200 beats; 4,800 more will fit.</b>
+    <div class="steps">4,200 × 6 = 25,200. Then 30,000 − 25,200 = <b>4,800</b>.</div>
+  </div>
+  <div class="ans"><b>5. 85 hours with patients.</b>
+    <div class="steps">9 × 14 = 126 hours. Then 126 − 26 − 15 = <b>85</b>.</div>
+  </div>
+
+</div>
+
+</body>
+</html>

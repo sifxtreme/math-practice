@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Trains — Remainders &amp; Unlike Denominators (day 2)</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #b45309; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #b45309; }
+  .header .sub { font-size: 12px; color: #a1866a; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #b45309;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #b45309; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #fdf6ec; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #b45309;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #f0d9b5;
+  }
+  .teach .step b { color: #b45309; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #fdf6ec; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #b45309; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #f0d9b5;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #b45309; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #b45309; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #b45309; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #a1866a; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #f0d9b5;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #fdf6ec;
+    border-left: 3px solid #d97706;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #b45309; }
+
+  .key h1 { color: #b45309; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #f2e2c8; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #b45309; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #b45309; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ==== MUSA ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🚂 Railway Math</h1>
+      <div class="sub">Day 2 — you've seen how this works, now without the example</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid1</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="problem guided">
+    <span class="qnum">1.</span><span class="tag">GUIDED</span>
+    <div class="qtext">47 passengers are waiting for a train. Each car seats 6 people. How many cars are needed so that everybody gets a seat?</div>
+    <div class="scaffold">
+      <div>Divide: 47 ÷ 6 = <span class='blank'></span> remainder <span class='blank'></span></div>
+      <div>The remainder means <span class='blank'></span> people still have no seat.</div>
+      <div>Can they be left at the station? <span class='blank'></span></div>
+      <div>So how many cars? <span class='blank'></span></div>
+    </div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A train wheel isn't flat — it's cone-shaped, which is what steers it around a curve without any steering at all.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A station loads 62 crates onto carts. Each cart holds 8 crates. How many carts get <b>completely full</b>, and how many crates are left on the platform?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Freight trains can be over a mile long — some in Australia run to 4 miles.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">75 students are taking a train to a museum. Each car holds 9 students. Every student must have a seat. How many cars does the school need?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The world's busiest station is Shinjuku in Tokyo — about 3.5 million people pass through it every day.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A conductor has 40 tickets to sort into books of 6. How many complete books can he make, and how many tickets are left over?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Conductors once punched each ticket with a uniquely shaped hole so no one could reuse it.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">53 suitcases must all be stored, and each luggage rack holds 7. How many racks are used, and how many suitcases are on the last rack?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The first luggage racks were nets, so passengers could see their bags from their seat.</div>
+  </div>
+
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🚂 Railway Math</h1>
+      <div class="sub">Day 2 — you've seen how this works, now without the example</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid2</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="problem guided">
+    <span class="qnum">1.</span><span class="tag">GUIDED</span>
+    <div class="qtext">kid2 finishes 1/3 of a train journey before lunch and another 1/4 of it after lunch. What fraction of the journey has he travelled?</div>
+    <div class="scaffold">
+      <div>Common bottom number: 3 × 4 = <span class='blank'></span></div>
+      <div>Rewrite: 1/3 = <span class='blank'></span> &nbsp; and &nbsp; 1/4 = <span class='blank'></span></div>
+      <div>Add the tops, keep the bottom: <span class='blank'></span></div>
+    </div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The fastest passenger train in service, the Shanghai Maglev, floats above the track on magnets at 267 mph.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A train is 2/5 full when it leaves the first station. At the next stop, enough people board to fill another 1/3 of the train. What fraction of the train is now full?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Trains are so efficient that moving one ton of freight a mile by rail uses about a quarter of the fuel a truck would.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A track crew lays 3/8 of a mile of rail on Monday and 1/2 a mile on Tuesday. How much track did they lay in total?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Rails are laid with small gaps because steel expands in summer heat — that's the clackety-clack sound.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A locomotive starts with 5/6 of a tank of fuel and burns 1/4 of a tank on the trip. What fraction of a tank is left?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A big diesel locomotive holds about 5,000 gallons of fuel — roughly 300 car fill-ups.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">kid2 reads 2/3 of a book on the train and his brother reads a different 1/5 of it. What fraction of the book has been read between them?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Reading on a train makes some people queasy because the eyes say 'still' while the inner ear says 'moving'.</div>
+  </div>
+
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps + what to watch for</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — kid1 (remainders)</div>
+
+  <div class="watch"><b>Watch for:</b> answering with the raw remainder ("7 r 5") instead of what the question asked. Don't correct the division — have him read the last sentence out loud again.</div>
+
+  <div class="ans"><b>1. 8 cars.</b>
+    <div class="steps">47 ÷ 6 = 7 r 5. Seven full cars, 5 people still standing → round <b>up</b> to <b>8</b>.</div>
+  </div>
+  <div class="ans"><b>2. 7 full carts, 6 crates left.</b>
+    <div class="steps">62 ÷ 8 = 7 r 6. Asks for <b>completely full</b> → do not round up. <b>7</b> carts, <b>6</b> crates.</div>
+  </div>
+  <div class="ans"><b>3. 9 cars.</b>
+    <div class="steps">75 ÷ 9 = 8 r 3. Everyone needs a seat → <b>9</b> cars, the last holding 3.</div>
+  </div>
+  <div class="ans"><b>4. 6 books, 4 tickets left.</b>
+    <div class="steps">40 ÷ 6 = 6 r 4. Complete books only → <b>6</b>, with <b>4</b> spare tickets.</div>
+  </div>
+  <div class="ans"><b>5. 8 racks; 4 suitcases on the last one.</b>
+    <div class="steps">53 ÷ 7 = 7 r 4. All must be stored → <b>8</b> racks, last one holds <b>4</b>.</div>
+  </div>
+
+  <div class="section-title">4th Grade — kid2 (unlike denominators)</div>
+
+  <div class="watch"><b>Watch for:</b> adding the bottoms (1/3 + 1/4 = 2/7). If it happens, go back to the pizza picture — you can't count pieces of different sizes. Also check he converted BOTH fractions, not just one.</div>
+
+  <div class="ans"><b>1. 7/12 of the journey.</b>
+    <div class="steps">Common bottom 12. 1/3 = 4/12, 1/4 = 3/12. 4/12 + 3/12 = <b>7/12</b>.</div>
+  </div>
+  <div class="ans"><b>2. 11/15 full.</b>
+    <div class="steps">Common bottom 15. 2/5 = 6/15, 1/3 = 5/15. 6/15 + 5/15 = <b>11/15</b>.</div>
+  </div>
+  <div class="ans"><b>3. 7/8 of a mile.</b>
+    <div class="steps">8 already works. 1/2 = 4/8. 3/8 + 4/8 = <b>7/8</b>. Good one for spotting you don't always multiply the bottoms.</div>
+  </div>
+  <div class="ans"><b>4. 7/12 of a tank.</b>
+    <div class="steps">Common bottom 12. 5/6 = 10/12, 1/4 = 3/12. 10/12 − 3/12 = <b>7/12</b>.</div>
+  </div>
+  <div class="ans"><b>5. 13/15 of the book.</b>
+    <div class="steps">Common bottom 15. 2/3 = 10/15, 1/5 = 3/15. 10/15 + 3/15 = <b>13/15</b>.</div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>National Parks Math — Timed</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #166534; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #166534; }
+  .header .sub { font-size: 12px; color: #7b9c86; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #166534;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #166534; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #f0faf3; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #166534;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #c3e6cd;
+  }
+  .teach .step b { color: #166534; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #f0faf3; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #166534; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #c3e6cd;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #166534; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #166534; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #166534; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #7b9c86; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #c3e6cd;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #f0faf3;
+    border-left: 3px solid #16a34a;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #166534; }
+
+  .key h1 { color: #166534; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #d3ecda; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #166534; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #166534; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ==== MUSA ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🏔️ National Parks Math</h1>
+      <div class="sub">Timed sheet — steady beats fast, but keep moving</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid1</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A ranger station has 74 trail maps to hand out in bundles of 8. How many complete bundles can be made, and how many maps are left?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Yellowstone was the first national park anywhere in the world, created in 1872.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">66 campers need tents, and each tent sleeps 7. Everybody needs a spot. How many tents are needed, and how many campers are in the last tent?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A bison can weigh a ton and still outrun a person — they hit 35 mph.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A visitor centre had 415 postcards, sold 187 over the weekend, then received a delivery of 130. How many postcards now?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The Grand Canyon is a mile deep, and the rock at the bottom is about 1.8 billion years old.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A trail crew works 9 sections and clears 6 fallen trees from each. A storm then drops 14 more trees across the trail. How many trees is that in total?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Some giant sequoias were already big trees when the Roman Empire fell.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A shuttle carries 52 hikers in vans that hold 6 each. Every hiker must get a ride. How many vans, and how many hikers ride in the last van?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Park shuttles exist partly because car exhaust was fading the rock colours in some canyons.</div>
+  </div>
+
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🏔️ National Parks Math</h1>
+      <div class="sub">Timed sheet — steady beats fast, but keep moving</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid2</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A hiking trail is 7/8 of a mile. kid2 walks 1/3 of a mile before stopping for water. How much of the trail is left?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The Appalachian Trail runs about 2,200 miles — most people who try to walk all of it don't finish.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">Rangers clear 2/5 of a trail on Monday and 1/4 of it on Tuesday. What fraction is cleared, and what fraction is still blocked?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A single fallen sequoia can take a crew days to cut through, so most trails route around them instead.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A water tank at a campsite is 5/6 full. Campers use 3/8 of a full tank overnight. What fraction is left in the morning?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Backcountry water has to be filtered even when it looks clear — the thing that makes you sick is usually invisible.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A park is 3/4 forest. Of the whole park, 1/6 burned in a fire. If all the burned land was forest, what fraction of the park is forest that did not burn?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Some pine cones only open and release their seeds after a fire, so the forest replants itself.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">Aisha fills 1/2 of her backpack with food and 2/5 of it with gear. What fraction is full, and what fraction is still empty?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The old rule is to carry no more than a fifth of your body weight — most first-time backpackers carry far more.</div>
+  </div>
+
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — kid1</div>
+
+  <div class="watch"><b>Watch for:</b> time it, but don't announce the clock — pressure changes what you're measuring. Note the finish time and errors in the log.</div>
+
+  <div class="ans"><b>1. 9 bundles, 2 maps left.</b>
+    <div class="steps">74 ÷ 8 = 9 r 2. Complete bundles → <b>9</b>, with <b>2</b> spare.</div>
+  </div>
+  <div class="ans"><b>2. 10 tents; 3 campers in the last.</b>
+    <div class="steps">66 ÷ 7 = 9 r 3. Everyone needs a spot → <b>10</b> tents, last holds <b>3</b>.</div>
+  </div>
+  <div class="ans"><b>3. 358 postcards.</b>
+    <div class="steps">415 − 187 = 228. Then 228 + 130 = <b>358</b>.</div>
+  </div>
+  <div class="ans"><b>4. 68 trees.</b>
+    <div class="steps">9 × 6 = 54 cleared. Then 54 + 14 storm trees = <b>68</b>.</div>
+  </div>
+  <div class="ans"><b>5. 9 vans; 4 hikers in the last.</b>
+    <div class="steps">52 ÷ 6 = 8 r 4. Everyone rides → <b>9</b> vans, last carries <b>4</b>.</div>
+  </div>
+
+  <div class="section-title">4th Grade — kid2</div>
+
+  <div class="watch"><b>Watch for:</b> problem 4 is the hard one — it needs a subtraction of two fractions where neither bottom divides the other. If he stalls, that's fine; note it and re-teach rather than pushing.</div>
+
+  <div class="ans"><b>1. 13/24 of a mile left.</b>
+    <div class="steps">Common bottom 24. 7/8 = 21/24, 1/3 = 8/24. 21/24 − 8/24 = <b>13/24</b>.</div>
+  </div>
+  <div class="ans"><b>2. Cleared 13/20; blocked 7/20.</b>
+    <div class="steps">Common bottom 20. 2/5 = 8/20, 1/4 = 5/20. 8/20 + 5/20 = <b>13/20</b>. Blocked: 20/20 − 13/20 = <b>7/20</b>.</div>
+  </div>
+  <div class="ans"><b>3. 11/24 of the tank.</b>
+    <div class="steps">Common bottom 24. 5/6 = 20/24, 3/8 = 9/24. 20/24 − 9/24 = <b>11/24</b>.</div>
+  </div>
+  <div class="ans"><b>4. 7/12 of the park.</b>
+    <div class="steps">Common bottom 12. 3/4 = 9/12, 1/6 = 2/12. 9/12 − 2/12 = <b>7/12</b>.</div>
+  </div>
+  <div class="ans"><b>5. 9/10 full; 1/10 empty.</b>
+    <div class="steps">Common bottom 10. 1/2 = 5/10, 2/5 = 4/10. 5/10 + 4/10 = <b>9/10</b>. Empty: <b>1/10</b>.</div>
+  </div>
+
+</div>
+
+</body>
+</html>

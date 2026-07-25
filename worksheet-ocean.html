@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ocean Explorer Math</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet {
+    page-break-after: always;
+    padding: 6px 4px;
+  }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 3px solid #0b6e8f;
+    padding-bottom: 8px;
+    margin-bottom: 6px;
+  }
+  .header h1 {
+    font-size: 22px;
+    margin: 0;
+    color: #0b6e8f;
+  }
+  .header .sub { font-size: 12px; color: #5d8b9c; font-style: italic; }
+  .grade {
+    font-size: 13px;
+    font-weight: bold;
+    background: #0b6e8f;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+  .meta {
+    display: flex;
+    gap: 30px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    color: #444;
+  }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #bcd9e8;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .qnum { font-weight: bold; font-size: 15px; color: #0b6e8f; }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work {
+    height: 78px;
+    border-top: 1px dashed #bbb;
+    position: relative;
+  }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999;
+    font-style: italic; letter-spacing: 0.5px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px;
+    color: #444;
+    background: #eef6fa;
+    border-left: 3px solid #0ea5e9;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #0b6e8f; }
+
+  /* Answer key */
+  .key h1 { color: #0b6e8f; }
+  .key .ans {
+    margin-bottom: 11px;
+    padding: 8px 12px;
+    border: 1px solid #cde3ee;
+    border-radius: 5px;
+    page-break-inside: avoid;
+    font-size: 13.5px;
+  }
+  .key .ans b { color: #0b6e8f; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #0b6e8f; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SHEET 1: 3rd GRADE ============ -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🌊 Ocean Explorer Math</h1>
+      <div class="sub">Word problems from the reef, the deep, and the research ship</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid1</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">kid1's aquarium has 8 tanks, and each tank holds 7 clownfish. At feeding time, 12 of the clownfish hide in the coral. How many clownfish can kid1 still see?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A clownfish lives inside a stinging sea anemone. A slimy coat on its skin keeps it from being stung.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">Idris collects 54 seashells on the beach. He gives 6 of them to his little sister, then arranges the rest equally into 8 rows on a shelf. How many shells are in each row?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A seashell is really a skeleton — the animal grows it on the outside instead of the inside, and it never takes it off.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A turtle rescue center starts the month caring for 315 sea turtles. It releases 148 of them back into the ocean, then takes in 96 more that were found hurt. How many turtles are at the center now?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A female sea turtle usually returns to lay her eggs on the very same beach where she hatched, even decades later.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A whale-watching boat leaves the dock at 9:40 a.m. It sails out for 50 minutes, watches whales for 35 minutes, then sails back for 50 minutes. What time does it get back to the dock?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A blue whale's heart is about the size of a small car, and its call can travel for hundreds of miles underwater.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A diving club packs 50 air tanks into crates for a trip. Each crate holds exactly 6 tanks. How many crates can be filled completely, and how many tanks are left over?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The word SCUBA is short for "Self-Contained Underwater Breathing Apparatus" — the tank lets a diver carry air along.</div>
+  </div>
+</div>
+
+<!-- ============ SHEET 2: 4th GRADE ============ -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🌊 Ocean Explorer Math</h1>
+      <div class="sub">Word problems from the reef, the deep, and the research ship</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid2</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A research ship unloads 18 crates of shark tagging kits, and each crate holds 32 kits. The kits are shared equally among 12 dive teams. How many kits does each team get?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Scientists clip small tags to sharks to track them. One great white named Nicole swam from South Africa to Australia and back — about 12,000 miles.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">kid2 saves $12 every week for 15 weeks to go to a diving camp. The camp costs $135 and a snorkel set costs $28. How much money does he have left?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Water blocks red light first, so about 30 feet down everything looks blue-green — a diver's red glove turns gray.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A rectangular tide-pool exhibit measures 45 feet long and 16 feet wide. What is its area? If one bag of sand covers 45 square feet, how many bags are needed to cover the whole floor?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Tide-pool animals get covered by the sea and then left in the open air twice a day, so they have to survive both.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A reef tank is divided into 20 equal sections for planting new coral. Five volunteers each plant 3 sections. What fraction of the tank did they plant in all, and what fraction is still empty? Write both fractions in simplest form.</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Coral reefs cover less than 1% of the ocean floor, but about 25% of all ocean species live on them.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A beach cleanup crew collects 1,850 pieces of plastic each day for 6 days. Their goal for the whole month is 15,000 pieces. How many pieces did they collect, and how many more do they need to reach the goal?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A plastic bottle can take about 450 years to break apart in the ocean — longer than the United States has existed.</div>
+  </div>
+</div>
+
+<!-- ============ SHEET 3: ANSWER KEY ============ -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade</div>
+
+  <div class="ans"><b>1. 44 clownfish.</b>
+    <div class="steps">8 tanks × 7 fish = 56. Then 56 − 12 hiding = <b>44</b>.</div>
+  </div>
+  <div class="ans"><b>2. 6 shells per row.</b>
+    <div class="steps">54 − 6 to his sister = 48. Then 48 ÷ 8 rows = <b>6</b>.</div>
+  </div>
+  <div class="ans"><b>3. 263 turtles.</b>
+    <div class="steps">315 − 148 released = 167. Then 167 + 96 new = <b>263</b>.</div>
+  </div>
+  <div class="ans"><b>4. 11:55 a.m.</b>
+    <div class="steps">50 + 35 + 50 = 135 minutes = 2 hr 15 min. Then 9:40 a.m. + 2 hr 15 min = <b>11:55 a.m.</b></div>
+  </div>
+  <div class="ans"><b>5. 8 full crates, 2 tanks left over.</b>
+    <div class="steps">50 ÷ 6 = 8 remainder 2. <b>8</b> crates full, <b>2</b> tanks left (they'd need a 9th crate).</div>
+  </div>
+
+  <div class="section-title">4th Grade</div>
+
+  <div class="ans"><b>1. 48 kits per team.</b>
+    <div class="steps">18 crates × 32 kits = 576. Then 576 ÷ 12 teams = <b>48</b>.</div>
+  </div>
+  <div class="ans"><b>2. $17 left.</b>
+    <div class="steps">$12 × 15 weeks = $180 saved. Then $180 − $135 − $28 = <b>$17</b>.</div>
+  </div>
+  <div class="ans"><b>3. Area = 720 sq ft; 16 bags of sand.</b>
+    <div class="steps">45 × 16 = 720 square feet. Then 720 ÷ 45 = <b>16</b> bags.</div>
+  </div>
+  <div class="ans"><b>4. Planted 15/20 = 3/4; empty 5/20 = 1/4.</b>
+    <div class="steps">5 volunteers × 3 sections = 15 planted. 15/20 simplifies to <b>3/4</b>. Empty: 20 − 15 = 5, so 5/20 = <b>1/4</b>.</div>
+  </div>
+  <div class="ans"><b>5. 11,100 pieces collected; 3,900 more needed.</b>
+    <div class="steps">1,850 × 6 days = 11,100. Then 15,000 − 11,100 = <b>3,900</b> to go.</div>
+  </div>
+</div>
+
+</body>
+</html>

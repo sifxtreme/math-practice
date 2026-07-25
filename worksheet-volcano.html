@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Volcano Math</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #9f1239; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #9f1239; }
+  .header .sub { font-size: 12px; color: #a97b88; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #9f1239;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #9f1239; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #fff1f5; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #9f1239;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #fbcfe0;
+  }
+  .teach .step b { color: #9f1239; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #fff1f5; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #9f1239; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #fbcfe0;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #9f1239; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #9f1239; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #9f1239; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #a97b88; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #fbcfe0;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #fff1f5;
+    border-left: 3px solid #e11d48;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #9f1239; }
+
+  .key h1 { color: #9f1239; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #f8d9e4; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #9f1239; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #9f1239; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ==== MUSA ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🌋 Volcano Math</h1>
+      <div class="sub">Word problems from the crater rim</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid1</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A research team must carry 58 rock samples down the mountain. Each pack holds 8 samples, and every sample must come down. How many packs do they need, and how many samples are in the last one?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Fresh lava can reach 2,100°F — hot enough to melt a copper penny in seconds.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A visitor centre has 91 helmets to store on shelves of 9. How many shelves are <b>completely full</b>, and how many helmets are left over?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Volcanologists wear silver heat suits that reflect radiant heat, which is why they look like astronauts.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A museum starts with 342 volcanic rocks, sends 158 to a school, and then collects 96 more on a field trip. How many rocks does it have now?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Pumice is the only rock that floats — it's full of gas bubbles frozen in place.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">An observation post has 7 windows and each window has 8 panes. During an eruption, 19 panes crack. How many panes are still whole?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Volcanic ash isn't soft like fire ash — it's tiny shards of glass, which is why it scratches everything.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A team of 46 scientists is going up in cable cars that hold 5 people each. Everyone must ride. How many cable cars are needed, and how many people are in the last car?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Mount Etna in Sicily has been erupting on and off for at least 500,000 years.</div>
+  </div>
+
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🌋 Volcano Math</h1>
+      <div class="sub">Word problems from the crater rim</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid2</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">An ash cloud covers 3/8 of a valley on the first day and another 1/2 of the valley on the second day. What fraction of the valley is covered? What fraction is still clear?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The 1815 eruption of Tambora threw up so much ash that 1816 was called 'the year without a summer' in Europe and North America.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A lava flow travels 2/3 of a mile in the morning and 1/6 of a mile in the afternoon. How far did it travel that day?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Most lava flows move slower than walking pace — you can usually stroll away from one.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A monitoring station's battery is 7/10 charged. Overnight it uses 1/4 of a full charge. What fraction of the battery is left?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Seismometers around a volcano can detect movement smaller than the width of a human hair.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A crater rim trail is 4/5 of a mile long. Aisha hikes 1/3 of a mile and stops. What fraction of a mile is left to walk?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Crater lakes can be more acidic than lemon juice because volcanic gases dissolve into the water.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">Scientists have mapped 5/6 of a lava tube. A cave-in blocks off 1/4 of the whole tube, which they can no longer reach. What fraction of the tube have they mapped and can still reach?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Lava tubes form when the outside of a flow cools into a crust while molten rock keeps running through the middle.</div>
+  </div>
+
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — kid1 (remainders)</div>
+
+  <div class="watch"><b>Watch for:</b> whether he's now asking himself which way to round WITHOUT being prompted. That's the skill going from Shaky to Solid.</div>
+
+  <div class="ans"><b>1. 8 packs; 2 samples in the last one.</b>
+    <div class="steps">58 ÷ 8 = 7 r 2. All must come down → <b>8</b> packs, last holds <b>2</b>.</div>
+  </div>
+  <div class="ans"><b>2. 10 full shelves, 1 helmet left.</b>
+    <div class="steps">91 ÷ 9 = 10 r 1. <b>Completely full</b> only → <b>10</b> shelves, <b>1</b> helmet over.</div>
+  </div>
+  <div class="ans"><b>3. 280 rocks.</b>
+    <div class="steps">342 − 158 = 184. Then 184 + 96 = <b>280</b>.</div>
+  </div>
+  <div class="ans"><b>4. 37 panes whole.</b>
+    <div class="steps">7 × 8 = 56 panes. 56 − 19 cracked = <b>37</b>.</div>
+  </div>
+  <div class="ans"><b>5. 10 cable cars; 1 person in the last.</b>
+    <div class="steps">46 ÷ 5 = 9 r 1. Everyone rides → <b>10</b> cars, last carries <b>1</b>.</div>
+  </div>
+
+  <div class="section-title">4th Grade — kid2 (unlike denominators)</div>
+
+  <div class="watch"><b>Watch for:</b> the subtraction ones (3, 4, 5). Same method, and that's the point — if he can add but not subtract, he's memorised a procedure rather than understood common denominators.</div>
+
+  <div class="ans"><b>1. Covered 7/8; 1/8 still clear.</b>
+    <div class="steps">Common bottom 8. 3/8 + 4/8 = <b>7/8</b>. Clear: 8/8 − 7/8 = <b>1/8</b>.</div>
+  </div>
+  <div class="ans"><b>2. 5/6 of a mile.</b>
+    <div class="steps">Common bottom 6. 2/3 = 4/6. 4/6 + 1/6 = <b>5/6</b>.</div>
+  </div>
+  <div class="ans"><b>3. 9/20 of the battery.</b>
+    <div class="steps">Common bottom 20. 7/10 = 14/20, 1/4 = 5/20. 14/20 − 5/20 = <b>9/20</b>.</div>
+  </div>
+  <div class="ans"><b>4. 7/15 of a mile left.</b>
+    <div class="steps">Common bottom 15. 4/5 = 12/15, 1/3 = 5/15. 12/15 − 5/15 = <b>7/15</b>.</div>
+  </div>
+  <div class="ans"><b>5. 7/12 of the tube.</b>
+    <div class="steps">Common bottom 12. 5/6 = 10/12, 1/4 = 3/12. 10/12 − 3/12 = <b>7/12</b>.</div>
+  </div>
+
+</div>
+
+</body>
+</html>

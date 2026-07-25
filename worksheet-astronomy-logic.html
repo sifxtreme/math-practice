@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Islamic Golden Age Astronomy — Logic &amp; Puzzles</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #1e3a8a; }
+  .header .sub { font-size: 12px; color: #7d8bb0; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #1e3a8a;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #1e3a8a; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #eef2ff; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #1e3a8a;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #c7d2fe;
+  }
+  .teach .step b { color: #1e3a8a; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #eef2ff; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #1e3a8a; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #1e3a8a; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #1e3a8a; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #1e3a8a; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #7d8bb0; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #c7d2fe;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #eef2ff;
+    border-left: 3px solid #4f46e5;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #1e3a8a; }
+
+  .key h1 { color: #1e3a8a; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #d5dcf7; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #1e3a8a; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #1e3a8a; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ==== MUSA ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🔭 House of Wisdom Logic</h1>
+      <div class="sub">Brain-teasers from the astronomers of the Islamic Golden Age</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid1</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">Three students charted stars one night: kid1, Idris, and Bilal. Together they charted 14 stars. Idris charted 6 and Bilal charted 3. How many did kid1 chart? Whose number was in the <b>middle</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Al-Sufi drew a star atlas in the year 964 that described the Andromeda Galaxy — over 900 years before telescopes could show what it was.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">An astrolabe is engraved with a ring of numbers: 5, 10, 15, 20, ___, ___ . What are the next two, and what is the rule?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> An astrolabe was a handheld computer made of brass. It could tell you the time, find your direction, and locate a star.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">Aisha counted 11 stars through a sighting tube. She saw <b>3 more</b> bright ones than dim ones. How many bright and how many dim? (Hint: try pairs that add to 11.)</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Many star names we still use are Arabic — Betelgeuse, Rigel, Aldebaran, Vega.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Four scholars finished copying a manuscript: Hamza, Layla, Omar, and Zayd. Hamza finished 1st. Zayd finished last. Layla finished ahead of Omar. List all four in order.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Paper reached Baghdad in the 700s, and books became cheap enough that the city had over 100 bookshops.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">kid1 is making an observation kit with one tool — astrolabe, quadrant, or sundial — and one notebook, leather or cloth. How many different kits can he make? List them.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A quadrant measures the angle between the horizon and a star, which tells you how far north or south you are.</div>
+  </div>
+
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🔭 House of Wisdom Logic</h1>
+      <div class="sub">Brain-teasers from the astronomers of the Islamic Golden Age</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid2</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">In a stargazing game, spotting a planet earns 5 points, a bright star earns 2, and a cloudy night <b>costs</b> 3. kid2 spots 3 planets and 4 bright stars but loses 2 nights to clouds. Zaid spots 2 planets, 6 bright stars, and loses 1 night. Who has more, and by how much?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Only five planets can be seen without a telescope: Mercury, Venus, Mars, Jupiter, and Saturn.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">Three astronomers — kid2, Idris, and Hamza — each have one job: measuring, recording, and drawing. Clue 1: kid2 is <b>not</b> the recorder. Clue 2: Hamza is the artist who draws. Who does what?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Al-Battani measured the length of a year as 365 days, 5 hours, 46 minutes, 24 seconds — off by only about 2 minutes.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">An observatory starts with 96 star charts. Each year, half of them are recopied onto fresh paper and the old ones retired. After 4 years, how many of the original charts are left? How many were retired in all?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The Maragheh observatory in Persia had a library of 40,000 books and a staff of astronomers from as far away as China.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Two brothers recorded moon sightings all month. Together they recorded 28. kid2 recorded <b>8 more</b> than kid1. How many did each record?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The Islamic calendar follows the moon, so its months shift about 11 days earlier each solar year.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A school of 18 students is split into equal groups of 6 to share telescopes. How many groups? Within one group, each student compares notes with every other student exactly once. How many comparisons happen in that group?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The word 'algebra' comes from al-jabr, the title of a book written in Baghdad around 820.</div>
+  </div>
+
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — reasoning included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — kid1</div>
+
+  <div class="ans"><b>1. kid1 charted 5; kid1 is the middle.</b>
+    <div class="steps">14 − 6 − 3 = <b>5</b>. In order: Bilal 3, kid1 5, Idris 6 → kid1 is in the middle.</div>
+  </div>
+  <div class="ans"><b>2. 25 and 30. Rule: add 5.</b>
+    <div class="steps">Each number goes up by 5. 20 + 5 = 25, 25 + 5 = <b>30</b>.</div>
+  </div>
+  <div class="ans"><b>3. 7 bright, 4 dim.</b>
+    <div class="steps">Adds to 11, differs by 3. 7 + 4 = 11 and 7 − 4 = 3. So <b>7</b> bright, <b>4</b> dim.</div>
+  </div>
+  <div class="ans"><b>4. Hamza, Layla, Omar, Zayd.</b>
+    <div class="steps">Hamza 1st, Zayd 4th. Layla ahead of Omar → Layla 2nd, Omar 3rd.</div>
+  </div>
+  <div class="ans"><b>5. 6 kits.</b>
+    <div class="steps">3 tools × 2 notebooks = <b>6</b>. (astrolabe-leather, astrolabe-cloth, quadrant-leather, quadrant-cloth, sundial-leather, sundial-cloth.)</div>
+  </div>
+
+  <div class="section-title">4th Grade — kid2</div>
+
+  <div class="ans"><b>1. kid2 17, Zaid 19. Zaid leads by 2.</b>
+    <div class="steps">kid2: (3×5) + (4×2) − (2×3) = 15 + 8 − 6 = 17. Zaid: (2×5) + (6×2) − (1×3) = 10 + 12 − 3 = 19. 19 − 17 = <b>2</b>.</div>
+  </div>
+  <div class="ans"><b>2. Hamza draws, kid2 measures, Idris records.</b>
+    <div class="steps">Hamza draws (Clue 2). kid2 isn't the recorder (Clue 1) and drawing is taken → kid2 measures. Idris records.</div>
+  </div>
+  <div class="ans"><b>3. 6 charts left; 90 retired.</b>
+    <div class="steps">96 → 48 → 24 → 12 → <b>6</b> after 4 years. Retired: 96 − 6 = <b>90</b>.</div>
+  </div>
+  <div class="ans"><b>4. kid1 10, kid2 18.</b>
+    <div class="steps">Take the 8 off first: 28 − 8 = 20, then 20 ÷ 2 = 10 for kid1. kid2 = 10 + 8 = <b>18</b>. Check: 10 + 18 = 28. ✓</div>
+  </div>
+  <div class="ans"><b>5. 3 groups; 15 comparisons per group.</b>
+    <div class="steps">18 ÷ 6 = <b>3</b> groups. In a group of 6 (A–F): 5+4+3+2+1 = <b>15</b> pairs.</div>
+  </div>
+
+</div>
+
+</body>
+</html>

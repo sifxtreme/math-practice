@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>World Cup Logic & Puzzles</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet {
+    page-break-after: always;
+    padding: 6px 4px;
+  }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 3px solid #0a7d3c;
+    padding-bottom: 8px;
+    margin-bottom: 6px;
+  }
+  .header h1 {
+    font-size: 22px;
+    margin: 0;
+    color: #0a7d3c;
+  }
+  .header .sub { font-size: 12px; color: #6a8a76; font-style: italic; }
+  .grade {
+    font-size: 13px;
+    font-weight: bold;
+    background: #0a7d3c;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+  .meta {
+    display: flex;
+    gap: 30px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    color: #444;
+  }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #bfe0cb;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .qnum { font-weight: bold; font-size: 15px; color: #0a7d3c; }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work {
+    height: 78px;
+    border-top: 1px dashed #bbb;
+    position: relative;
+  }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999;
+    font-style: italic; letter-spacing: 0.5px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px;
+    color: #444;
+    background: #eef8f1;
+    border-left: 3px solid #16a34a;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #0a7d3c; }
+
+  /* Answer key */
+  .key h1 { color: #0a7d3c; }
+  .key .ans {
+    margin-bottom: 11px;
+    padding: 8px 12px;
+    border: 1px solid #cde7d6;
+    border-radius: 5px;
+    page-break-inside: avoid;
+    font-size: 13.5px;
+  }
+  .key .ans b { color: #0a7d3c; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #0a7d3c; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SHEET 1: 3rd GRADE ============ -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>⚽ World Cup Logic &amp; Puzzles</h1>
+      <div class="sub">Brain-teasers from the 2026 World Cup</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid1</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">Three friends scored goals in a match: kid1, Idris, and Omar. Together they scored 9 goals. Idris scored 5 goals and Omar scored 1 goal. How many goals did kid1 score? Whose score was in the <b>middle</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A team earns 3 points for winning a game, 1 point for a tie, and 0 points for losing.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A soccer team's jersey numbers follow a pattern: 3, 6, 9, 12, ___, ___ . What are the next two numbers, and what is the rule?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Each team has 11 players on the field at a time — 1 goalie and 10 other players.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">In a penalty shootout, Bilal took 9 shots in all. He <b>scored 3 more</b> shots than he missed. How many did he score, and how many did he miss? (Hint: try some numbers that add up to 9.)</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> If a knockout game is still tied after extra time, a penalty shootout decides who wins.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Four teams finished a group: Red, Blue, Green, and Yellow. Red finished 1st. Yellow finished last. Blue finished higher than Green. List all four teams in order from 1st place to 4th place.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> In each World Cup group, the top 2 teams move on to the next round.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">kid1's team can wear a red, blue, or white jersey, with either black or white shorts. How many different jersey-and-shorts uniforms can they make? Try listing them all.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The 2026 World Cup has 48 teams — the most in World Cup history.</div>
+  </div>
+</div>
+
+<!-- ============ SHEET 2: 4th GRADE ============ -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>⚽ World Cup Logic &amp; Puzzles</h1>
+      <div class="sub">Brain-teasers from the 2026 World Cup</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid2</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A win = 3 points, a tie = 1 point, a loss = 0 points. The Falcons played 3 games: 1 win, 1 tie, and 1 loss. The Hawks played 3 games: 2 wins and 1 loss. How many points does each team have? Who has more, and by how many?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Teams are ranked in their group by points, so a win (3 points) is worth much more than a tie (1 point).</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">Three teammates — kid2, Zaid, and Hamza — play three positions: forward, goalie, and defender. Clue 1: kid2 is <b>not</b> the goalie. Clue 2: Hamza is the defender. Which position does each player play?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The goalie is the only player allowed to touch the ball with their hands — and only inside their own box.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A knockout tournament starts with 16 teams. In each round, half the teams are knocked out and half move on. How many rounds does it take to reach 1 champion? How many games are played in total?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> In a knockout tournament, the total number of games is always one less than the number of teams (16 teams → 15 games).</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Two brothers scored goals all tournament. Together they scored 20 goals. kid2 scored <b>4 more</b> goals than kid1. How many goals did each brother score?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The World Cup is held once every 4 years, so a player only gets a few chances in their whole life to play in one.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A tournament has 12 teams, split into groups of 4. How many groups are there? In one group, each of the 4 teams plays every other team exactly once. How many games are played in that group? (Hint: list the matchups.)</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The real 2026 World Cup is split into exactly 12 groups of 4 teams — just like this puzzle.</div>
+  </div>
+</div>
+
+<!-- ============ SHEET 3: ANSWER KEY ============ -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — reasoning included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade</div>
+
+  <div class="ans"><b>1. kid1 scored 3 goals; kid1 is the middle.</b>
+    <div class="steps">9 total − 5 (Idris) − 1 (Omar) = <b>3</b> for kid1. Ordered: Omar 1, kid1 3, Idris 5 → kid1 is in the middle.</div>
+  </div>
+  <div class="ans"><b>2. 15 and 18. Rule: add 3 each time.</b>
+    <div class="steps">3, 6, 9, 12 each go up by 3. 12 + 3 = 15, 15 + 3 = <b>18</b>.</div>
+  </div>
+  <div class="ans"><b>3. Scored 6, missed 3.</b>
+    <div class="steps">The two numbers add to 9 and differ by 3. Guess &amp; check: 6 + 3 = 9 and 6 − 3 = 3. So scored <b>6</b>, missed <b>3</b>.</div>
+  </div>
+  <div class="ans"><b>4. Red, Blue, Green, Yellow.</b>
+    <div class="steps">Red is 1st and Yellow is 4th. That leaves 2nd and 3rd for Blue and Green; Blue is higher, so Blue 2nd, Green 3rd. Order: <b>Red, Blue, Green, Yellow</b>.</div>
+  </div>
+  <div class="ans"><b>5. 6 uniforms.</b>
+    <div class="steps">3 jersey colors × 2 shorts colors = <b>6</b>. (red-black, red-white, blue-black, blue-white, white-black, white-white.)</div>
+  </div>
+
+  <div class="section-title">4th Grade</div>
+
+  <div class="ans"><b>1. Falcons 4, Hawks 6. Hawks have 2 more.</b>
+    <div class="steps">Falcons: 3 + 1 + 0 = 4. Hawks: 3 + 3 + 0 = 6. 6 − 4 = <b>2</b> more for the Hawks.</div>
+  </div>
+  <div class="ans"><b>2. Hamza = defender, kid2 = forward, Zaid = goalie.</b>
+    <div class="steps">Hamza is the defender (Clue 2). kid2 is not the goalie (Clue 1), so kid2 is the forward. That leaves goalie for Zaid.</div>
+  </div>
+  <div class="ans"><b>3. 4 rounds; 15 games total.</b>
+    <div class="steps">16 → 8 → 4 → 2 → 1 is <b>4</b> rounds. Games: 8 + 4 + 2 + 1 = <b>15</b> (or 16 − 1 = 15).</div>
+  </div>
+  <div class="ans"><b>4. kid1 8 goals, kid2 12 goals.</b>
+    <div class="steps">Take the 4 extra off the 20: 20 − 4 = 16, then 16 ÷ 2 = 8 for kid1. kid2 = 8 + 4 = <b>12</b>. Check: 8 + 12 = 20. ✓</div>
+  </div>
+  <div class="ans"><b>5. 3 groups; 6 games per group.</b>
+    <div class="steps">12 ÷ 4 = <b>3</b> groups. In a group of 4 (call them A, B, C, D): AB, AC, AD, BC, BD, CD = <b>6</b> games.</div>
+  </div>
+</div>
+
+</body>
+</html>

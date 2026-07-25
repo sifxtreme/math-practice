@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>New Skill — Remainders &amp; Unlike Denominators</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet {
+    page-break-after: always;
+    padding: 6px 4px;
+  }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 3px solid #6d28d9;
+    padding-bottom: 8px;
+    margin-bottom: 6px;
+  }
+  .header h1 {
+    font-size: 22px;
+    margin: 0;
+    color: #6d28d9;
+  }
+  .header .sub { font-size: 12px; color: #8b7aa8; font-style: italic; }
+  .grade {
+    font-size: 13px;
+    font-weight: bold;
+    background: #6d28d9;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+  .meta {
+    display: flex;
+    gap: 30px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    color: #444;
+  }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* --- TEACH: the worked example box ---
+     NOTE: padding/margin below deliberately use the exact literal strings that
+     print-worksheet.sh rewrites (`padding: 9px 12px;` / `margin-bottom: 4px;`),
+     so this box shrinks along with everything else and the sheet still fits 3
+     pages. Don't "tidy" them into different values. */
+  .teach {
+    border: 2px solid #6d28d9;
+    border-radius: 6px;
+    padding: 9px 12px;
+    margin-bottom: 4px;
+    background: #faf7ff;
+    page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #6d28d9;
+    display: inline-block; padding: 2px 9px; border-radius: 3px;
+    margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px;
+    margin: 3px 0 3px 4px;
+    padding-left: 8px;
+    border-left: 3px solid #c4b5fd;
+  }
+  .teach .step b { color: #6d28d9; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #ede9fe; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #5b21b6; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #ddd6fe;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #6d28d9; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #6d28d9; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #6d28d9; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work {
+    height: 78px;
+    border-top: 1px dashed #bbb;
+    position: relative;
+  }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999;
+    font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided problem: the pre-labeled steps ARE the work area — no separate
+     .work box. Keeps it in normal flow so it can never overlap the answer
+     line once print-worksheet.sh shrinks .work to 40px. */
+  .scaffold {
+    font-size: 12.5px; color: #7c6f9c;
+    border-top: 1px dashed #bbb;
+    padding-top: 4px;
+  }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #a99bc4;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px;
+    color: #444;
+    background: #f5f3ff;
+    border-left: 3px solid #8b5cf6;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #6d28d9; }
+
+  /* Answer key */
+  .key h1 { color: #6d28d9; }
+  .key .ans {
+    margin-bottom: 11px;
+    padding: 8px 12px;
+    border: 1px solid #ddd6fe;
+    border-radius: 5px;
+    page-break-inside: avoid;
+    font-size: 13.5px;
+  }
+  .key .ans b { color: #6d28d9; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #6d28d9; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ============ SHEET 1: MUSA — REMAINDER INTERPRETATION ============ -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🚌 What Do We Do With What's Left Over?</h1>
+      <div class="sub">New skill — dividing when it doesn't come out even</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid1</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="teach">
+    <div class="teach-title">HOW IT WORKS</div>
+    <div class="prompt">A class of 26 students is going on a trip. Each van holds 6 students. How many vans do they need?</div>
+    <div class="step"><b>Step 1 — Divide.</b> 26 ÷ 6 = 4 remainder 2.</div>
+    <div class="step"><b>Step 2 — Say what the numbers mean.</b> 4 vans get completely full. 2 students are still standing there.</div>
+    <div class="step"><b>Step 3 — Ask: can I leave the leftover behind?</b> No. Those 2 students still have to get on a van.</div>
+    <div class="step"><b>Step 4 — Answer the question that was asked.</b> They need <b>5 vans</b> — 4 full ones and 1 with only 2 students in it.</div>
+    <div class="punch"><b>The trap:</b> the answer is <b>not</b> "4 remainder 2." Always go back and re-read what the question asked for. Sometimes you round <b>up</b> (vans, boxes, tables), sometimes you throw the leftover away (how many <i>full</i> boxes did we fill?).</div>
+  </div>
+
+  <div class="problem guided">
+    <span class="qnum">1.</span><span class="tag">GUIDED</span>
+    <div class="qtext">kid1 is packing 34 books into boxes. Each box holds 8 books. How many boxes does he need so that every book is packed?</div>
+    <div class="scaffold">
+      <div>Divide: 34 ÷ 8 = <span class="blank"></span> remainder <span class="blank"></span></div>
+      <div>What does the remainder mean? <span class="blank"></span> books left over</div>
+      <div>Can those books be left behind? <span class="blank"></span></div>
+      <div>So how many boxes? <span class="blank"></span></div>
+    </div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Libraries pack books spine-up in boxes so the pages don't bend under the weight.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A baker has 50 cupcakes. He puts 7 cupcakes in each gift box. How many <b>completely full</b> gift boxes can he make, and how many cupcakes are left over?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Cupcakes got their name because the early recipes measured everything in cups instead of weighing it.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">45 students are going to a museum. Each bus holds 9 students. How many buses are needed? Careful — read the question twice.</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> School buses are yellow because your eye notices yellow faster than any other color out of the corner of your vision.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A camp has 38 kids and each tent sleeps 5. Every kid needs a place to sleep. How many tents does the camp need, and how many kids are in the last tent?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A tent stays up because the poles push out while the ropes pull in — the two forces balance each other.</div>
+  </div>
+</div>
+
+<!-- ============ SHEET 2: YUSUF — UNLIKE DENOMINATORS ============ -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🍕 Adding Fractions That Don't Match</h1>
+      <div class="sub">New skill — unlike denominators</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid2</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="teach">
+    <div class="teach-title">HOW IT WORKS</div>
+    <div class="prompt">kid2 eats 1/2 of a pizza. Zaid eats 1/3 of the same pizza. How much did they eat together?</div>
+    <div class="step"><b>Step 1 — Notice the problem.</b> Halves and thirds are different-sized pieces. You cannot add 1 + 1 and get an answer, because the pieces aren't the same size.</div>
+    <div class="step"><b>Step 2 — Find a size they can both become.</b> Cut everything into sixths. Both 2 and 3 divide into 6.</div>
+    <div class="step"><b>Step 3 — Rewrite each fraction.</b> 1/2 = 3/6 (multiply top and bottom by 3). 1/3 = 2/6 (multiply top and bottom by 2).</div>
+    <div class="step"><b>Step 4 — Now add.</b> 3/6 + 2/6 = <b>5/6</b>. The bottom number does <b>not</b> change — you're just counting sixths.</div>
+    <div class="punch"><b>The trap:</b> 1/2 + 1/3 is <b>not</b> 2/5. Never add the bottoms. To find the common bottom, the fastest way is to multiply the two denominators together (2 × 3 = 6) — it always works, even if it isn't always the smallest.</div>
+  </div>
+
+  <div class="problem guided">
+    <span class="qnum">1.</span><span class="tag">GUIDED</span>
+    <div class="qtext">kid2 reads 1/4 of his book on Monday and 1/3 of it on Tuesday. What fraction of the book has he read in all?</div>
+    <div class="scaffold">
+      <div>Common bottom number: 4 × 3 = <span class="blank"></span></div>
+      <div>Rewrite: 1/4 = <span class="blank"></span> &nbsp;&nbsp; and &nbsp;&nbsp; 1/3 = <span class="blank"></span></div>
+      <div>Add the tops, keep the bottom: <span class="blank"></span></div>
+    </div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The line in a fraction is called a vinculum, and it has been used in math for over 800 years.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A recipe needs 2/3 cup of flour and 1/6 cup of sugar. How many cups of dry ingredients is that altogether?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Bakers weigh flour instead of scooping it, because a packed cup can hold 20% more than a loose one.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">Bilal ran 3/4 of a mile and then walked 2/5 of a mile. How far did he go in total? Is it more or less than 1 mile?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A mile was originally 1,000 paces of a Roman soldier — <i>mille passus</i> means "a thousand steps."</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A water jug is 7/8 full. kid2 pours out 1/3 of a jug. What fraction of the jug is left? (Same steps — but subtract this time.)</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A gallon of water weighs about 8 pounds, which is why a full jug is so hard to lift with one hand.</div>
+  </div>
+</div>
+
+<!-- ============ SHEET 3: ANSWER KEY ============ -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps + what to watch for</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — kid1 (remainders)</div>
+
+  <div class="watch"><b>Watch for:</b> answering "4 remainder 2" instead of answering the actual question. If he writes the remainder as the answer, don't correct the arithmetic — ask him to re-read the last sentence of the problem out loud. That's the skill.</div>
+
+  <div class="ans"><b>1. 5 boxes.</b>
+    <div class="steps">34 ÷ 8 = 4 r 2. Four full boxes, 2 books left. Books can't be left behind → <b>5 boxes</b> (last one has 2).</div>
+  </div>
+  <div class="ans"><b>2. 7 full boxes, 1 cupcake left over.</b>
+    <div class="steps">50 ÷ 7 = 7 r 1. This one asks for <b>completely full</b> boxes, so we do NOT round up: <b>7</b> boxes, <b>1</b> cupcake left.</div>
+  </div>
+  <div class="ans"><b>3. 5 buses.</b>
+    <div class="steps">45 ÷ 9 = 5 exactly, no remainder. The "read twice" warning is a fake-out — sometimes it just comes out even. <b>5 buses</b>.</div>
+  </div>
+  <div class="ans"><b>4. 8 tents; 3 kids in the last one.</b>
+    <div class="steps">38 ÷ 5 = 7 r 3. Every kid needs a bed → round up to <b>8</b> tents; the 8th holds the leftover <b>3</b>.</div>
+  </div>
+
+  <div class="section-title">4th Grade — kid2 (unlike denominators)</div>
+
+  <div class="watch"><b>Watch for:</b> adding the bottom numbers (1/4 + 1/3 = 2/7). If that happens, go back to the pizza picture — you can't count pieces of different sizes. Also watch for him converting one fraction and forgetting the other.</div>
+
+  <div class="ans"><b>1. 7/12 of the book.</b>
+    <div class="steps">Common bottom 4 × 3 = 12. 1/4 = 3/12, 1/3 = 4/12. 3/12 + 4/12 = <b>7/12</b>.</div>
+  </div>
+  <div class="ans"><b>2. 5/6 cup.</b>
+    <div class="steps">6 already works (3 divides into 6). 2/3 = 4/6. 4/6 + 1/6 = <b>5/6</b>. Good one to point out that you don't always need to multiply the bottoms.</div>
+  </div>
+  <div class="ans"><b>3. 23/20 miles = 1 3/20 miles — more than 1 mile.</b>
+    <div class="steps">Common bottom 4 × 5 = 20. 3/4 = 15/20, 2/5 = 8/20. 15/20 + 8/20 = <b>23/20</b>, which is 1 whole and 3/20. Since 23 > 20, it's <b>more</b> than a mile.</div>
+  </div>
+  <div class="ans"><b>4. 13/24 of the jug.</b>
+    <div class="steps">Common bottom 8 × 3 = 24. 7/8 = 21/24, 1/3 = 8/24. 21/24 − 8/24 = <b>13/24</b>. Same procedure as adding — only the last step changes.</div>
+  </div>
+</div>
+
+</body>
+</html>
