@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Silk Road Caravan Math</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet {
+    page-break-after: always;
+    padding: 6px 4px;
+  }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 3px solid #8a5a1b;
+    padding-bottom: 8px;
+    margin-bottom: 6px;
+  }
+  .header h1 {
+    font-size: 22px;
+    margin: 0;
+    color: #8a5a1b;
+  }
+  .header .sub { font-size: 12px; color: #9c7c52; font-style: italic; }
+  .grade {
+    font-size: 13px;
+    font-weight: bold;
+    background: #8a5a1b;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+  .meta {
+    display: flex;
+    gap: 30px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    color: #444;
+  }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #e8d5bc;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .qnum { font-weight: bold; font-size: 15px; color: #8a5a1b; }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work {
+    height: 78px;
+    border-top: 1px dashed #bbb;
+    position: relative;
+  }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999;
+    font-style: italic; letter-spacing: 0.5px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px;
+    color: #444;
+    background: #fbf3e7;
+    border-left: 3px solid #d99b34;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #8a5a1b; }
+
+  /* Answer key */
+  .key h1 { color: #8a5a1b; }
+  .key .ans {
+    margin-bottom: 11px;
+    padding: 8px 12px;
+    border: 1px solid #e8d5bc;
+    border-radius: 5px;
+    page-break-inside: avoid;
+    font-size: 13.5px;
+  }
+  .key .ans b { color: #8a5a1b; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #8a5a1b; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SHEET 1: 3rd GRADE (kid1) ============ -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🐪 Silk Road Caravan Math</h1>
+      <div class="sub">Word problems from the trade roads between east and west</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid1</span></div>
+    <div>Date: <span>&nbsp;July 26, 2026</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A caravan loads 6 camels for the journey. Each camel carries 145 kilograms of silk. At the first oasis the traders sell 230 kilograms. How many kilograms of silk is the caravan still carrying?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A camel can carry about 400 kilograms, but caravans loaded them lighter so they could walk for weeks without wearing out.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">57 traders are waiting to cross the desert. Each guide can safely lead 8 traders at a time. How many guides does the caravan need so that <i>every</i> trader has a guide?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Desert guides navigated by the stars. The North Star sits almost still in the sky all night, so it always points the same way.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A merchant named Bilal packs 72 bolts of cloth equally into 8 crates. At the market he sells 3 whole crates. How many bolts of cloth does he have left?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> For hundreds of years only China knew how to make silk. The secret was that it comes from the cocoon of a caterpillar.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Two water skins are exactly the same size. kid2's water skin is <b>1/2</b> full. Hamza's water skin is <b>3/8</b> full. Whose water skin has more water in it?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Travellers carried water in bags made of animal skin. The water seeped through very slowly, and that tiny bit of evaporation kept the rest cool.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A rectangular carpet is being woven for a merchant's tent. Its area is 96 square feet, and one side measures 8 feet. How long is the other side?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A hand-knotted carpet can hold over a million knots. A weaver ties every single one by hand.</div>
+  </div>
+</div>
+
+<!-- ============ SHEET 2: 4th GRADE (kid2) ============ -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🐪 Silk Road Caravan Math</h1>
+      <div class="sub">Word problems from the trade roads between east and west</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid2</span></div>
+    <div>Date: <span>&nbsp;July 26, 2026</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A caravan travels 34 miles every day for 26 days. After resting, it travels a final 88 miles to reach the city gates. How many miles did the caravan travel altogether?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The Silk Road was not one road. It was a web of routes stretching more than 4,000 miles.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A trader has 1,462 glass beads. He packs them equally into 7 boxes, and any beads left over go into a small pouch. How many beads are in each box, and how many end up in the pouch?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Glass beads were once so valuable along these routes that they were traded like money.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">On the first day a caravan covers <b>1/3</b> of the route. On the second day it covers another <b>2/5</b> of the route. What fraction of the whole route has it covered so far?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Very few traders walked the whole road. Goods were handed from caravan to caravan, so a bolt of silk might change owners a dozen times.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Saffron costs <b>4.75</b> silver coins per gram at one stall and <b>4.8</b> silver coins per gram at another. Khadija buys 1 gram from the cheaper stall and pays with a 10-coin piece. How much change does she get back?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Saffron is still the most expensive spice on earth. It takes around 75,000 flowers to make one pound of it.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">Each camel drinks 9 litres of water per day. The caravan has 4 camels and is carrying 500 litres of water. For how many <i>full</i> days can they water every camel, and how many litres are left over?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A camel's hump stores fat, not water. It can drink 100 litres in about ten minutes when it finally reaches a well.</div>
+  </div>
+</div>
+
+<!-- ============ SHEET 3: ANSWER KEY ============ -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">Silk Road Caravan Math — worked steps for the grown-up</div>
+    </div>
+    <div class="grade">Adult</div>
+  </div>
+
+  <div class="section-title">kid1 — 3rd Grade</div>
+
+  <div class="ans">
+    <b>1. 640 kilograms</b>
+    <div class="steps">145 × 6 = 870 kg loaded · 870 − 230 = <b>640 kg</b>. <i>Watch for:</i> subtracting 230 from 145 first.</div>
+  </div>
+  <div class="ans">
+    <b>2. 8 guides</b>
+    <div class="steps">57 ÷ 8 = 7 remainder 1. Seven guides cover 56 traders; 1 trader is still waiting, so an 8th guide is needed. <i>The remainder is the whole point</i> — "7" is the trap answer.</div>
+  </div>
+  <div class="ans">
+    <b>3. 45 bolts</b>
+    <div class="steps">72 ÷ 8 = 9 bolts per crate · 3 × 9 = 27 sold · 72 − 27 = <b>45 bolts</b>. Three operations; the order is the test.</div>
+  </div>
+  <div class="ans">
+    <b>4. kid2's</b>
+    <div class="steps">1/2 = 4/8. Compare 4/8 with 3/8 → 4/8 is larger, so <b>kid2's</b> has more. <i>Watch for:</i> picking Hamza because 3 and 8 are bigger numbers than 1 and 2.</div>
+  </div>
+  <div class="ans">
+    <b>5. 12 feet</b>
+    <div class="steps">Area = length × width, so 96 ÷ 8 = <b>12 feet</b>. <i>Watch for:</i> subtracting (96 − 8) instead of dividing.</div>
+  </div>
+
+  <div class="section-title">kid2 — 4th Grade</div>
+
+  <div class="ans">
+    <b>1. 972 miles</b>
+    <div class="steps">34 × 26 = 884 (34 × 20 = 680, 34 × 6 = 204, 680 + 204 = 884) · 884 + 88 = <b>972 miles</b>.</div>
+  </div>
+  <div class="ans">
+    <b>2. 208 per box, 6 in the pouch</b>
+    <div class="steps">1,462 ÷ 7 = 208 remainder 6. Check: 7 × 208 = 1,456, and 1,462 − 1,456 = 6. Both numbers are part of the answer.</div>
+  </div>
+  <div class="ans">
+    <b>3. 11/15 of the route</b>
+    <div class="steps">Common denominator 15: 1/3 = 5/15 and 2/5 = 6/15 · 5/15 + 6/15 = <b>11/15</b>. <i>Watch for:</i> 3/8 — adding the tops and the bottoms straight across.</div>
+  </div>
+  <div class="ans">
+    <b>4. 5.25 silver coins</b>
+    <div class="steps">Compare first: 4.75 &lt; 4.80, so the cheaper stall is the 4.75 one · 10 − 4.75 = <b>5.25</b>. <i>Watch for:</i> reading 4.8 as smaller than 4.75 because it has fewer digits.</div>
+  </div>
+  <div class="ans">
+    <b>5. 13 full days, 32 litres left over</b>
+    <div class="steps">9 × 4 = 36 litres per day · 500 ÷ 36 = 13 remainder 32. Check: 36 × 13 = 468, and 500 − 468 = 32. <i>Watch for:</i> answering 13.8 days — the question asks for <i>full</i> days.</div>
+  </div>
+</div>
+
+</body>
+</html>
