@@ -9,29 +9,41 @@
 # untouched — it still prints full-size via Cmd+P.
 #
 # Usage:
-#   ./print-worksheet.sh worksheet-worldcup.html                # render + print to the Brother
+#   ./print-worksheet.sh worksheet-worldcup.html                # render + print ALL pages (incl. answer key)
 #   ./print-worksheet.sh worksheet-worldcup.html --dry-run      # render only, don't print
 #   ./print-worksheet.sh <file.html> --printer <NAME>           # print to a different printer
-#   ./print-worksheet.sh <file.html> --both                     # also print the answer key page (default: skip it)
+#   ./print-worksheet.sh <file.html> --no-key                   # kids' sheets only, skip the answer key
 #   ./print-worksheet.sh <file.html> --key-only                 # print ONLY the answer key page (no kid sheets)
+#   ./print-worksheet.sh <file.html> --date "July 28, 2026"     # stamp the Date: field at print time
+#   ./print-worksheet.sh <file.html> --date today               # same, using today's date
 #
-# Prints only the kids' sheets by default; pass --both to include the answer key,
-# or --key-only when the sheets are already printed and you just need the key.
+# --date stamps the kids' `Date:` fields in the rendered copy only; your source
+# .html is never touched. That's the point: reprinting an old sheet used to mean
+# hand-editing its Date span first, and a sheet that leaves the printer undated
+# is unfilable — you can't tell later which day it was for or whether it was done.
+# The answer key is deliberately left undated.
+#
+# Prints ALL pages by default, answer key included (Asif asked for the key every
+# time, 2026-07-26). Pass --no-key for kids' sheets only, or --key-only when the
+# sheets are already printed and you just need the key.
 
 set -uo pipefail
 
 CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 PRINTER="Brother_HL_L2305_series"
 DRY=0
-INCLUDE_KEY=0
+INCLUDE_KEY=1   # default ON since 2026-07-26 — Asif wants the key every time
 KEY_ONLY=0
+STAMP_DATE=""
 SRC=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --printer)  PRINTER="$2"; shift 2 ;;
+    --date)     STAMP_DATE="$2"; shift 2 ;;
     --dry-run)  DRY=1; shift ;;
-    --both)     INCLUDE_KEY=1; shift ;;
+    --both)     INCLUDE_KEY=1; shift ;;   # kept for compatibility; now the default
+    --no-key)   INCLUDE_KEY=0; shift ;;   # kids' sheets only
     --key-only) KEY_ONLY=1; shift ;;
     -h|--help) grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *)         SRC="$1"; shift ;;
@@ -46,6 +58,10 @@ if [ ! -x "$CHROME" ]; then
   echo "Chrome not found at: $CHROME" >&2; exit 1
 fi
 
+if [ "$STAMP_DATE" = "today" ]; then
+  STAMP_DATE="$(date '+%B %-d, %Y')"
+fi
+
 TMP="$(mktemp -d)"
 base="$(basename "${SRC%.html}")"
 PRINTHTML="$TMP/$base-print.html"
@@ -53,10 +69,25 @@ PDF="$TMP/$base.pdf"
 
 # 1) Tighten the layout so it fits Chrome-headless's fat margins at 3 pages.
 #    Fonts are left alone; only work-box height + vertical spacing shrink.
-python3 - "$SRC" "$PRINTHTML" <<'PY'
+python3 - "$SRC" "$PRINTHTML" "$STAMP_DATE" <<'PY'
+import html as _html
 import re, sys
 src, out = sys.argv[1], sys.argv[2]
+stamp = sys.argv[3] if len(sys.argv) > 3 else ""
 h = open(src).read()
+
+# --date: rewrite the kids' Date: spans in the RENDER ONLY (source stays untouched).
+# Matches whether the span is empty or already carries a date, so it overrides a
+# stale baked-in date rather than doubling up. The answer key has no Date: field,
+# so it stays undated automatically — don't add one.
+if stamp:
+    pat = re.compile(r'(<div>Date:\s*<span>).*?(</span></div>)', re.S)
+    h, n = pat.subn(lambda m: m.group(1) + '&nbsp;' + _html.escape(stamp) + m.group(2), h)
+    if n == 0:
+        sys.stderr.write("WARNING: --date given but no 'Date: <span>' field matched — sheet will print undated.\n")
+    else:
+        sys.stderr.write("Stamped %d date field(s): %s\n" % (n, stamp))
+
 subs = [
     (r'@page \{ margin: [0-9.]+in; \}', '@page { size: letter; margin: 0.35in; }'),
     (r'line-height: 1\.4;',      'line-height: 1.22;'), # body — biggest space lever
@@ -100,21 +131,26 @@ if [ "$pages" != "$expected" ]; then
   echo "         Inspect the PDF before relying on it: $PDF" >&2
 fi
 
-# 4) Choose page range: kids' sheets only (drop the answer-key = last page) unless --both/--key-only.
+# 4) Choose page range. Default prints EVERYTHING including the answer key (changed 2026-07-26).
+#    --no-key drops the last page; --key-only prints just it.
 RANGE_ARGS=()
 if [ "$KEY_ONLY" = "1" ] && [ "$pages" -ge 1 ]; then
   RANGE_ARGS=(-P "$pages")
   echo "Printing page $pages only (the answer key)."
 elif [ "$INCLUDE_KEY" = "0" ] && [ "$pages" -ge 2 ]; then
   RANGE_ARGS=(-P "1-$((pages-1))")
-  echo "Printing pages 1-$((pages-1)) (kids' sheets; answer key skipped — use --both to include it)."
+  echo "Printing pages 1-$((pages-1)) (kids' sheets only; answer key suppressed via --no-key)."
 fi
 
 # 5) Print (or dry-run).
 if [ "$DRY" = "1" ]; then
-  echo "[dry-run] would run: lp -d $PRINTER ${RANGE_ARGS[*]} -t \"$base\" \"$PDF\""
+  # ${arr[@]+...} guard: macOS ships bash 3.2, where `set -u` treats an EMPTY
+  # array expansion as unbound and kills the script — which is the default path
+  # (no --key-only/--no-key => no page range => empty array), so a plain print
+  # died right before `lp` ran, after printing a reassuring "Rendered: 3 pages".
+  echo "[dry-run] would run: lp -d $PRINTER ${RANGE_ARGS[@]+${RANGE_ARGS[*]}} -t \"$base\" \"$PDF\""
   echo "PDF kept at: $PDF"
 else
-  lp -d "$PRINTER" "${RANGE_ARGS[@]}" -t "$base" "$PDF"
+  lp -d "$PRINTER" ${RANGE_ARGS[@]+"${RANGE_ARGS[@]}"} -t "$base" "$PDF"
   echo "Sent to $PRINTER."
 fi

@@ -21,7 +21,42 @@ Recurring task: generate printable math word-problem worksheets for Asif's kids.
 6. **5 problems per kid** on a PRACTICE sheet — **4** on a TEACH sheet (the worked example eats one problem's worth of page; 5 overflows to a 2nd page).
 7. **Paper only.** No Khan Academy, no app, no screen. The sheet has to carry the teaching itself — see **Two sheet types** below.
 
-## Two sheet types
+## A full day = THREE sheets per child
+
+**Set 2026-07-26.** One sheet per kid is not the unit of work. A complete day is
+**three sheets each**, and they exercise different things:
+
+| Type | File suffix | What it is | Format |
+|---|---|---|---|
+| **Math** | `worksheet-<theme>.html` | Compound word problems — the operation choice is the test | 5 per kid (4 on a TEACH sheet) |
+| **Drill** | *not generated —* [`DRILLS.md`](DRILLS.md) | **Short, bare problems.** Speed and fluency, not comprehension. Timed | a math-drills.com PDF per kid |
+| **Logic** | `worksheet-<theme>-logic.html` | Puzzles / reasoning — no arithmetic fluency required to start | 4–5 per kid |
+
+Keep them as **three separate files, each still 3 pages** (kid1 · kid2 · key).
+Do NOT merge into one 7-page file — `print-worksheet.sh` self-checks page count
+against `.sheet` blocks and expects 3.
+
+> ⚠️ **The "word problems, not bare arithmetic" rule below applies to the MATH
+> sheet only.** A drill sheet is *supposed* to be bare arithmetic — that's the
+> point of it. Don't apply requirement 1 to a drill sheet.
+
+**Status:** logic sheets exist (`-egypt-logic`, `-worldcup-logic`,
+`-astronomy-logic`). **Drills are NOT generated and never were** — don't write a
+`-drill.html`. They come off math-drills.com, one verified PDF per kid per skill,
+listed in [`DRILLS.md`](DRILLS.md); each PDF is 2 pages, questions then answer key.
+(This line used to read "no drill sheet exists yet, that type still needs
+building." It was wrong: a forge monitor had been posting math-drills PDFs to
+Slack daily since well before that was written. The two files just never learned
+about each other. That monitor was deleted 2026-07-27 — it drilled below the
+difficulty pin — and `DRILLS.md` replaced it with per-kid sheets at the pin.)
+
+> Worth knowing: `PRACTICE-PLAN-2026.md` § "Why this plan isn't fact drills" concluded from a May 2026 timing
+> analysis that fact-fluency drills are *not* the bottleneck. Drills were added
+> anyway on 2026-07-26 at Asif's direction — they buy speed, which is a separate
+> goal from understanding. Not a contradiction, just don't expect them to move
+> comprehension.
+
+## Two sheet types (applies to the MATH sheet)
 
 The kids are not doing Khan or any app, so a sheet introducing a brand-new skill has to *teach* it, not just test it. Which type you write depends on whether the skill is new.
 
@@ -54,10 +89,10 @@ Straight to 5 compound word problems, no example box. This is the original forma
 ## How to make a new set
 
 1. Copy the closest existing sheet — `worksheet.html` for PRACTICE, `worksheet-teach-remainders-fractions.html` for TEACH. The layout/CSS is already dialed in.
-2. Pick a new **theme** (and matching "Did you know?" facts).
+2. Pick a new **theme** (and matching "Did you know?" facts). **Themes already used — do not repeat:** space · World Cup (×3) · ocean · dinosaur · Ancient Egypt · astronomy · human body · national parks · trains · volcano · Silk Road. **Append yours here when you add a sheet.**
 3. Write 5 fresh compound problems per grade, using the skill spread in **Difficulty pin** below (that section is the live setting — read it, don't use the baseline unless it says to).
-4. Regenerate the **answer key** page with worked steps — verify every answer by hand.
-5. Pre-fill each sheet's `Name:` field (kid1 / kid2).
+4. Regenerate the **answer key** page with worked steps, then **verify every answer programmatically** — a throwaway Python block asserting each expected value (`fractions.Fraction` for the fraction problems). Hand-checking is exactly where a tired adult repeats the very error the key exists to catch. Print the pass/fail table before you print paper.
+5. Pre-fill each sheet's `Name:` field (kid1 / kid2). For the `Date:` field, **prefer `./print-worksheet.sh <file> --date "July 28, 2026"`** (or `--date today`) — it stamps the render only, leaves your source alone, and overrides a stale baked-in date, so **reprinting an old sheet never needs a hand-edit**. A blank date makes the sheet unfilable the moment it leaves the printer: you can't tell later which day it was for or whether it was done. The answer key has no `Date:` field and stays undated — don't add one. Baking the date into the HTML still works for a sheet written for one specific day.
 6. Render it before handing it over: `./print-worksheet.sh <file> --dry-run` must report **3 pages**.
 
 ## Difficulty pin
@@ -97,7 +132,9 @@ Sheets written to the baseline: `worksheet.html`, `worksheet-worldcup*.html`, `w
 
 ## Printing
 
-**Easy path (one command) — `./print-worksheet.sh <file.html>`.** Renders the sheet to a clean 3-page PDF and prints the kids' sheets to the Brother (`Brother_HL_L2305_series`). Flags: `--dry-run` (render only), `--both` (also print the answer-key page — skipped by default), `--printer NAME`.
+**Easy path (one command) — `./print-worksheet.sh <file.html>`.** Renders the sheet to a clean 3-page PDF and prints it to the Brother (`Brother_HL_L2305_series`), **answer key included by default** since 2026-07-26. Flags: `--dry-run` (render only), `--date "July 28, 2026"` / `--date today` (stamp the Date field at print time), `--no-key` (kids' sheets only), `--key-only` (just the key), `--printer NAME`.
+
+- ⚠️ **Don't "simplify" the `${RANGE_ARGS[@]+...}` guards near the bottom.** macOS ships bash 3.2, where `set -u` treats an *empty* array expansion as unbound and kills the script. That is the default path (no `--key-only`/`--no-key` ⇒ no page range ⇒ empty array), so a plain print died right before `lp` ran — after printing a reassuring `Rendered: 3 pages`. Fixed 2026-07-27.
 
 - Why the script exists: Chrome's `--headless --print-to-pdf` **ignores `@page` margins** and forces ~1in margins, which overflows each sheet's last problem to a 2nd page (3 pages → 5). The script renders a lightly-tightened copy (smaller work boxes + spacing, **fonts unchanged**) that fits 3 pages at those margins. Your source `.html` is left untouched.
 - It self-checks the page count against the number of `.sheet` blocks and WARNS if they don't match (a sign the worksheet's CSS drifted from this template — keep the `height: 78px` / `line-height: 1.4` / `padding: 9px 12px` values so the tighten-transform still matches).
