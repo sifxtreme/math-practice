@@ -41,7 +41,7 @@ against `.sheet` blocks and expects 3.
 > point of it. Don't apply requirement 1 to a drill sheet.
 
 **Status:** logic sheets exist (`-egypt-logic`, `-worldcup-logic`,
-`-astronomy-logic`). **Drills are NOT generated and never were** — don't write a
+`-astronomy-logic`, `-bridges-logic`). **Drills are NOT generated and never were** — don't write a
 `-drill.html`. They come off math-drills.com, one verified PDF per kid per skill,
 listed in [`DRILLS.md`](DRILLS.md); each PDF is 2 pages, questions then answer key.
 (This line used to read "no drill sheet exists yet, that type still needs
@@ -89,7 +89,7 @@ Straight to 5 compound word problems, no example box. This is the original forma
 ## How to make a new set
 
 1. Copy the closest existing sheet — `worksheet.html` for PRACTICE, `worksheet-teach-remainders-fractions.html` for TEACH. The layout/CSS is already dialed in.
-2. Pick a new **theme** (and matching "Did you know?" facts). **Themes already used — do not repeat:** space · World Cup (×3) · ocean · dinosaur · Ancient Egypt · astronomy · human body · national parks · trains · volcano · Silk Road. **Append yours here when you add a sheet.**
+2. Pick a new **theme** (and matching "Did you know?" facts). **Themes already used — do not repeat:** space · World Cup (×3) · ocean · dinosaur · Ancient Egypt · astronomy · human body · national parks · trains · volcano · Silk Road · bridges. **Append yours here when you add a sheet.** Still unused: weather · Mars rovers.
 3. Write 5 fresh compound problems per grade, using the skill spread in **Difficulty pin** below (that section is the live setting — read it, don't use the baseline unless it says to).
 4. Regenerate the **answer key** page with worked steps, then **verify every answer programmatically** — a throwaway Python block asserting each expected value (`fractions.Fraction` for the fraction problems). Hand-checking is exactly where a tired adult repeats the very error the key exists to catch. Print the pass/fail table before you print paper.
 5. Pre-fill each sheet's `Name:` field (kid1 / kid2). For the `Date:` field, **prefer `./print-worksheet.sh <file> --date "July 28, 2026"`** (or `--date today`) — it stamps the render only, leaves your source alone, and overrides a stale baked-in date, so **reprinting an old sheet never needs a hand-edit**. A blank date makes the sheet unfilable the moment it leaves the printer: you can't tell later which day it was for or whether it was done. The answer key has no `Date:` field and stays undated — don't add one. Baking the date into the HTML still works for a sheet written for one specific day.
@@ -150,6 +150,7 @@ Sheets written to the baseline: `worksheet.html`, `worksheet-worldcup*.html`, `w
 - `worksheet-dinosaur.html` — fossil dig word problems.
 - `worksheet-worldcup-logic.html` — World Cup logic/puzzles.
 - `worksheet-egypt-logic.html` — Ancient Egypt logic/puzzles.
+- `worksheet-bridges-logic.html` — bridge logic/puzzles; kid2's #5 is the classic lantern crossing (answer 17, not 19).
 - `print-worksheet.sh` — render a worksheet to a clean 3-page PDF and print it to the Brother.
 - `README.md` — human-facing overview.
 - `AGENTS.md` — this file.

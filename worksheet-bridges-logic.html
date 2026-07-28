@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bridge Builders — Logic &amp; Puzzles</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #1e3a8a; }
+  .header .sub { font-size: 12px; color: #7d8bb0; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #1e3a8a;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #1e3a8a; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #eef2ff; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #1e3a8a;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #c7d2fe;
+  }
+  .teach .step b { color: #1e3a8a; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #eef2ff; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #1e3a8a; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #1e3a8a; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #1e3a8a; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #1e3a8a; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #7d8bb0; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #c7d2fe;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #eef2ff;
+    border-left: 3px solid #4f46e5;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #1e3a8a; }
+
+  .key h1 { color: #1e3a8a; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #d5dcf7; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #1e3a8a; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #1e3a8a; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ==== MUSA ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🌉 Bridge Builders Logic</h1>
+      <div class="sub">Puzzles from the world's great river crossings</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid1</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A rope footbridge holds at most <b>50 kg</b> at one time. Hamza weighs 25 kg, Bilal 20 kg, and Layla 30 kg. Which <b>pairs</b> are allowed to cross together? Can all three cross at once?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> In Peru, villagers rebuild the Q'eswachaka rope bridge by hand every year, weaving the whole thing out of grass.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">The stone arches under an old bridge are numbered in order: 3, 6, 9, 12, ___, ___ . What are the next two numbers, and what is the rule?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The Alcántara Bridge in Spain was built by Roman engineers around the year 106, and it still stands today.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">One morning 15 boats passed under the bridge. There were <b>5 more</b> sailboats than motorboats. How many of each? (Hint: try pairs that add to 15.)</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Some bridges split in the middle and tilt upward to let tall ships through. London's Tower Bridge still opens about 800 times a year.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Four bridges cross the same river: Iron, Stone, Rope, and Wood. Stone is the furthest <b>north</b>. Wood is the furthest <b>south</b>. Rope is just north of Wood. List all four in order from north to south.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The city of Venice is built on water and has around 400 bridges — many so small only people on foot can use them.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">kid1 is building a model bridge. The deck can be <b>wood or steel</b>, and the cables can be <b>red, blue, or green</b>. How many different models can he build? List them all.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Each main cable on the Golden Gate Bridge is a bundle of 27,572 thin steel wires — thinner than a pencil, all pressed together.</div>
+  </div>
+
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🌉 Bridge Builders Logic</h1>
+      <div class="sub">Puzzles from the world's great river crossings</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid2</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A bridge toll: a car costs 4 dirhams, a truck 9, and any crossing <b>after sunset</b> costs 5 extra. kid2's family made 3 car and 2 truck crossings, 1 of them after sunset. Amina's made 5 car and 1 truck crossing, 2 after sunset. Who paid more, and by how much?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Old London Bridge had shops and houses built on top of it, some seven storeys tall.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">kid2, Khadija, and Tariq each inspected a different bridge (Iron, Rope, Stone) on a different day (Mon, Wed, Fri). Who did which, and when?<br>
+    <b>1.</b> Khadija did not inspect the Rope bridge. &nbsp;<b>2.</b> Tariq inspected on Friday. &nbsp;<b>3.</b> The Iron bridge was inspected on Monday, and not by Khadija.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> US law requires most bridges to be inspected at least once every two years.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A rope bridge is laid with 64 original planks. Every year a storm takes out <b>half</b> of the original planks still remaining, and new ones replace them. After 5 years, how many <b>original</b> planks are left? How many were replaced in all?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A rope bridge sways on purpose. A bridge that cannot move at all cracks when the wind pushes on it.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Two bridges carried 132 vehicles between them in one hour. The Iron bridge carried <b>24 more</b> than the Stone bridge. How many did each carry?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The Akashi Kaikyō Bridge in Japan hangs across a gap of 1,991 metres — almost two kilometres between its towers.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">Four people cross a dark rope bridge with <b>one</b> lantern. It holds <b>2 at a time</b>, the lantern must go with them, a pair moves at the <b>slower</b> one's speed, and someone must carry the lantern back. kid2 takes 1 minute, kid1 2, Baba 5, Dadi 10. What is the <b>fastest</b> they can all be across?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Before electric light, bridge keepers walked out each evening to light oil lamps along the whole span by hand.</div>
+  </div>
+
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — reasoning included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — kid1</div>
+
+  <div class="ans"><b>1. Hamza+Bilal (45) and Bilal+Layla (50) may cross. Hamza+Layla (55) may not. All three = 75 kg, too heavy.</b>
+    <div class="steps">25+20 = 45 ✓ · 20+30 = <b>50</b>, exactly the limit, so allowed ("at most 50") · 25+30 = 55 ✗ · 75 ✗.</div>
+  </div>
+  <div class="ans"><b>2. 15 and 18. Rule: add 3 each time (the multiples of 3).</b>
+    <div class="steps">12 + 3 = 15, 15 + 3 = <b>18</b>.</div>
+  </div>
+  <div class="ans"><b>3. 10 sailboats, 5 motorboats.</b>
+    <div class="steps">Take the 5 off first: 15 − 5 = 10, then 10 ÷ 2 = 5 motorboats. Sailboats = <b>10</b>. Check: 10+5 = 15 ✓, 10−5 = 5 ✓.</div>
+  </div>
+  <div class="ans"><b>4. Stone, Iron, Rope, Wood.</b>
+    <div class="steps">Stone 1st, Wood 4th. Rope is just north of Wood → 3rd. Only Iron is left → 2nd.</div>
+  </div>
+  <div class="ans"><b>5. 6 models.</b>
+    <div class="steps">2 decks × 3 colours = <b>6</b>: wood-red, wood-blue, wood-green, steel-red, steel-blue, steel-green.</div>
+  </div>
+
+  <div class="watch"><b>Watch for:</b> #1 — 50 kg <i>is</i> allowed ("at most 50"); if he rules Bilal+Layla out, have him read the limit aloud. #3 — the classic slip is 10 and 5 reversed; make him check the difference, not just the total.</div>
+
+  <div class="section-title">4th Grade — kid2</div>
+
+  <div class="ans"><b>1. Amina paid more — 39 to kid2's 35, so by 4 dirhams.</b>
+    <div class="steps">kid2: (3×4)+(2×9)+(1×5) = 12+18+5 = <b>35</b>. Amina: (5×4)+(1×9)+(2×5) = 20+9+10 = <b>39</b>. 39−35 = <b>4</b>.</div>
+  </div>
+  <div class="ans"><b>2. kid2 — Iron — Monday · Khadija — Stone — Wednesday · Tariq — Rope — Friday.</b>
+    <div class="steps">Clue 3: Iron is Monday, not Khadija. Clue 2 puts Tariq on Friday, so not Monday → <b>kid2, Iron, Monday</b>. Clue 1: Khadija isn't Rope and Iron is taken → <b>Khadija, Stone</b>. Tariq takes Rope on Friday, so Khadija is Wednesday.</div>
+  </div>
+  <div class="ans"><b>3. 2 original planks left; 62 replaced.</b>
+    <div class="steps">64 → 32 → 16 → 8 → 4 → <b>2</b> (5 halvings). Replaced: 64 − 2 = <b>62</b>.</div>
+  </div>
+  <div class="ans"><b>4. Iron 78, Stone 54.</b>
+    <div class="steps">Take the 24 off first: 132 − 24 = 108, then 108 ÷ 2 = <b>54</b> Stone. Iron = <b>78</b>. Check: 78+54 = 132 ✓, 78−54 = 24 ✓.</div>
+  </div>
+  <div class="ans"><b>5. 17 minutes.</b>
+    <div class="steps">kid2+kid1 cross (2) · kid2 back (1) · <b>Baba+Dadi cross together (10)</b> · kid1 back (2) · kid2+kid1 cross (2) = <b>17</b>. The trick: send the two slowest <i>together</i> so the 5 hides inside the 10.</div>
+  </div>
+
+  <div class="watch"><b>Watch for:</b> #5 — almost everybody answers <b>19</b> (the fastest shuttles each person over one at a time: 2+1+5+1+10). That's a good answer, just not the best one. Don't give away the trick; ask "what if the two slowest walked together?" Getting 19 and then improving it to 17 is worth more than getting 17 straight off.</div>
+
+</div>
+
+</body>
+</html>
