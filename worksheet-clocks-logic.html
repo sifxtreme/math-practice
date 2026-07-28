@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Clockwork Logic</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #1e3a8a; }
+  .header .sub { font-size: 12px; color: #7d8bb0; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #1e3a8a;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #1e3a8a; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #eef2ff; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #1e3a8a;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #c7d2fe;
+  }
+  .teach .step b { color: #1e3a8a; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #eef2ff; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #1e3a8a; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #1e3a8a; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #1e3a8a; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #1e3a8a; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #7d8bb0; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #c7d2fe;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #eef2ff;
+    border-left: 3px solid #4f46e5;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #1e3a8a; }
+
+  .key h1 { color: #1e3a8a; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #d5dcf7; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #1e3a8a; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #1e3a8a; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ==== MUSA ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🕰️ Clockwork Logic</h1>
+      <div class="sub">Puzzles about keeping time</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid1</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A kitchen clock runs <b>15 minutes slow</b>. It shows <b>3:40</b>. What is the real time?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Before railways, every town kept its own local time by the sun — noon in one town was not noon in the next.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A tower bell strikes the hour: once at 1 o'clock, twice at 2 o'clock, and so on. How many strikes altogether from <b>1 o'clock through 6 o'clock</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> We split hours into 60 minutes because the Babylonians counted in sixties, more than 4,000 years ago.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A clock chimes <b>every 15 minutes</b>. How many chimes are there from <b>2:00 to 4:00</b>, counting the chimes at 2:00 and at 4:00 themselves?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A sundial only works in sunshine, which is why water clocks were invented — they kept counting at night and indoors.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Three friends arrive at the clock tower. <b>Idris</b> arrives before <b>Salma</b>. <b>Yahya</b> arrives after <b>Salma</b>. Who arrived <b>first</b>, and who arrived <b>last</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The pendulum clock, invented in 1656, was such a leap that it cut a typical clock's daily error from minutes to seconds.</div>
+  </div>
+
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🕰️ Clockwork Logic</h1>
+      <div class="sub">Puzzles about keeping time</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;kid2</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">You have a <b>4-minute</b> hourglass and a <b>7-minute</b> hourglass, and nothing else. How do you measure <b>exactly 9 minutes</b>? Write the steps with the times.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Working out longitude at sea needed a clock that stayed accurate on a rolling ship — the problem stood for decades.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">Three bells ring together at noon. One rings every <b>6 minutes</b>, one every <b>8 minutes</b>, one every <b>12 minutes</b>. How many minutes until all three ring together again?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> An atomic clock is so steady it would drift less than a second over millions of years.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A train arrives at <b>3:45</b>. The journey took <b>1 hour 50 minutes</b>, and before boarding he waited <b>25 minutes</b> at the station. What time did he reach the station?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Railways forced countries onto standard time — trains cannot run to a timetable if every town keeps its own clock.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">At <b>4:20</b>, what is the angle between the hour hand and the minute hand? (Careful: by 4:20 the hour hand has already crept past the 4.)</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A clock face is 360 degrees over 12 hours, so the hour hand moves just half a degree every minute.</div>
+  </div>
+
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — kid1</div>
+  <div class="ans"><b>1. 3:55.</b>
+    <div class="steps">Slow means it hasn't caught up yet, so the real time is <b>later</b>: 3:40 + 15 minutes = <b>3:55</b>. Ask which way before adding &mdash; that's the whole question.</div>
+  </div>
+  <div class="ans"><b>2. 21 strikes.</b>
+    <div class="steps">1 + 2 + 3 + 4 + 5 + 6 = <b>21</b>. Pair the ends to go faster: (1+6) + (2+5) + (3+4) = 7 + 7 + 7.</div>
+  </div>
+  <div class="ans"><b>3. 9 chimes.</b>
+    <div class="steps">2:00 to 4:00 is 120 minutes, and 120 &divide; 15 = 8 gaps. Counting both ends means <b>9</b> chimes, not 8 &mdash; fenceposts, not fences.</div>
+  </div>
+  <div class="ans"><b>4. Idris first, Yahya last.</b>
+    <div class="steps">Idris before Salma, and Salma before Yahya, chains into Idris &rarr; Salma &rarr; Yahya. So <b>Idris</b> first and <b>Yahya</b> last.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> #3 is the fencepost trap: 120 &divide; 15 = 8 <i>gaps</i> but <b>9</b> chimes. Expect 8. It's the same idea as the leftover-needs-a-box remainder work he's been doing all week — worth naming that out loud, because he'll see they're the same shape.</div>
+
+  <div class="section-title">4th Grade — kid2</div>
+  <div class="ans"><b>1. Yes — 9 minutes, using four flips.</b>
+    <div class="steps">Start <b>both</b> at 0. At <b>4 min</b> the small one empties &mdash; flip it. At <b>7 min</b> the big one empties &mdash; flip it. At <b>8 min</b> the small one empties again; the big one has now been running 1 minute, so it holds exactly 1 minute of sand in the bottom. <b>Flip the big one</b> and it runs out at <b>9 minutes</b>. The idea: a part-used glass measures the time it has already run.</div>
+  </div>
+  <div class="ans"><b>2. 24 minutes.</b>
+    <div class="steps">Find the first number 6, 8 and 12 all divide into. Multiples of 8: 8, 16, <b>24</b>. 24 is divisible by 6 and 12 too, so <b>24 minutes</b>.</div>
+  </div>
+  <div class="ans"><b>3. 1:30.</b>
+    <div class="steps">Work backwards from the arrival. 3:45 &minus; 1 h 50 min = 1:55 departure. Then 1:55 &minus; 25 min = <b>1:30</b>. Undo the journey first, then the wait.</div>
+  </div>
+  <div class="ans"><b>4. 10 degrees.</b>
+    <div class="steps">Minute hand: 20 min &times; 6&deg; = 120&deg;. Hour hand: 4 &times; 30&deg; = 120&deg;, plus 20 min &times; 0.5&deg; = 10&deg;, so 130&deg;. Difference = <b>10&deg;</b>. Answering 20&deg; means forgetting the hour hand drifts.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> #1 is genuinely hard and #4 catches almost everyone at 20&deg;. Neither is a fluency problem, so don't let a miss here read as a bad day &mdash; note them as puzzles attempted, not skills failed. If he lands the hourglass unaided, that's the strongest reasoning result of the week.</div>
+
+</div>
+
+</body>
+</html>
