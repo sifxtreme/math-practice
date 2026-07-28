@@ -23,8 +23,9 @@ Recurring task: generate printable math word-problem worksheets for Asif's kids.
 
 ## A full day = THREE sheets per child
 
-**Set 2026-07-26.** One sheet per kid is not the unit of work. A complete day is
-**three sheets each**, and they exercise different things:
+**Set 2026-07-26. Re-confirmed by Asif 2026-07-28 and made binding.** One sheet per
+kid is not the unit of work. A complete day is **three sheets each**, and they
+exercise different things:
 
 | Type | File suffix | What it is | Format |
 |---|---|---|---|
@@ -35,6 +36,14 @@ Recurring task: generate printable math word-problem worksheets for Asif's kids.
 Keep them as **three separate files, each still 3 pages** (kid1 · kid2 · key).
 Do NOT merge into one 7-page file — `print-worksheet.sh` self-checks page count
 against `.sheet` blocks and expects 3.
+
+> ⚠️ **All three run EVERY day, and logic is the one that keeps getting dropped.**
+> Twice now this rule has decayed the same way: it was written here, the schedule
+> table in `PRACTICE-PLAN-2026.md` quietly disagreed with a `—`, and the schedule won
+> — because the schedule is what gets read each morning. **A dash in that table is a
+> bug.** A genuinely lighter day gets a written reason in the cell, and the only
+> legitimate ones are the named exceptions (the break, school Prep week, the taper).
+> Before printing, count: did each kid get word problems, logic, AND a drill?
 
 > ⚠️ **The "word problems, not bare arithmetic" rule below applies to the MATH
 > sheet only.** A drill sheet is *supposed* to be bare arithmetic — that's the
