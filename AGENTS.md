@@ -41,8 +41,12 @@ against `.sheet` blocks and expects 3.
 > Twice now this rule has decayed the same way: it was written here, the schedule
 > table in `PRACTICE-PLAN-2026.md` quietly disagreed with a `—`, and the schedule won
 > — because the schedule is what gets read each morning. **A dash in that table is a
-> bug.** A genuinely lighter day gets a written reason in the cell, and the only
-> legitimate ones are the named exceptions (the break, school Prep week, the taper).
+> bug.** The count drops for exactly one reason: **a break Asif designates** (right
+> now, Aug 3–9 — nothing else). Every other day until school starts is a full three-
+> sheet day. **Do not invent light days.** The plan invented two — a 15-minute
+> school Prep week and an end-of-summer taper — and both were removed on 2026-07-28
+> because Asif never asked for them.
+>
 > Before printing, count: did each kid get word problems, logic, AND a drill?
 
 > ⚠️ **The "word problems, not bare arithmetic" rule below applies to the MATH
