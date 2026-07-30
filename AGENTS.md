@@ -147,6 +147,18 @@ Sheets written to the baseline: `worksheet.html`, `worksheet-worldcup*.html`, `w
 
 ## Printing
 
+> ⚠️ **"The plan says it's printed" is not evidence that it printed.** Block 1 was
+> bulk-printed on 2026-07-28, and the schedule logged all ten days as ✅ — including
+> days that hadn't happened. Two mornings then reprinted sheets that were already in
+> the stack. `PRACTICE-PLAN-2026.md` now separates **📦 stack** (paper exists, printed
+> ahead) from **✅ \<date\>** (that day's set actually went out that morning); a ✅ on a
+> future row is a bug. To settle it, read the printer, not the plan:
+> `grep "$(date +%d/%b/%Y)" /var/log/cups/access_log | grep -c Send-Document` — 0 means
+> nothing went out today. And `lp` returning a request id only means CUPS *queued* it:
+> confirm with `lpstat -o` (blank = drained) and check `Alerts:` in
+> `lpstat -l -p Brother_HL_L2305_series` — an empty paper tray shows as
+> `media-needed-error` and holds the job silently.
+
 **Easy path (one command) — `./print-worksheet.sh <file.html>`.** Renders the sheet to a clean 3-page PDF and prints it to the Brother (`Brother_HL_L2305_series`), **answer key included by default** since 2026-07-26. Flags: `--dry-run` (render only), `--date "July 28, 2026"` / `--date today` (stamp the Date field at print time), `--no-key` (kids' sheets only), `--key-only` (just the key), `--printer NAME`.
 
 - ⚠️ **Don't "simplify" the `${RANGE_ARGS[@]+...}` guards near the bottom.** macOS ships bash 3.2, where `set -u` treats an *empty* array expansion as unbound and kills the script. That is the default path (no `--key-only`/`--no-key` ⇒ no page range ⇒ empty array), so a plain print died right before `lp` ran — after printing a reassuring `Rendered: 3 pages`. Fixed 2026-07-27.
