@@ -1,0 +1,56 @@
+# print-ledger.tsv — what paper EXISTS, one line per print job.
+#
+# Columns:  printed_at (ISO8601)  <TAB>  target_day (YYYY-MM-DD)  <TAB>  label
+#
+# This is the file `day-guard.sh` reads to answer "does paper for this day already
+# exist?" — Guard C, the one that stops a morning from reprinting a sheet that is
+# already sitting in the stack. It is TRACKED IN GIT on purpose: a gitignored
+# ledger starts empty on a fresh clone, and an empty ledger silently answers "no
+# paper exists" for every day, which is the exact wrong answer.
+#
+# ⚠️ DO NOT hand-edit this file with a grep filter. On 2026-07-31 a cleanup pass
+# ran `grep -v "logic$"` over it to strip test rows and silently deleted four real
+# seed rows — every worksheet whose name ends in "-logic". Rewrite the whole file
+# from a known source instead, then re-run ./test-day-guard.sh, which counts the
+# rows per day and will catch exactly that.
+#
+# Rows dated before 2026-07-31 are RECONSTRUCTED from CUPS job history (jobs
+# 120–159, `lpstat -W completed -o`) cross-read against PRACTICE-PLAN-2026.md's
+# schedule table. Job COUNTS and DATES are measured and exact. The mapping of a
+# specific job number to a specific filename is inferred from the plan — CUPS no
+# longer exposes job titles here. Fine for the guard, which only reads target_day,
+# but don't treat a label below as evidence of what a given job contained.
+#
+# Everything from 2026-07-31 onward is recorded live by day-guard.sh at print time.
+2026-07-25T10:00:00	2026-07-25	RECONSTRUCTED worksheet-ocean + key (jobs 120-122)
+2026-07-26T10:00:00	2026-07-26	RECONSTRUCTED worksheet-silkroad + egypt logic sheet (jobs 123-125)
+2026-07-27T10:00:00	2026-07-27	RECONSTRUCTED worksheet-dinosaur + astronomy logic sheet (jobs 126-127)
+2026-07-28T08:45:00	2026-07-28	RECONSTRUCTED teach-remainders-fractions + bridges logic sheet + 2 drills (jobs 128-131)
+2026-07-28T08:50:00	2026-07-29	BULK RUN worksheet-weather
+2026-07-28T08:50:00	2026-07-29	BULK RUN worksheet-lighthouse-logic
+2026-07-28T08:53:00	2026-07-29	BULK RUN drill kid1 multiplication_0201 (A)
+2026-07-28T08:53:00	2026-07-29	BULK RUN drill kid2 multiplication_0202 (A)
+2026-07-28T08:50:00	2026-07-30	BULK RUN worksheet-mars-rovers
+2026-07-28T08:50:00	2026-07-30	BULK RUN worksheet-falconry-logic
+2026-07-28T08:53:00	2026-07-30	BULK RUN drill kid1 division_long_1dd2dd_r (B)
+2026-07-28T08:53:00	2026-07-30	BULK RUN drill kid2 division_long_1dd4dd_r (A)
+2026-07-28T08:51:00	2026-07-31	BULK RUN worksheet-honeybees
+2026-07-28T08:51:00	2026-07-31	BULK RUN worksheet-caravan-logic
+2026-07-28T08:54:00	2026-07-31	BULK RUN drill kid1 multiplication_0301 (A)
+2026-07-28T08:54:00	2026-07-31	BULK RUN drill kid2 multiplication_0202 (B)
+2026-07-28T08:51:00	2026-08-01	BULK RUN worksheet-sailing-ships
+2026-07-28T08:52:00	2026-08-01	BULK RUN worksheet-clocks-logic
+2026-07-28T08:55:00	2026-08-01	BULK RUN drill kid1 division_long_1dd2dd_r (C)
+2026-07-28T08:55:00	2026-08-01	BULK RUN drill kid2 division_long_1dd3dd_r (B)
+2026-07-28T08:52:00	2026-08-02	BULK RUN worksheet-mountains-cumulative
+2026-07-28T08:52:00	2026-08-02	BULK RUN worksheet-kites-logic-cumulative
+2026-07-28T08:56:00	2026-08-02	BULK RUN drill kid1 multiplication_0201 (B)
+2026-07-28T08:56:00	2026-08-02	BULK RUN drill kid2 multiplication_0202 (C)
+2026-07-29T07:44:22	2026-07-29	DUPLICATE reprint of stack paper (job 152)
+2026-07-29T07:44:52	2026-07-29	DUPLICATE reprint of stack paper (job 153)
+2026-07-29T07:45:18	2026-07-29	DUPLICATE reprint of stack paper (job 154)
+2026-07-29T07:45:38	2026-07-29	DUPLICATE reprint of stack paper (job 155)
+2026-07-30T16:12:46	2026-07-30	DUPLICATE reprint of stack paper (job 156)
+2026-07-30T16:13:16	2026-07-30	DUPLICATE reprint of stack paper (job 157)
+2026-07-30T16:22:23	2026-07-30	DUPLICATE reprint of stack paper (job 158)
+2026-07-30T16:22:44	2026-07-30	DUPLICATE reprint of stack paper (job 159)

@@ -25,11 +25,31 @@ reached**:
 |---|---|
 | **A — never ahead** | Any sheet dated later than today |
 | **B — one target day per calendar day** | A second, different day once you've printed for one today |
+| **C — never a second copy** | A day whose paper already exists (printed on an earlier date) |
 
-Several *files* on the same day are fine — that's what a full day is. Reprinting a
-**past** day is fine too: a kid who lost Wednesday's sheet is still one day's worth
-of paper. The escape hatch is `--override-day-guard`, which is deliberately verbose,
-warns loudly, and records the override in the ledger.
+Several *files* on the same day are fine — that's what a full day is (word + logic +
+two drills = four jobs), and Guard C only looks at paper printed on an *earlier* day,
+so it never blocks file #2 of this morning's own set.
+
+**Guard C is the one that matters most, and it was nearly missed.** A and B alone
+would not have stopped either duplicate morning: Jul 29 and Jul 30 each printed a
+single day, on that day, one day at a time — clean under both. Asif caught it
+straight away (*"we already printed aug 1 and aug 2 i guess"*), which is exactly
+right: the Jul 28 bulk run put paper on the shelf through Aug 2, so the next two
+mornings were lined up to repeat the mistake. **"One day at a time" and "don't print
+what already exists" are two different rules.** You need both.
+
+The escape hatch is `--override-day-guard`, deliberately verbose, warns loudly, and
+records the override in the ledger. A genuine replacement — a lost or ruined sheet —
+goes through it, and should: that's a deliberate act, not a default.
+
+`print-ledger.tsv` is the record of what paper exists, **tracked in git** (a
+gitignored ledger starts empty on a fresh clone, and an empty ledger answers "no
+paper exists" for every day — the wrong answer, silently). Rows before 2026-07-31 are
+reconstructed from CUPS jobs 120–159; everything after is recorded live at print time.
+
+**Run [`test-day-guard.sh`](test-day-guard.sh) after touching `day-guard.sh`** — 17
+cases, no printer involved, real ledger untouched.
 
 **Why code and not another paragraph:** this exact rule has now decayed three times
 by living only in a doc — twice as the three-sheets-a-day rule (written here, silently
@@ -248,6 +268,8 @@ answer independently and must exit 0 before any of them is printed.
 > is the failure a hand-edit causes and a page-count check catches only sometimes.
 - `print-worksheet.sh` — render a worksheet to a clean 3-page PDF and print it to the Brother.
 - `print-drill.sh` — print a math-drills.com PDF through the same day guard.
-- `day-guard.sh` — sourced by both print scripts. The one-day-at-a-time enforcement + the print ledger (`.print-ledger.tsv`, gitignored; CUPS is the authoritative record of what came out).
+- `day-guard.sh` — sourced by both print scripts. The one-day-at-a-time enforcement (guards A, B, C).
+- `print-ledger.tsv` — tracked record of what paper exists, per target day. Guard C reads it.
+- `test-day-guard.sh` — 17 regression cases for the guard. Run after any change to it.
 - `README.md` — human-facing overview.
 - `AGENTS.md` — this file.

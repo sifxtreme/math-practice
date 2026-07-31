@@ -2,4 +2,3 @@ __pycache__/
 *.pyc
 *.pdf
 .DS_Store
-.print-ledger.tsv
