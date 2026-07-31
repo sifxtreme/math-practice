@@ -4,6 +4,46 @@ Recurring task: generate printable math word-problem worksheets for Asif's kids.
 
 **Active plan: [`PRACTICE-PLAN-2026.md`](PRACTICE-PLAN-2026.md)** — daily practice Jul 25 → Aug 30, 2026 (school starts Aug 31). Check it for which sheet is due before generating a new one.
 
+## 🔒 ONE DAY'S WORTH OF PAPER AT A TIME
+
+**Set by Asif 2026-07-31. This one is enforced in code, not prose.**
+
+> *"I'll only ask you for one day at a time. I will never ask you for more.
+> Make sure you don't print out more than one day worth at a time — it's really bad."*
+
+**Never print ahead. Never print a batch.** One day = word problems + logic + drills,
+for **that day only**. That is the maximum, every time, with no exceptions to infer.
+
+Asif will never ask for more than one day, so **a request for a batch is a
+misreading of the request** — go back and re-read it.
+
+[`day-guard.sh`](day-guard.sh) enforces it at the point where paper is actually
+committed. Both print scripts source it, and it **refuses (exit 2) before `lp` is
+reached**:
+
+| Guard | Refuses |
+|---|---|
+| **A — never ahead** | Any sheet dated later than today |
+| **B — one target day per calendar day** | A second, different day once you've printed for one today |
+
+Several *files* on the same day are fine — that's what a full day is. Reprinting a
+**past** day is fine too: a kid who lost Wednesday's sheet is still one day's worth
+of paper. The escape hatch is `--override-day-guard`, which is deliberately verbose,
+warns loudly, and records the override in the ledger.
+
+**Why code and not another paragraph:** this exact rule has now decayed three times
+by living only in a doc — twice as the three-sheets-a-day rule (written here, silently
+contradicted by the schedule table, and the table won), and once on 2026-07-28, when
+a session printed all of Block 1 in a single run — **20 jobs, 10 days of sheets**
+(CUPS jobs 132–151) — while this file already said one day at a time. Two mornings
+then reprinted days that were already sitting in that stack. A doc cannot refuse. The
+guard can.
+
+**Generating ahead is still fine** — building a week of sheets costs nothing but
+tokens and lets themes be planned. It is only *printing* ahead that is banned. Keep
+the two verbs separate: `build_sheets.py` may run for a batch; `print-worksheet.sh`
+runs for one day.
+
 ## The kids
 
 | Name | Grade |
@@ -159,7 +199,13 @@ Sheets written to the baseline: `worksheet.html`, `worksheet-worldcup*.html`, `w
 > `lpstat -l -p Brother_HL_L2305_series` — an empty paper tray shows as
 > `media-needed-error` and holds the job silently.
 
-**Easy path (one command) — `./print-worksheet.sh <file.html>`.** Renders the sheet to a clean 3-page PDF and prints it to the Brother (`Brother_HL_L2305_series`), **answer key included by default** since 2026-07-26. Flags: `--dry-run` (render only), `--date "July 28, 2026"` / `--date today` (stamp the Date field at print time), `--no-key` (kids' sheets only), `--key-only` (just the key), `--printer NAME`.
+> 🔒 **Before any print, re-read [ONE DAY'S WORTH OF PAPER AT A TIME](#-one-days-worth-of-paper-at-a-time) above.** The scripts will refuse a batch or a future day on their own, but the guard is a backstop, not the plan.
+
+**Easy path (one command) — `./print-worksheet.sh <file.html>`.** Renders the sheet to a clean 3-page PDF and prints it to the Brother (`Brother_HL_L2305_series`), **answer key included by default** since 2026-07-26. Flags: `--dry-run` (render only), `--date "July 28, 2026"` / `--date today` (stamp the Date field at print time), `--no-key` (kids' sheets only), `--key-only` (just the key), `--printer NAME`, `--override-day-guard` (break the one-day rule; loud, logged).
+
+**Drills — `./print-drill.sh <drill.pdf> --for kid1 --date today`.** Drills are half the day's paper, and a bare `lp` bypasses every guard, so they get their own guarded entry point. Same flags for `--date`, `--printer`, `--dry-run`, `--override-day-guard`. It also checks the PDF is 2 pages, which catches the `qp` (questions-only, no key) link named in [`DRILLS.md`](DRILLS.md).
+
+- `--dry-run` deliberately does **not** consult the day guard — nothing is printed, so nothing is spent. Use it freely to check page counts on any sheet, any date.
 
 - ⚠️ **Don't "simplify" the `${RANGE_ARGS[@]+...}` guards near the bottom.** macOS ships bash 3.2, where `set -u` treats an *empty* array expansion as unbound and kills the script. That is the default path (no `--key-only`/`--no-key` ⇒ no page range ⇒ empty array), so a plain print died right before `lp` ran — after printing a reassuring `Rendered: 3 pages`. Fixed 2026-07-27.
 
@@ -201,5 +247,7 @@ answer independently and must exit 0 before any of them is printed.
 > CSS literals `print-worksheet.sh` rewrites are still present in every file, which
 > is the failure a hand-edit causes and a page-count check catches only sometimes.
 - `print-worksheet.sh` — render a worksheet to a clean 3-page PDF and print it to the Brother.
+- `print-drill.sh` — print a math-drills.com PDF through the same day guard.
+- `day-guard.sh` — sourced by both print scripts. The one-day-at-a-time enforcement + the print ledger (`.print-ledger.tsv`, gitignored; CUPS is the authoritative record of what came out).
 - `README.md` — human-facing overview.
 - `AGENTS.md` — this file.

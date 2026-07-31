@@ -19,6 +19,16 @@ Each page carries **two** PDF links. Take the one **without** `qp` in the filena
 
 So one link = the kid's page *and* the grown-up's key, which is the same deal the generated sheets give you. Print page 1, keep page 2.
 
+## Printing a drill
+
+**Use [`print-drill.sh`](print-drill.sh), not a bare `lp`.**
+
+```bash
+./print-drill.sh ~/Downloads/multiplication_0301_001.pdf --for kid1 --date today
+```
+
+It routes the drill through the same **one-day-at-a-time guard** as the generated sheets ([`day-guard.sh`](day-guard.sh)): no future-dated paper, and no second target day once you've printed for one today. Drills were **half** the Jul 28 bulk run — 10 of its 20 jobs — and they went out via a bare `lp`, which no guard can see. That's the hole this closes. It also flags a PDF that isn't 2 pages, which is how you catch grabbing the `qp` link by mistake.
+
 ## The sheets — verified 2026-07-27
 
 Every row below was checked live: page resolves, non-`qp` PDF exists and is 2 pages, 10 variants each. A deliberately-bogus slug was checked alongside them and failed, so the check could actually fail.

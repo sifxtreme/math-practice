@@ -16,6 +16,12 @@
 #   ./print-worksheet.sh <file.html> --key-only                 # print ONLY the answer key page (no kid sheets)
 #   ./print-worksheet.sh <file.html> --date "July 28, 2026"     # stamp the Date: field at print time
 #   ./print-worksheet.sh <file.html> --date today               # same, using today's date
+#   ./print-worksheet.sh <file.html> --override-day-guard       # break the one-day-at-a-time rule (loud)
+#
+# ⚠️ ONE DAY'S WORTH OF PAPER AT A TIME. This script refuses to print a sheet
+# dated in the future, and refuses a second target day once you've printed for
+# one today. See day-guard.sh for the why and the escape hatch. Reprinting a
+# PAST day is fine — that's still one day's worth.
 #
 # --date stamps the kids' `Date:` fields in the rendered copy only; your source
 # .html is never touched. That's the point: reprinting an old sheet used to mean
@@ -29,12 +35,16 @@
 
 set -uo pipefail
 
+# shellcheck source=day-guard.sh
+. "$(cd "$(dirname "$0")" && pwd)/day-guard.sh"
+
 CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 PRINTER="Brother_HL_L2305_series"
 DRY=0
 INCLUDE_KEY=1   # default ON since 2026-07-26 — Asif wants the key every time
 KEY_ONLY=0
 STAMP_DATE=""
+OVERRIDE_GUARD=0
 SRC=""
 
 while [ $# -gt 0 ]; do
@@ -42,6 +52,7 @@ while [ $# -gt 0 ]; do
     --printer)  PRINTER="$2"; shift 2 ;;
     --date)     STAMP_DATE="$2"; shift 2 ;;
     --dry-run)  DRY=1; shift ;;
+    --override-day-guard) OVERRIDE_GUARD=1; shift ;;
     --both)     INCLUDE_KEY=1; shift ;;   # kept for compatibility; now the default
     --no-key)   INCLUDE_KEY=0; shift ;;   # kids' sheets only
     --key-only) KEY_ONLY=1; shift ;;
@@ -150,7 +161,15 @@ if [ "$DRY" = "1" ]; then
   # died right before `lp` ran, after printing a reassuring "Rendered: 3 pages".
   echo "[dry-run] would run: lp -d $PRINTER ${RANGE_ARGS[@]+${RANGE_ARGS[*]}} -t \"$base\" \"$PDF\""
   echo "PDF kept at: $PDF"
+  echo "[dry-run] day guard not consulted — it runs only on a real print."
 else
+  # ONE DAY'S WORTH AT A TIME. Refuses (exit 2) before anything reaches `lp`.
+  # No --date means the sheet is for today; the generated sheets ship with a
+  # blank Date field, so there is no baked-in day to read instead.
+  TARGET_DAY="$(to_iso_day "$STAMP_DATE")" || {
+    echo "ERROR: couldn't parse --date '$STAMP_DATE' into a calendar day." >&2; exit 1; }
+  guard_one_day "$TARGET_DAY" "$base" "$OVERRIDE_GUARD"
+
   lp -d "$PRINTER" ${RANGE_ARGS[@]+"${RANGE_ARGS[@]}"} -t "$base" "$PDF"
-  echo "Sent to $PRINTER."
+  echo "Sent to $PRINTER (for $TARGET_DAY)."
 fi
