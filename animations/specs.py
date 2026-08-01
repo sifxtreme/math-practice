@@ -100,39 +100,57 @@ def mult_by_one_digit(top, bot):
         real_d = d * 10 ** j
         digits = list(str(total))
 
-        # ---------- beat 1: WHAT IS IT? The product exists as one number, and the
-        # ---------- animation stops here so it can be looked at before it is split.
-        flash1 = ["b0", f"t{j}"]
+        # The chip is a little expression, not just an answer. When a carry is coming
+        # in it has to show `12 + 2 = 14`, because otherwise the 14 arrives out of
+        # nowhere -- the kid sees a 6, a 2 and a carry, and then a number that has no
+        # visible parentage. Only the cells of the TOTAL carry a `part`; those are the
+        # ones that fly out when it splits.
+        totcells = [{"t": ch, "part": i} for i, ch in enumerate(digits)]
         if carry:
-            flash1.append(f"cy{j-1}")
-        say1 = (f"<b>{bot} × {d} = {raw}.</b>" if carry == 0 else
-                f"<b>{bot} × {d} = {raw}</b>, and <i>now</i> add the carry: "
-                f"<b>{raw} + {carry} = {total}</b>.")
-        if j == 0:
-            why1 = (f"<b>{raw} ones.</b> But a column only holds <i>one</i> digit — "
-                    f"{raw} cannot all stay here. Watch where each half goes next."
-                    if raw >= 10 else
-                    f"<b>{raw} ones</b>, and that fits in a single column.")
+            chip_first = [{"t": ch} for ch in str(raw)]
+            chip_full = ([{"t": ch} for ch in str(raw)]
+                         + [{"t": "+", "op": True},
+                            {"t": str(carry), "arrive": f"cy{j-1}"},
+                            {"t": "=", "op": True}] + totcells)
         else:
-            why1 = (f"That {d} is really <b>{real_d}</b>, so this move is really "
-                    f"<b>{bot} × {real_d} = {raw * 10 ** j}</b>.")
-        if carry:
-            why1 += (f" And the carry is not a {carry} — it is <b>{carry * 10 ** j}</b>, "
-                     f"which is why it gets added in at this column and not the last one.")
-        trap1 = None
-        if carry:
-            wrong = (d + carry) * bot
-            trap1 = (f"<b>Multiply first, then add.</b> Doing it backwards — "
-                     f"{d} + {carry} = {d+carry}, then {d+carry} × {bot} = {wrong} — "
-                     f"is the mistake almost everybody makes here.")
+            chip_first = chip_full = totcells
+        # width of the widest state this chip will reach, so all three beats sit in
+        # the same place instead of the chip hopping when the expression grows
+        reserve = sum(22 if c.get("op") else 30 for c in chip_full) + 32
+
+        # ---------- beat 1: the multiplication, on its own
         steps.append({
-            "label": f"{bot} × {d}", "beat": None, "say": say1, "why": why1,
-            "show": [], "flash": flash1, "bubble": {"digits": digits},
-            "trap": trap1, "modelCell": strip_index.get(j),
-            "dwell": 4.8 if trap1 else 4.0,
+            "label": f"{bot} × {d}", "beat": None,
+            "say": f"<b>{bot} × {d} = {raw}.</b>",
+            "why": ((f"<b>{raw} ones.</b> But a column only holds <i>one</i> digit — "
+                     f"{raw} cannot all stay here. Watch where each half goes next."
+                     if raw >= 10 else
+                     f"<b>{raw} ones</b>, and that fits in a single column.")
+                    if j == 0 else
+                    f"That {d} is really <b>{real_d}</b>, so this move is really "
+                    f"<b>{bot} × {real_d} = {raw * 10 ** j}</b>."),
+            "show": [], "flash": ["b0", f"t{j}"], "bubble": {"cells": chip_first, "reserveW": reserve},
+            "modelCell": strip_index.get(j), "dwell": 3.8,
         })
 
-        # ---------- beat 2: WHERE DOES EACH DIGIT GO?
+        # ---------- beat 2 (only when there IS one): the carry comes down and joins in
+        if carry:
+            steps.append({
+                "label": "+ THE CARRY", "beat": None,
+                "say": f"Now bring in the carry from the last column: "
+                       f"<b>{raw} + {carry} = {total}</b>.",
+                "why": f"That carry is not a {carry} — it is <b>{carry * 10 ** j}</b>. "
+                       f"It came from the column on the right, where it did not fit, and "
+                       f"this is the column where it belongs.",
+                "show": [], "flash": [f"cy{j-1}"],
+                "bubble": {"cells": chip_full, "grewFrom": len(chip_first), "reserveW": reserve},
+                "trap": (f"<b>Multiply first, then add.</b> Doing it backwards — "
+                         f"{d} + {carry} = {d+carry}, then {d+carry} × {bot} = "
+                         f"{(d+carry)*bot} — is the mistake almost everybody makes here."),
+                "modelCell": strip_index.get(j), "dwell": 5.0,
+            })
+
+        # ---------- beat 3: where each digit of the total goes
         show, split = [], []
         if last:
             for i, ch in enumerate(reversed(digits)):
@@ -171,10 +189,17 @@ def mult_by_one_digit(top, bot):
 
         steps.append({
             "label": "WHERE IT GOES", "beat": None, "say": say2, "why": why2,
-            "show": show, "flash": [], "bubble": {"digits": digits}, "split": split,
+            "show": show, "flash": [], "bubble": {"cells": chip_full, "reserveW": reserve}, "split": split,
             "modelCell": strip_index.get(j), "dwell": 4.4,
         })
         carry = 0 if last else total // 10
+
+    # One reserved width for the whole animation, so the chip appears in the same
+    # spot every time instead of moving between digit groups.
+    _mx = max((st["bubble"]["reserveW"] for st in steps if st.get("bubble")), default=0)
+    for st in steps:
+        if st.get("bubble"):
+            st["bubble"]["reserveW"] = _mx
 
     rough = round(top, -1)
     steps.append({
@@ -251,31 +276,47 @@ def mult_two_by_two(top, bot):
 
     def digit_beats(mult, d, carry, j, last, slot, ans_row, ans_pre, carry_pre,
                     hot_key, mrow, tens_scale):
-        """Two beats for one digit of a round: what the product IS, then where each
-        half of it goes. The product has to exist as a number before it is split, or
-        the kid never sees the thing the carry came out of."""
+        """Beats for one digit of a round: the multiplication, then (if a carry is
+        coming in) the carry joining it, then where each half of the total goes. The
+        chip has to show `12 + 2 = 14` or the 14 has no visible parentage."""
         raw = mult * d
         total = raw + carry
         digits = list(str(total))
-        flash1 = [hot_key, f"t{j}"]
+        totcells = [{"t": ch, "part": i} for i, ch in enumerate(digits)]
         if carry:
-            flash1.append(f"{carry_pre}{j-1}")
-        say1 = (f"<b>{mult} × {d} = {raw}.</b>" if carry == 0 else
-                f"<b>{mult} × {d} = {raw}</b>, then add the carry: <b>{raw} + {carry} = {total}</b>.")
-        why1 = (f"<b>{raw}</b> — and a column holds one digit, so watch where each "
-                f"half of it goes."
-                if (j == 0 and tens_scale == 1 and raw >= 10) else
-                f"Really <b>{mult * tens_scale} × {d * 10 ** j} = "
-                f"{raw * 10 ** j * tens_scale}</b>.")
-        trap1 = None
-        if carry:
-            trap1 = (f"<b>Multiply first, then add the carry.</b> Not "
-                     f"{d} + {carry} = {d+carry}, then × {mult} = {(d+carry)*mult}.")
+            chip_first = [{"t": ch} for ch in str(raw)]
+            chip_full = ([{"t": ch} for ch in str(raw)]
+                         + [{"t": "+", "op": True},
+                            {"t": str(carry), "arrive": f"{carry_pre}{j-1}"},
+                            {"t": "=", "op": True}] + totcells)
+        else:
+            chip_first = chip_full = totcells
+        reserve = sum(22 if c.get("op") else 30 for c in chip_full) + 32
+
         steps.append({
-            "label": f"{mult} × {d}", "beat": None, "say": say1, "why": why1,
-            "show": [], "flash": flash1, "bubble": {"digits": digits},
-            "trap": trap1, "modelRow": mrow, "dwell": 4.4 if trap1 else 3.6,
+            "label": f"{mult} × {d}", "beat": None,
+            "say": f"<b>{mult} × {d} = {raw}.</b>",
+            "why": (f"<b>{raw}</b> — and a column holds one digit, so watch where each "
+                    f"half of it goes."
+                    if (j == 0 and tens_scale == 1 and raw >= 10) else
+                    f"Really <b>{mult * tens_scale} × {d * 10 ** j} = "
+                    f"{raw * 10 ** j * tens_scale}</b>."),
+            "show": [], "flash": [hot_key, f"t{j}"], "bubble": {"cells": chip_first, "reserveW": reserve},
+            "modelRow": mrow, "dwell": 3.6,
         })
+
+        if carry:
+            steps.append({
+                "label": "+ THE CARRY", "beat": None,
+                "say": f"Now bring in the carry: <b>{raw} + {carry} = {total}</b>.",
+                "why": f"The carry came from the column on the right, where it did not "
+                       f"fit. This is the column it belongs in.",
+                "show": [], "flash": [f"{carry_pre}{j-1}"],
+                "bubble": {"cells": chip_full, "grewFrom": len(chip_first), "reserveW": reserve},
+                "trap": (f"<b>Multiply first, then add the carry.</b> Not "
+                         f"{d} + {carry} = {d+carry}, then × {mult} = {(d+carry)*mult}."),
+                "modelRow": mrow, "dwell": 4.8,
+            })
 
         show, split = [], []
         if last:
@@ -288,8 +329,7 @@ def mult_two_by_two(top, bot):
             say2 = (f"Nothing left on top, so <b>both digits go down</b>."
                     if len(digits) > 1 else f"Write the <b>{total}</b>.")
             why2 = (f"<b>{total}</b> lands across two columns because that is where its "
-                    f"two place values belong.") if len(digits) > 1 else \
-                   f"One digit, one column."
+                    f"two place values belong.") if len(digits) > 1 else "One digit, one column."
         elif total >= 10:
             ones, tens = total % 10, total // 10
             k_ans, k_car = f"{ans_pre}{slot}", f"{carry_pre}{j}"
@@ -302,9 +342,8 @@ def mult_two_by_two(top, bot):
             say2 = (f"<b>{total}</b> is two digits and only one fits in a box. The "
                     f"<b>{ones}</b> drops <b>down</b>; the <b>{tens}</b> flies <b>up</b> "
                     f"to the shelf above the next column.")
-            why2 = (f"Split it by size: <b>{total} = {ones} + {tens}0</b> in this round's "
-                    f"columns. The part that does not fit moves one column left, which is "
-                    f"the only thing a carry ever is.")
+            why2 = (f"The part that does not fit moves one column left, which is the only "
+                    f"thing a carry ever is.")
         else:
             k_ans = f"{ans_pre}{slot}"
             toks.append({"k": k_ans, "r": ans_row, "c": col(slot), "t": str(total),
@@ -316,7 +355,7 @@ def mult_two_by_two(top, bot):
 
         steps.append({
             "label": "WHERE IT GOES", "beat": None, "say": say2, "why": why2,
-            "show": show, "flash": [], "bubble": {"digits": digits}, "split": split,
+            "show": show, "flash": [], "bubble": {"cells": chip_full, "reserveW": reserve}, "split": split,
             "modelRow": mrow, "dwell": 4.2,
         })
         return 0 if last else total // 10
@@ -387,6 +426,13 @@ def mult_two_by_two(top, bot):
         "why": f"Which is the whole rectangle: <b>{p2} + {p1} = {product}</b>.",
         "show": ans_keys, "flash": ans_keys, "dwell": 3.8, "modelRow": "all",
     })
+
+    # One reserved width for the whole animation, so the chip appears in the same
+    # spot every time instead of moving between digit groups.
+    _mx = max((st["bubble"]["reserveW"] for st in steps if st.get("bubble")), default=0)
+    for st in steps:
+        if st.get("bubble"):
+            st["bubble"]["reserveW"] = _mx
 
     r_top = round(top, -1)
     steps.append({

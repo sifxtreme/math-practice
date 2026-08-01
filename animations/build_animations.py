@@ -234,6 +234,8 @@ header .thesis b{color:var(--ink)}
 /* a digit bound for the shelf already looks like a carry while it flies, so there
    is no colour jump at the handoff */
 .bubble .bd.to-carry{color:var(--warn)}
+.bubble .bop{position:relative;font-size:clamp(17px,3.4vw,25px);font-weight:600;
+  color:var(--mute);padding:0 4px;line-height:1.06;display:block}
 
 /* the pen goes to the spot BEFORE the mark appears, so writing order is visible */
 .pen{position:absolute;left:0;top:0;pointer-events:none;z-index:5;opacity:0;
@@ -529,6 +531,7 @@ function pick(i){
   });
   penXY = null; prevSi = 0;
   buildBoard(a); buildBeats(a); buildModel(a); buildDots(a);
+  reserveChipGutter(a);
   apply(true);
 }
 
@@ -558,6 +561,16 @@ function buildBoard(a){
     s.className = 'tok ' + t.cls; s.dataset.k = t.k; s.textContent = t.t;
     cells.get(key).appendChild(s);
   });
+}
+
+function reserveChipGutter(a){
+  const wrapEl = $('boardwrap');
+  wrapEl.style.paddingRight = '';
+  const need = Math.max(0, ...a.steps.map(s => (s.bubble && s.bubble.reserveW) || 0));
+  if (!need) return;
+  // only steal the space if what's left still comfortably holds the board
+  const avail = wrapEl.clientWidth, board = $('board').getBoundingClientRect().width;
+  if (avail - need - 26 > board + 30) wrapEl.style.paddingRight = (need + 26) + 'px';
 }
 
 function buildBeats(a){
@@ -708,18 +721,53 @@ function inkIn(node, fromBox, myBox){
    travels down-left to the answer row, the carry travels up-left to the shelf. Both
    directions match what you tell the kid. Falls back to above the board when there
    is no room to the right, which is the case on a phone. */
-function showBubble(digits, wrap, boardRect){
-  const bub = $('bubble'), key = digits.join('');
-  if (bub.dataset.key !== key) { bub.dataset.key = key;
-    bub.innerHTML = '<span class="shell"></span>' +
-      digits.map((d, i) => `<span class="bd" data-part="${i}">${d}</span>`).join(''); }
-  const estW = digits.length * 30 + 32;
+function chipKey(cells){ return cells.map(c => c.t).join(''); }
+function showBubble(cells, wrap, boardRect, reserveW){
+  const bub = $('bubble'), key = chipKey(cells);
+  const fresh = bub.dataset.key !== key;
+  if (fresh) { bub.dataset.key = key;
+    bub.innerHTML = '<span class="shell"></span>' + cells.map((c, i) => c.op
+      ? `<span class="bop" data-i="${i}">${c.t}</span>`
+      : `<span class="bd" data-i="${i}"${c.part !== undefined ? ` data-part="${c.part}"` : ''}>${c.t}</span>`
+      ).join(''); }
+  const estW = reserveW || cells.reduce((n, c) => n + (c.op ? 22 : 30), 32);
   const wrapW = $('boardwrap').clientWidth;
   const rightX = boardRect.right - wrap.left + 20;
   const fits = rightX + estW <= wrapW - 4;
   bub.style.left = (fits ? rightX : Math.max(4, (wrapW - estW) / 2)) + 'px';
   bub.style.top  = (fits ? boardRect.top - wrap.top + 6 : 0) + 'px';
   bub.classList.add('up');
+  return fresh;
+}
+/* The carry does not teleport into the sum. It comes down off the shelf and lands in
+   the expression, which is the whole answer to "how did the 14 happen". */
+function growBubble(cells, grewFrom, boxes){
+  const bub = $('bubble');
+  let at = 0;
+  [...bub.querySelectorAll('[data-i]')].filter(n => +n.dataset.i >= grewFrom)
+    .forEach(n => {
+      const cell = cells[+n.dataset.i];
+      const src = cell.arrive && boxes[cell.arrive];
+      if (src) {
+        const to = n.getBoundingClientRect();
+        const dx = (src.left + src.width / 2) - (to.left + to.width / 2);
+        const dy = (src.top + src.height / 2) - (to.top + to.height / 2);
+        play(n, [
+          { transform: `translate(${dx}px,${dy}px) scale(.6)`, opacity: 0, offset: 0 },
+          { transform: `translate(${dx}px,${dy}px) scale(.6)`, opacity: 1, offset: .13 },
+          { transform: `translate(${dx * .4}px,${dy * .4 + 16}px) scale(.82)`, opacity: 1, offset: .6 },
+          { transform: 'none', opacity: 1, offset: 1 },
+        ], { duration: 680, delay: at, easing: T.ease.arc, fill: 'backwards' });
+        // nothing after the carry may appear until the carry has actually landed —
+        // otherwise the chip reads "12 + = 14" for a beat, which is nonsense
+        at += 620;
+      } else {
+        play(n, [{ opacity: 0, transform: 'translateX(-10px) scale(.78)' },
+                 { opacity: 1, transform: 'none' }],
+             { duration: 260, delay: at, easing: T.ease.ink, fill: 'backwards' });
+        at += 110;
+      }
+    });
 }
 function splitBubble(split, partBoxes, el, box){
   const bub = $('bubble'), shell = bub.querySelector('.shell');
@@ -788,18 +836,20 @@ function apply(instant){
   const wrap = $('boardwrap').getBoundingClientRect();
   const boardRect = board.getBoundingClientRect();
   const box = {};
-  new Set([...newly, ...Object.values(flyFrom)]).forEach(k => {
+  const arriving = (cur.bubble && cur.bubble.cells || []).filter(c => c.arrive).map(c => c.arrive);
+  new Set([...newly, ...Object.values(flyFrom), ...arriving]).forEach(k => {
     if (el[k]) box[k] = el[k].getBoundingClientRect();
   });
   // The bubble is already on screen from the compute beat, so its parts can be
   // measured here in the read phase. If it is NOT up (someone jumped straight to
   // this step), there is nothing to fly and the marks simply appear.
   const bub = $('bubble');
-  const bubKey = cur.bubble ? cur.bubble.digits.join('') : null;
+  const bubKey = cur.bubble ? cur.bubble.cells.map(c => c.t).join('') : null;
   const canSplit = !!(cur.split && !instant && !back && !REDUCED
                       && bub.classList.contains('up') && bub.dataset.key === bubKey);
-  const partBoxes = canSplit
-    ? [...bub.querySelectorAll('.bd')].map(n => n.getBoundingClientRect()) : [];
+  const partBoxes = {};
+  if (canSplit) bub.querySelectorAll('.bd[data-part]').forEach(n => {
+    partBoxes[+n.dataset.part] = n.getBoundingClientRect(); });
 
   /* ---------- WRITE PHASE ---------- */
   for (const k in el) {
@@ -810,8 +860,11 @@ function apply(instant){
 
   if (!REDUCED && !instant && !back) newly.forEach(k => holdHidden(el[k]));
 
-  if (cur.bubble && !canSplit) showBubble(cur.bubble.digits, wrap, boardRect);
-  else if (!cur.bubble) { bub.classList.remove('up'); bub.dataset.key = ''; }
+  if (cur.bubble && !canSplit) {
+    const fresh = showBubble(cur.bubble.cells, wrap, boardRect, cur.bubble.reserveW);
+    if (fresh && cur.bubble.grewFrom != null && !instant && !back && !REDUCED)
+      growBubble(cur.bubble.cells, cur.bubble.grewFrom, box);
+  } else if (!cur.bubble) { bub.classList.remove('up'); bub.dataset.key = ''; }
 
   const litFlash = () => flash.forEach(k => {
     if (el[k] && el[k].classList.contains('on')) el[k].classList.add('flash');

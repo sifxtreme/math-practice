@@ -158,43 +158,93 @@ def verify_model(a, x, y, kind):
 
 
 def verify_bubbles(a, top, bot):
-    """The product bubble is the number the algorithm normally hides. Two things must
-    hold or it teaches a lie: the sequence of bubbles must be the real running products,
-    and the digit that flies out of the bubble must be the digit that lands on the board."""
+    """The chip is a little expression, and it is the only place the intermediate
+    numbers are ever visible. Three things have to hold or it teaches a lie:
+      - the arithmetic written in the chip is TRUE  (raw + carry == total)
+      - the carry it pulls in is the digit actually sitting on the shelf
+      - the digit that flies out of the chip is the digit that lands on the board
+    """
     toks = {t["k"]: t for t in a["toks"]}
 
-    # --- every bubble digit must physically land where the split says it does
+    def cells(st):
+        return (st.get("bubble") or {}).get("cells") or []
+
     for i, st in enumerate(a["steps"]):
+        cs = cells(st)
+        if not cs:
+            check(not st.get("split"), f"[{a['id']}] step {i} splits with no chip to split")
+            continue
+
+        # --- the chip's own arithmetic, read straight off the cells
+        parts = [c for c in cs if "part" in c]
+        if parts:
+            idx = [c["part"] for c in parts]
+            check(idx == list(range(len(parts))),
+                  f"[{a['id']}] step {i} chip parts are not 0..n", str(idx))
+            total = int("".join(c["t"] for c in parts))
+            ops = [k for k, c in enumerate(cs) if c.get("op")]
+            if ops:
+                lhs = int("".join(c["t"] for c in cs[:ops[0]]))
+                mid = [c for c in cs if c.get("arrive")]
+                check(len(mid) == 1, f"[{a['id']}] step {i} chip has an operator but nothing arriving")
+                if mid:
+                    check(lhs + int(mid[0]["t"]) == total,
+                          f"[{a['id']}] step {i} chip claims {lhs} + {mid[0]['t']} = {total}")
+                    src = mid[0]["arrive"]
+                    check(src in toks, f"[{a['id']}] step {i} carry arrives from unknown mark {src}")
+                    if src in toks:
+                        check(toks[src]["t"] == mid[0]["t"],
+                              f"[{a['id']}] step {i} pulls a {mid[0]['t']} off the shelf, "
+                              f"but {src} reads {toks[src]['t']!r}")
+                check(st.get("bubble", {}).get("grewFrom") is None
+                      or st["bubble"]["grewFrom"] == ops[0],
+                      f"[{a['id']}] step {i} grows from the wrong cell")
+
+        # --- every flying digit must be the digit that lands
         if st.get("split"):
-            check(bool(st.get("bubble")), f"[{a['id']}] step {i} splits with no bubble to split")
-            digits = (st.get("bubble") or {}).get("digits", [])
             seen = set()
             for sp in st["split"]:
-                check(0 <= sp["part"] < len(digits),
-                      f"[{a['id']}] step {i} flies part {sp['part']} of a {len(digits)}-digit bubble")
+                match = [c for c in cs if c.get("part") == sp["part"]]
+                check(len(match) == 1,
+                      f"[{a['id']}] step {i} flies part {sp['part']}, which the chip has "
+                      f"{len(match)} of")
                 check(sp["to"] in toks, f"[{a['id']}] step {i} flies to unknown mark {sp['to']}")
-                if 0 <= sp["part"] < len(digits) and sp["to"] in toks:
-                    check(digits[sp["part"]] == toks[sp["to"]]["t"],
-                          f"[{a['id']}] step {i}: bubble digit {digits[sp['part']]!r} flies to "
+                if match and sp["to"] in toks:
+                    check(match[0]["t"] == toks[sp["to"]]["t"],
+                          f"[{a['id']}] step {i}: chip digit {match[0]['t']!r} flies to "
                           f"{sp['to']} which reads {toks[sp['to']]['t']!r}")
-                seen.add(sp["part"])
                 check(sp["to"] in st.get("show", []),
                       f"[{a['id']}] step {i} flies to {sp['to']} but never reveals it")
-            check(seen == set(range(len(digits))),
-                  f"[{a['id']}] step {i} leaves bubble digits unaccounted for", str(sorted(seen)))
+                seen.add(sp["part"])
+            check(seen == {c["part"] for c in cs if "part" in c},
+                  f"[{a['id']}] step {i} leaves chip digits unaccounted for", str(sorted(seen)))
 
-    # --- the bubbles, in order, must be the real running products
-    got = [int("".join(st["bubble"]["digits"]))
-           for st in a["steps"] if st.get("bubble") and not st.get("split")]
+    # --- the sequence of totals must be the real running products
+    got = [int("".join(c["t"] for c in cells(st) if "part" in c))
+           for st in a["steps"] if st.get("split")]
     want, tdig = [], [int(c) for c in str(top)]
     rounds = [bot] if bot < 10 else [bot % 10, bot // 10]
     for m in rounds:
         carry = 0
         for j, d in enumerate(reversed(tdig)):
-            total = m * d + carry
-            want.append(total)
-            carry = 0 if j == len(tdig) - 1 else total // 10
-    check(got == want, f"[{a['id']}] bubble sequence", f"got {got}, want {want}")
+            t = m * d + carry
+            want.append(t)
+            carry = 0 if j == len(tdig) - 1 else t // 10
+    check(got == want, f"[{a['id']}] chip totals in order", f"got {got}, want {want}")
+
+    # --- every multiplication that takes a carry must SHOW the addition happening
+    n_add = sum(1 for st in a["steps"]
+                if (st.get("bubble") or {}).get("grewFrom") is not None)
+    n_need = 0
+    for m in rounds:
+        carry = 0
+        for j, d in enumerate(reversed(tdig)):
+            t = m * d + carry
+            if carry:
+                n_need += 1
+            carry = 0 if j == len(tdig) - 1 else t // 10
+    check(n_add == n_need,
+          f"[{a['id']}] {n_need} carries get added in, but only {n_add} chips show it")
 
 
 # ------------------------------------------------------------ structural

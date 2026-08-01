@@ -67,12 +67,23 @@ computed 42 and wrote the `2` and the `4` into two places **in the same instant*
 42 never existed. A kid watching it sees two digits appear from nowhere and has no reason
 to believe they are halves of the same thing.
 
-So each digit of a multiplication is now **two steps**, not one:
+He came back to it the same day, pointing at `6 × 2` with a carry of 2 waiting on the
+shelf: *"we are just showing 3 numbers then 14 — how did the 14 happen? that's necessary
+for the kids to understand."* Same gap, one level down. The chip jumped straight to the
+total, so the `12` never existed and neither did the `+ 2`.
+
+So each digit of a multiplication is now **two steps — three when a carry is coming in**:
 
 | beat | what happens |
 |---|---|
-| **`6 × 7`** | the product appears as a **whole number in a chip** beside the board, and stops there. Nothing else moves. You can talk about it, then press space. |
-| **`WHERE IT GOES`** | the chip's outline fades and its two digits **fly apart** — the `2` down-left into the ones column, the `4` up-left onto the shelf |
+| **`6 × 2`** | the product appears as a **whole number in a chip** beside the board, and stops there. Nothing else moves. You can talk about it, then press space. |
+| **`+ THE CARRY`** *(only when there is one)* | the chip grows into a written expression, in order: `12` → `12 +` → the carry **flies down off the shelf** into the gap → `12 + 2` → `=` → `14`. Nothing appears out of sequence; the `= 14` waits until the carry has landed. |
+| **`WHERE IT GOES`** | the chip's outline fades and the digits of the total **fly apart** — the `4` down-left into its column, the `1` up-left onto the shelf |
+
+The chip is an expression, not a number, and only the cells of the **total** can fly out.
+That is why `verify_animations.py` can assert the chip's own arithmetic is true: it reads
+`12` and `2` and `14` straight off the cells and checks `12 + 2 == 14`, and separately
+that the `2` it pulled in is the digit actually sitting on `cy1`.
 
 Two details that matter:
 
@@ -81,13 +92,18 @@ Two details that matter:
   point at it and say "that one's leaving" before it does.
 - The directions are real. The chip sits to the **right** of the board precisely so the
   ones digit travels **down** and the carry travels **up**, matching what you say out loud.
-  On a phone, where there is no room to the right, it falls back to above the board.
+  The board reserves a gutter for it and sits left of centre; without that the chip falls
+  back to sitting *above* the board, and then the carry flies **down** to its shelf — the
+  opposite of what you just said. On a phone there is genuinely no room, so it does sit
+  above; the carry's travel there is 14px, which reads as sideways rather than down.
+- One reserved width for the whole animation, so the chip appears in **the same spot every
+  time** rather than hopping as the expression grows.
 
 The `why` line under it does the place-value half: *"Split it by size: 42 = 2 + 40. The 2
 fits in the ones column. The 40 does not — so it moves one column left, to where 40
 belongs. **That is all a carry is.**"*
 
-This roughly doubles the step count on the multiplication tabs (kid1 5 → 8, kid2 11 → 15).
+This doubles the step count on the multiplication tabs (kid1 5 → 10, kid2 11 → 17).
 That is the point — the linger is under your thumb, not on a timer.
 
 ## The model — the same sum drawn a second way
