@@ -163,7 +163,7 @@ header .thesis b{color:var(--ink)}
 .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
 .tab{font:inherit;font-size:14px;cursor:pointer;background:var(--card);color:var(--mute);
      border:1.5px solid var(--line);border-radius:10px;padding:8px 14px;text-align:left;
-     transition:.16s;line-height:1.25}
+     transition:background-color .16s ease,border-color .16s ease,color .16s ease;line-height:1.25}
 .tab b{display:block;font-size:15px;color:var(--ink)}
 .tab:hover{border-color:var(--accent)}
 .tab[aria-selected=true]{background:var(--accent);border-color:var(--accent);color:#fff;
@@ -190,9 +190,10 @@ header .thesis b{color:var(--ink)}
        --cw:clamp(38px,8.4vw,58px)}
 .board .cell{display:flex;align-items:flex-end;justify-content:center;gap:3px;min-height:1px}
 .board .tok{font-size:clamp(28px,6.4vw,44px);font-weight:600;line-height:1.06;
-     opacity:0;transform:translateY(-7px) scale(.8);position:relative;
-     transition:opacity .26s ease,transform .32s cubic-bezier(.18,.9,.26,1.1)}
-.board .tok.on{opacity:1;transform:none}
+     opacity:0;position:relative}
+/* `.on` is STATE, not motion. The appearing is driven by the Web Animations API
+   so each mark can be sequenced behind the pen instead of all landing at once. */
+.board .tok.on{opacity:1}
 .board .tok.op{color:var(--mute);font-weight:400}
 .board .tok.hot,.board .tok.hot2{color:var(--accent)}
 .board .tok.ans,.board .tok.quo{color:var(--accent)}
@@ -202,19 +203,6 @@ header .thesis b{color:var(--ink)}
 .board .tok.zero{color:var(--warn)}
 .board .tok.rlab{font-size:clamp(18px,3.6vw,26px);font-weight:700;color:var(--accent);
           align-self:center;padding-left:4px}
-.board .tok.drop.on{animation:dropIn .55s cubic-bezier(.2,.85,.3,1.15)}
-@keyframes dropIn{from{transform:translateY(-52px) scale(.72);opacity:0}to{transform:none;opacity:1}}
-.board .tok.zero.on{animation:pop .6s cubic-bezier(.2,.9,.3,1.35)}
-@keyframes pop{0%{transform:scale(.15);opacity:0}55%{transform:scale(1.35)}100%{transform:none;opacity:1}}
-
-/* a carry does not fade in where it lands — it TRAVELS there from the digit that
-   produced it, which is the one bit of motion that carries real meaning */
-.board .tok.flying{animation:fly .72s cubic-bezier(.35,.05,.2,1)}
-@keyframes fly{
-  0%  {transform:translate(var(--fx),var(--fy)) scale(1.5);opacity:0}
-  18% {transform:translate(var(--fx),var(--fy)) scale(1.5);opacity:1}
-  100%{transform:none;opacity:1}
-}
 .board .tok.flash::before{content:"";position:absolute;inset:-6px -7px;border-radius:8px;
      border:2.5px solid var(--accent);animation:ring 1.15s ease-in-out infinite}
 @keyframes ring{0%,100%{opacity:.28;transform:scale(.97)}50%{opacity:1;transform:scale(1.03)}}
@@ -224,7 +212,7 @@ header .thesis b{color:var(--ink)}
      animation:strike .3s ease-out forwards}
 @keyframes strike{to{transform:rotate(-16deg) scaleX(1)}}
 
-.decor{width:100%;opacity:0;transition:opacity .25s}
+.decor{width:100%;opacity:0;transition:opacity .22s ease}
 .decor.on{opacity:1}
 .decor.rule{border-top:3px solid var(--ink);height:0;align-self:center}
 .decor.bracket{border-top:3.5px solid var(--ink);border-left:3.5px solid var(--ink);
@@ -232,8 +220,8 @@ header .thesis b{color:var(--ink)}
      margin-left:-6px;width:calc(100% + 6px)}
 
 /* the pen goes to the spot BEFORE the mark appears, so writing order is visible */
-.pen{position:absolute;left:0;top:0;pointer-events:none;z-index:5;
-     transition:transform .38s cubic-bezier(.3,.7,.25,1);opacity:0}
+.pen{position:absolute;left:0;top:0;pointer-events:none;z-index:5;opacity:0;
+     will-change:transform,opacity}
 .pen.up{opacity:1}
 .pen .body{fill:var(--accent)}
 .pen .nib{fill:var(--ink)}
@@ -242,7 +230,8 @@ header .thesis b{color:var(--ink)}
 .beats{display:flex;gap:6px;justify-content:center;margin-top:4px}
 .beat{font-family:ui-monospace,monospace;font-size:11px;font-weight:700;letter-spacing:.6px;
       border:1.5px solid var(--line);color:var(--mute);border-radius:7px;padding:4px 11px;
-      transition:.2s}
+      transition:background-color .2s ease,border-color .2s ease,color .2s ease,transform .2s
+        cubic-bezier(.2,.9,.3,1.4)}
 .beat.now{background:var(--accent);border-color:var(--accent);color:#fff;transform:scale(1.09)}
 
 /* ---------- narration, right under the board ---------- */
@@ -267,7 +256,8 @@ header .thesis b{color:var(--ink)}
 .area{display:grid;gap:0;font-family:ui-monospace,monospace;max-width:560px}
 .acell{position:relative;background:var(--accent-soft);border:1.5px solid var(--line);
        margin:-0.75px;min-height:52px;padding:6px 4px;display:flex;flex-direction:column;
-       align-items:center;justify-content:center;transition:.25s;opacity:.45}
+       align-items:center;justify-content:center;opacity:.45;
+       transition:opacity .28s ease,background-color .28s ease,outline-color .28s ease}
 /* the slices share edges — it is ONE rectangle cut up, not four tiles */
 .acell.lit{opacity:1;background:var(--card);z-index:2;
        outline:2.5px solid var(--accent);outline-offset:-2.5px}
@@ -276,13 +266,14 @@ header .thesis b{color:var(--ink)}
 .ahead{font-family:ui-monospace,monospace;font-size:13px;font-weight:700;color:var(--accent);
        display:flex;align-items:center;justify-content:center;padding:2px}
 .asum{font-family:ui-monospace,monospace;font-size:13px;color:var(--mute);
-      display:flex;align-items:center;padding-left:8px;white-space:nowrap;transition:.25s;opacity:.45}
+      display:flex;align-items:center;padding-left:8px;white-space:nowrap;opacity:.45;
+      transition:opacity .28s ease,color .28s ease}
 .asum.lit{opacity:1;color:var(--accent);font-weight:700}
 
 .ladder{font-family:ui-monospace,monospace;font-size:16px;line-height:1.65;
         border-collapse:collapse}
-.ladder td{padding:2px 10px;text-align:right;transition:.25s}
-.ladder tr{opacity:.42;transition:.25s}
+.ladder td{padding:2px 10px;text-align:right;transition:color .25s ease}
+.ladder tr{opacity:.42;transition:opacity .25s ease}
 .ladder tr.lit{opacity:1}
 .ladder tr.lit td.note{color:var(--accent);font-weight:700}
 .ladder td.note{text-align:left;font-size:12.5px;color:var(--mute);white-space:nowrap}
@@ -298,7 +289,8 @@ header .thesis b{color:var(--ink)}
 /* ---------- controls ---------- */
 .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
 button.ctl{font:inherit;font-size:14.5px;cursor:pointer;border-radius:9px;padding:9px 15px;
-     border:1.5px solid var(--line);background:var(--card);color:var(--ink);transition:.14s}
+     border:1.5px solid var(--line);background:var(--card);color:var(--ink);
+     transition:border-color .14s ease,color .14s ease,opacity .14s ease}
 button.ctl:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
 button.ctl:disabled{opacity:.35;cursor:default}
 button.ctl.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;
@@ -309,7 +301,8 @@ button.ctl.primary:hover{opacity:.9;color:#fff}
      border:1.5px solid var(--line);background:var(--card);color:var(--ink)}
 .dots{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}
 .dot{flex:1 1 12px;min-width:10px;height:7px;border-radius:4px;background:var(--line);
-     border:0;padding:0;cursor:pointer;transition:.18s}
+     border:0;padding:0;cursor:pointer;
+     transition:background-color .18s ease,opacity .18s ease,transform .18s ease}
 .dot.done{background:var(--accent);opacity:.42}
 .dot.now{background:var(--accent);opacity:1;transform:scaleY(1.6)}
 .hint{font-size:12.5px;color:var(--mute);margin-top:9px}
@@ -342,7 +335,6 @@ footer{margin-top:26px;font-size:12.5px;color:var(--mute);text-align:center}
 
 @media (prefers-reduced-motion:reduce){
   .board .tok,.decor,.pen,.acell,.ladder tr{transition:none}
-  .board .tok.drop.on,.board .tok.zero.on,.board .tok.flying,
   .board .tok.flash::before,.board .tok.struck::after{animation:none}
   .board .tok.struck::after{transform:rotate(-16deg) scaleX(1)}
   .board .tok.flash::before{opacity:1}
@@ -481,6 +473,7 @@ function pick(i){
     };
     $('tryRows').appendChild(row);
   });
+  penXY = null; prevSi = 0;
   buildBoard(a); buildBeats(a); buildModel(a); buildDots(a);
   apply(true);
 }
@@ -582,38 +575,189 @@ function buildDots(a){
   });
 }
 
+/* ---------------- motion system ----------------
+   One timing table so the whole page shares a feel. Everything animated below is
+   transform/opacity only, so it stays on the compositor thread.
+
+   The rule that makes it read as WRITING rather than as fading boxes: the pen
+   arrives FIRST, the mark appears under the nib SECOND. v1 ran both at once,
+   which is why the pen looked like decoration floating near a digit instead of
+   the thing that made it. Marks within a step are also chained, not simultaneous —
+   a hand writes one thing at a time. */
+const T = {
+  ink: 165, inkOut: 95, drop: 450, arc: 610,
+  travelMin: 95, travelMax: 330, pxPerMs: 0.62,
+  chain: 0.5,     // how much the next mark overlaps the previous one settling
+  sweep: 50,      // stagger when a step PLACES many marks (setup) rather than writing them
+  ease: {
+    travel: 'cubic-bezier(.45,.05,.2,1)',
+    ink:    'cubic-bezier(.2,.9,.3,1)',
+    arc:    'cubic-bezier(.4,.02,.2,1)',
+    out:    'cubic-bezier(.4,0,1,1)',
+  },
+};
+let running = [], timers = [], pending = [], penXY = null, prevSi = 0;
+
+function haltMotion(){
+  timers.forEach(clearTimeout); timers = [];
+  // finish (not cancel) so a fast Next lands everything on its final state
+  running.forEach(an => { try { an.finish(); } catch (e) {} });
+  running = [];
+  // anything still waiting its turn must not stay hidden
+  pending.forEach(n => { n.style.opacity = ''; });
+  pending = [];
+}
+/* `.on` lands in the write phase but the animation is created later, on a timer.
+   Without this the mark is painted at full opacity in the gap and then restarts
+   from zero — a visible double-take on every single step. */
+function holdHidden(node){ if (node) { node.style.opacity = '0'; pending.push(node); } }
+function release(node){
+  if (!node) return;
+  node.style.opacity = '';
+  pending = pending.filter(n => n !== node);
+}
+function play(el, frames, opts){
+  const an = el.animate(frames, opts);
+  running.push(an);
+  an.finished.catch(() => {}).then(() => { running = running.filter(x => x !== an); });
+  return an;
+}
+function after(ms, fn){ timers.push(setTimeout(fn, ms)); }
+
+function inkIn(node, fromBox, myBox){
+  if (!node) return;
+  release(node);
+  if (fromBox && myBox) {                       // a carry: it ARCS in from the digit that made it
+    const dx = fromBox.left - myBox.left, dy = fromBox.top - myBox.top;
+    return play(node, [
+      { transform: `translate(${dx}px,${dy}px) scale(1.45)`, opacity: 0, offset: 0 },
+      { transform: `translate(${dx}px,${dy}px) scale(1.45)`, opacity: 1, offset: .14 },
+      { transform: `translate(${dx * .45}px,${dy * .55 - 22}px) scale(1.18)`, opacity: 1, offset: .58 },
+      { transform: 'none', opacity: 1, offset: 1 },
+    ], { duration: T.arc, easing: T.ease.arc, fill: 'backwards' });
+  }
+  if (node.classList.contains('drop'))
+    return play(node, [{ transform: 'translateY(-54px) scale(.72)', opacity: 0 },
+                       { transform: 'none', opacity: 1 }],
+                { duration: T.drop, easing: T.ease.ink, fill: 'backwards' });
+  if (node.classList.contains('zero'))
+    return play(node, [{ transform: 'scale(.2)', opacity: 0, offset: 0 },
+                       { transform: 'scale(1.3)', opacity: 1, offset: .62 },
+                       { transform: 'none', opacity: 1, offset: 1 }],
+                { duration: T.arc * .8, easing: T.ease.ink, fill: 'backwards' });
+  return play(node, [{ transform: 'translateY(-8px) scale(.86)', opacity: 0 },
+                     { transform: 'none', opacity: 1 }],
+              { duration: T.ink, easing: T.ease.ink, fill: 'backwards' });
+}
+
+function penTarget(b, wrap){
+  return { x: b.left - wrap.left + b.width / 2 + 7, y: b.top - wrap.top + b.height - 7 };
+}
+function parkPen(pt, show){
+  const pen = $('pen');
+  if (!show || !pt) { pen.classList.remove('up'); return; }
+  pen.style.transform = `translate(${pt.x - 2}px, ${pt.y - 2}px)`;
+  pen.classList.add('up');
+  penXY = pt;
+}
+
 function apply(instant){
+  haltMotion();
   const a = A[ai], cur = a.steps[si];
+  const back = si < prevSi;
+  const board = $('board'), pen = $('pen');
+
   const show = new Set(), struck = new Set();
   a.steps.slice(0, si + 1).forEach(s => {
     (s.show || []).forEach(k => show.add(k));
     (s.strike || []).forEach(k => struck.add(k));
   });
   const flash = new Set(cur.flash || []);
-  const board = $('board');
-  const newly = (cur.show || []).filter(k => !board.querySelector(`[data-k="${k}"]`)?.classList.contains('on'));
 
-  board.querySelectorAll('[data-k]').forEach(el => {
-    const k = el.dataset.k;
-    el.classList.toggle('on', show.has(k));
-    el.classList.toggle('flash', show.has(k) && flash.has(k));
-    el.classList.toggle('struck', struck.has(k));
-    el.classList.remove('flying');
+  /* ---------- READ PHASE ----------
+     Every measurement happens before any write. Interleaving them is what forces
+     a synchronous layout, and it is invisible to every data check we have. */
+  const el = {};
+  board.querySelectorAll('[data-k]').forEach(n => { el[n.dataset.k] = n; });
+  const wasOn = {};
+  for (const k in el) wasOn[k] = el[k].classList.contains('on');
+  const newly  = (cur.show || []).filter(k => el[k] && !wasOn[k]);
+  const leaving = Object.keys(el).filter(k => wasOn[k] && !show.has(k));
+
+  const flyFrom = {};
+  (cur.fly || []).forEach(f => { flyFrom[f.k] = f.from; });
+  const wrap = $('boardwrap').getBoundingClientRect();
+  const box = {};
+  new Set([...newly, ...Object.values(flyFrom)]).forEach(k => {
+    if (el[k]) box[k] = el[k].getBoundingClientRect();
   });
 
-  // a carry travels from the digit that made it, up to its shelf
-  if (!REDUCED) (cur.fly || []).forEach(f => {
-    const to = board.querySelector(`[data-k="${f.k}"]`);
-    const from = board.querySelector(`[data-k="${f.from}"]`);
-    if (!to || !from) return;
-    const a1 = from.getBoundingClientRect(), a2 = to.getBoundingClientRect();
-    to.style.setProperty('--fx', (a1.left - a2.left) + 'px');
-    to.style.setProperty('--fy', (a1.top - a2.top) + 'px');
-    void to.offsetWidth;
-    to.classList.add('flying');
+  /* ---------- WRITE PHASE ---------- */
+  for (const k in el) {
+    el[k].classList.toggle('on', show.has(k));
+    el[k].classList.toggle('struck', struck.has(k));
+    el[k].classList.remove('flash');
+  }
+
+  if (!REDUCED && !instant && !back) newly.forEach(k => holdHidden(el[k]));
+
+  const litFlash = () => flash.forEach(k => {
+    if (el[k] && el[k].classList.contains('on')) el[k].classList.add('flash');
   });
 
-  movePen(newly, instant);
+  if (REDUCED || instant) {
+    litFlash();
+    parkPen(newly.length ? penTarget(box[newly[0]], wrap) : penXY,
+            !REDUCED && newly.length > 0 && si > 0);
+  } else if (back) {
+    // undoing is not writing — no pen, and the marks lift off quickly
+    leaving.forEach(k => play(el[k], [{ opacity: 1, transform: 'none' },
+                                      { opacity: 0, transform: 'scale(.88)' }],
+                              { duration: T.inkOut, easing: T.ease.out }));
+    litFlash();
+    pen.classList.remove('up');
+  } else if (!newly.length) {
+    litFlash();
+    pen.classList.remove('up');
+  } else if (newly.length > 3 || si === 0) {
+    // the problem being PLACED on the page, not written by hand — a quick sweep
+    pen.classList.remove('up');
+    newly.forEach((k, i) => after(i * T.sweep, () =>
+      inkIn(el[k], box[flyFrom[k]], box[k])));
+    after(newly.length * T.sweep + T.ink + 60, litFlash);
+    penXY = null;
+  } else {
+    let cursor = penXY, t = 0;
+    newly.forEach(k => {
+      if (flyFrom[k]) {                 // arcs up from the digit that made it — no pen
+        const at = t;
+        after(at, () => inkIn(el[k], box[flyFrom[k]], box[k]));
+        t = at + T.ink * T.chain;
+        return;
+      }
+      const pt = penTarget(box[k], wrap);
+      const from = cursor;
+      const dist = from ? Math.hypot(pt.x - from.x, pt.y - from.y) : 0;
+      const dur = from ? Math.min(T.travelMax, Math.max(T.travelMin, dist / T.pxPerMs))
+                       : T.travelMin;
+      const at = t;
+      after(at, () => {
+        pen.classList.add('up');
+        play(pen, [
+          { transform: `translate(${(from ? from.x : pt.x) - 2}px, ${(from ? from.y : pt.y) - 2}px)`,
+            opacity: from ? 1 : 0 },
+          { transform: `translate(${pt.x - 2}px, ${pt.y - 2}px)`, opacity: 1 },
+        ], { duration: dur, easing: T.ease.travel, fill: 'forwards' });
+      });
+      // the mark lands only once the nib is there
+      after(at + dur, () => inkIn(el[k], box[flyFrom[k]], box[k]));
+      cursor = pt;
+      t = at + dur + T.ink * T.chain;
+    });
+    penXY = cursor;
+    after(t + 60, litFlash);
+  }
+  prevSi = si;
 
   $('badge').textContent = cur.label;
   $('say').innerHTML = cur.say;
@@ -626,11 +770,11 @@ function apply(instant){
     b.classList.toggle('now', b.dataset.beat === cur.beat));
 
   const mr = cur.modelRow, mc = cur.modelCell;
-  $('model').querySelectorAll('.acell,.asum').forEach(el => {
+  $('model').querySelectorAll('.acell,.asum').forEach(node => {
     const lit = mr === 'all' || mc === 'all'
-      || (mr !== undefined && mr !== null && +el.dataset.r === mr)
-      || (mc !== undefined && mc !== null && el.classList.contains('acell') && +el.dataset.c === mc);
-    el.classList.toggle('lit', !!lit);
+      || (mr !== undefined && mr !== null && +node.dataset.r === mr)
+      || (mc !== undefined && mc !== null && node.classList.contains('acell') && +node.dataset.c === mc);
+    node.classList.toggle('lit', !!lit);
   });
   $('model').querySelectorAll('tr[data-r]').forEach(tr =>
     tr.classList.toggle('lit', mr === 'all' || +tr.dataset.r === mr));
@@ -642,21 +786,6 @@ function apply(instant){
   $('back').disabled = si === 0;
   $('next').disabled = si === a.steps.length - 1;
   if (playing && si === a.steps.length - 1) stop();
-}
-
-function movePen(newly, instant){
-  const pen = $('pen'), wrap = $('boardwrap');
-  if (REDUCED || !newly.length) { pen.classList.remove('up'); return; }
-  const el = $('board').querySelector(`[data-k="${newly[0]}"]`);
-  if (!el) { pen.classList.remove('up'); return; }
-  const b = el.getBoundingClientRect(), w = wrap.getBoundingClientRect();
-  // tip sits just below-right of the mark, body hanging away from it
-  const x = b.left - w.left + b.width / 2 + 6;
-  const y = b.top - w.top + b.height - 6;
-  if (instant) pen.style.transition = 'none';
-  pen.style.transform = `translate(${x - 2}px, ${y - 2}px)`;
-  if (instant) { void pen.offsetWidth; pen.style.transition = ''; }
-  pen.classList.add('up');
 }
 
 function step(n){
@@ -687,7 +816,11 @@ $('next').onclick = () => { stop(); step(1); };
 $('back').onclick = () => { stop(); step(-1); };
 $('restart').onclick = () => { stop(); si = 0; apply(); };
 $('speed').onchange = () => { if (playing) { clearTimeout(timer); tick(); } };
-addEventListener('resize', () => apply(true));
+let rAF = 0;
+addEventListener('resize', () => {
+  if (rAF) return;
+  rAF = requestAnimationFrame(() => { rAF = 0; penXY = null; apply(true); });
+});
 
 addEventListener('keydown', e => {
   if (e.target.tagName === 'SELECT') return;

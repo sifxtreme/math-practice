@@ -70,15 +70,32 @@ by using ... rectangular arrays and/or area models"* — and v1 had none of it.
 
 ## The motion
 
-- **A pen leads every mark.** It travels to the spot *before* the digit appears, so writing
-  *order* is visible, not just the result. Its nib lands on the mark; the body hangs
-  down-right so it never covers what it just wrote.
-- **Carries fly.** A carry does not fade in where it lands — it travels from the digit that
-  produced it up to its shelf. That is the one bit of motion that carries real meaning.
-- **Brought-down digits drop** from the dividend.
-- **D · M · S · B lights up** on the division animations so the four moves have a beat.
+**It was never a performance problem.** `perf-check.mjs` measured the first version at
+`apply()` p95 of 0.8–1.4ms against an 8.3ms frame budget, zero long tasks, zero forced
+reflows. Nothing was dropping frames. Throwing `will-change` and GPU hints at it would
+have changed nothing anybody could see. What was wrong was **choreography**:
+
+| defect | fix |
+|---|---|
+| The pen and the ink moved **at the same time**, so the mark appeared before the pen got there — the pen read as decoration floating near a digit, not the thing that made it | the pen **arrives first**, the mark appears under the nib second |
+| Every mark in a step landed in **the same instant** | marks are **chained** — one after another, travel time scaled by distance |
+| `transition: all` on tabs, dots, beats and area cells | explicit property lists; only `transform`/`opacity` on the board, so it stays on the compositor |
+| A carry **faded in** where it landed | it **arcs** up from the digit that produced it, lofting through a raised mid-point |
+| The pen travelled to carries too | carries loft in on their own; the pen only visits marks a hand actually makes |
+| `.on` landed in the write phase but the animation was created later on a timer, so each mark was **painted at full opacity for ~95ms and then restarted from zero** — a double-take on every step | newly-revealed marks are held at `opacity:0` until their animation exists |
+
+The state class `.on` is now **state only, with no transition** — all motion is driven
+through the Web Animations API so each mark can be sequenced independently. Timings live
+in one `T` table so the whole page shares a feel. Reads and writes are separated into
+distinct phases inside `apply()`, so no write-then-read pair can force a synchronous layout.
+
+Also: **brought-down digits drop** from the dividend, **D · M · S · B lights up** so the
+four moves have a beat, the pen stays away during SET UP (that is the problem being *placed*,
+not written), going **Back** un-inks quickly with no pen (undoing is not writing), and the
+attention pulse waits until the ink has landed so the two do not compete.
 
 All of it respects `prefers-reduced-motion` — the pen hides and the flights are skipped.
+Window resize is rAF-throttled to one re-layout per frame.
 
 Controls: `space` next · `←` back · `R` restart · `P` play/pause · `1`–`4` switch tab.
 Play auto-advances with a per-step dwell; traps and `why` steps get a longer pause.
@@ -91,11 +108,18 @@ Play auto-advances with a per-step dwell; traps and `why` steps get a longer pau
 | `specs.py` | The algorithm simulators. Every digit comes from running the real algorithm. |
 | `build_animations.py` | Problem choices + narration + the HTML/CSS/JS template. **Edit here.** |
 | `verify_animations.py` | Independent re-derivation of the arithmetic, layout and model. Must exit 0. |
-| `render-check.mjs` | Headless-Chromium assertions the data cannot make. Must exit 0. |
+| `render-check.mjs` | Headless-Chromium assertions the data cannot make, incl. choreography. Must exit 0. |
+| `perf-check.mjs` | Measures `apply()` cost, forced layouts, long tasks. Must exit 0. |
 
 ```bash
-python3 build_animations.py && python3 verify_animations.py
+python3 build_animations.py && python3 verify_animations.py \
+  && node render-check.mjs && node perf-check.mjs
 ```
+
+All four must exit 0. `perf-check.mjs` enforces a budget: `apply()` p95 under 8.3ms (one
+frame at 120Hz), max under 16.7ms, zero long tasks, zero forced-reflow violations. Treat
+its absolute frame numbers as soft — headless timing is synthetic — and the before/after
+delta as the real signal.
 
 ## Changing a worked example
 
@@ -145,3 +169,13 @@ mark actually visible, no two marks overlapping, uniform digit size, no horizont
 at 1180px or 390px, that Back really does un-write marks, and that **the pen is visible,
 its nib within 40px of the mark it just wrote, and covering less than 30% of it**. Those
 pen assertions were mutation-tested too.
+
+**Choreography is asserted, not eyeballed.** `render-check.mjs` steps the animation, samples
+pen position and per-mark opacity every frame for 1.5s, and requires that (a) marks land at
+least 30ms apart — no simultaneous reveal — and (b) each mark is inked while the pen is
+within 45px of it, skipping carries because those arrive by themselves. Currently the first
+mark inks at ~123ms with the pen 10px away and the carry lofts in ~150ms later.
+
+Those assertions were mutation-tested too: firing the ink before the pen arrives, collapsing
+the chain so marks land together, and restoring the flash-of-final-state bug were each
+confirmed to fail the check.

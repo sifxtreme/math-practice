@@ -137,20 +137,76 @@ await page.waitForTimeout(200);
 for (let s = 0; s < 5; s++) await page.keyboard.press(' ');
 await page.waitForTimeout(700);
 const penFit = await page.evaluate(() => {
-  const pen = document.getElementById('pen').getBoundingClientRect();
-  const zero = document.querySelector('[data-k="zero"]').getBoundingClientRect();
-  const ox = Math.min(pen.right, zero.right) - Math.max(pen.left, zero.left);
-  const oy = Math.min(pen.bottom, zero.bottom) - Math.max(pen.top, zero.top);
-  const nib = { x: pen.left + 2, y: pen.top + 2 };
-  return { visible: parseFloat(getComputedStyle(document.getElementById('pen')).opacity) > .5,
+  const A = JSON.parse(document.getElementById('ANIM').textContent);
+  const idx = [...document.querySelectorAll('.tab')].findIndex(t => t.getAttribute('aria-selected') === 'true');
+  const step = A[idx].steps[[...document.querySelectorAll('.dot')].findIndex(d => d.classList.contains('now'))];
+  const last = (step.show || []).filter(k => document.querySelector(`.board [data-k="${k}"]`)).pop();
+  const pen = document.getElementById('pen');
+  const pb = pen.getBoundingClientRect();
+  const mb = document.querySelector(`.board [data-k="${last}"]`).getBoundingClientRect();
+  const ox = Math.min(pb.right, mb.right) - Math.max(pb.left, mb.left);
+  const oy = Math.min(pb.bottom, mb.bottom) - Math.max(pb.top, mb.top);
+  return { key: last, label: step.label,
+           visible: parseFloat(getComputedStyle(pen).opacity) > .5,
            overlapArea: Math.max(0, ox) * Math.max(0, oy),
-           markArea: zero.width * zero.height,
-           nibDist: Math.hypot(nib.x - (zero.left + zero.width / 2), nib.y - zero.bottom) };
+           markArea: mb.width * mb.height,
+           nibDist: Math.hypot((pb.left + 2) - (mb.left + mb.width / 2), (pb.top + 2) - mb.bottom) };
 });
 if (!penFit.visible) fails.push('pen not visible on a step that writes a mark');
-if (penFit.nibDist > 40) fails.push(`pen nib ${Math.round(penFit.nibDist)}px from the mark it wrote`);
+if (penFit.nibDist > 40) fails.push(`pen nib ${Math.round(penFit.nibDist)}px from '${penFit.key}', the last mark of step ${penFit.label}`);
 if (penFit.overlapArea > penFit.markArea * 0.3)
   fails.push(`pen covers ${Math.round(100*penFit.overlapArea/penFit.markArea)}% of the mark`);
+
+// CHOREOGRAPHY: the pen must ARRIVE before the mark appears, and marks inside a
+// step must land one after another. That sequencing is the whole point of the
+// motion rewrite and no data check can see it.
+await page.keyboard.press('1');
+await page.waitForTimeout(250);
+await page.keyboard.press(' ');           // step 0 -> 1 (setup -> first written marks)
+await page.waitForTimeout(1600);
+const cho = await page.evaluate(async () => {
+  const A = JSON.parse(document.getElementById('ANIM').textContent);
+  const ti = [...document.querySelectorAll('.tab')].findIndex(t => t.getAttribute('aria-selected') === 'true');
+  const now = [...document.querySelectorAll('.dot')].findIndex(d => d.classList.contains('now'));
+  const next = A[ti].steps[now + 1];
+  const q = k => document.querySelector(`.board [data-k="${k}"]`);
+  const keys = (next.show || []).filter(q);
+  const targets = keys.map(k => { const b = q(k).getBoundingClientRect();
+                                  return { k, x: b.left + b.width / 2, y: b.bottom }; });
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+  const samples = [], t0 = performance.now();
+  await new Promise(res => (function tick() {
+    const t = performance.now() - t0, pb = document.getElementById('pen').getBoundingClientRect();
+    samples.push({ t, nib: [pb.left + 2, pb.top + 2],
+                   op: keys.map(k => +getComputedStyle(q(k)).opacity) });
+    if (t > 1500) res(); else requestAnimationFrame(tick);
+  })());
+  return { keys, targets, samples, flies: (next.fly || []).map(f => f.k) };
+});
+
+const inkAt = cho.keys.map((_, i) => {
+  const s = cho.samples.find(s => s.op[i] > 0.5);
+  return s ? s.t : null;
+});
+const nibGap = cho.keys.map((_, i) => {
+  const s = cho.samples.find(s => s.op[i] > 0.5);
+  if (!s) return null;
+  return Math.hypot(s.nib[0] - cho.targets[i].x, s.nib[1] - cho.targets[i].y);
+});
+if (inkAt.some(v => v === null)) fails.push(`choreography: a mark never reached opacity>0.5`);
+else {
+  for (let i = 1; i < inkAt.length; i++)
+    if (inkAt[i] <= inkAt[i - 1] + 30)
+      fails.push(`choreography: marks ${cho.keys[i-1]}/${cho.keys[i]} land together ` +
+                 `(${Math.round(inkAt[i-1])}ms vs ${Math.round(inkAt[i])}ms) — no stagger`);
+  nibGap.forEach((g, i) => {
+    if (cho.flies.includes(cho.keys[i])) return;   // carries loft in on their own
+    if (g > 45) fails.push(`choreography: mark ${cho.keys[i]} inked while the pen was ` +
+                           `${Math.round(g)}px away — pen is not leading`);
+  });
+}
+const choReport = { keys: cho.keys, flies: cho.flies, inkAt: inkAt.map(v => v && Math.round(v)),
+                    nibGap: nibGap.map(v => v && Math.round(v)) };
 
 // Back button must actually un-write marks
 await page.keyboard.press('1');
@@ -184,6 +240,6 @@ for (let s = 0; s < 20; s++) await dark.keyboard.press(' ');
 await dark.waitForTimeout(600);
 await dark.screenshot({ path: `${OUT}/dark-final.png`, fullPage: true });
 
-console.log(JSON.stringify({ errs, fails, narrow, report }, null, 1));
+console.log(JSON.stringify({ errs, fails, narrow, choReport, report }, null, 1));
 await b.close();
 process.exit(fails.length || errs.length ? 1 : 0);

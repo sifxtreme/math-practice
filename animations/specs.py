@@ -301,7 +301,7 @@ def mult_two_by_two(top, bot):
         "why": f"Look at the rectangle: the top strip is <b>{b_tens*10} × {top} = {p2}</b>. Every "
                f"multiple of {b_tens*10} ends in 0, so row 2 <i>has</i> to end in 0. You are not "
                f"adding a magic zero — you are writing down where the number actually is.",
-        "show": ["zero", "plus"], "flash": ["bt", "zero"], "dwell": 6.0, "modelRow": 0,
+        "show": ["plus", "zero"], "flash": ["bt", "zero"], "dwell": 6.0, "modelRow": 0,
         "trap": f"<b>This is the single most common way to get a 2-digit × 2-digit wrong.</b> "
                 f"Skip the 0 and you add {p1} + {p2//10} = {p1 + p2//10} instead of "
                 f"{p1} + {p2} = {product}.",
