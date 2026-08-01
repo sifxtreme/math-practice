@@ -8,6 +8,11 @@ self-contained (inline CSS + JS, no dependencies, no network), same as the works
 open -a "Google Chrome" ~/code/experiments/personal/math-worksheets/animations/index.html
 ```
 
+**Chrome is the only target.** Confirmed by Asif 2026-08-01: *"we will always just use
+chrome for this."* Every check here runs headless Chromium, which is therefore the real
+browser and not a proxy for one — don't spend effort on Safari or Firefox quirks, and
+don't caveat results with them.
+
 ## Why this exists
 
 The drills are bare arithmetic off math-drills.com, and a kid can get a 2-digit × 1-digit
