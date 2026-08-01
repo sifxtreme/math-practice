@@ -129,6 +129,34 @@ difficulty pin — and `DRILLS.md` replaced it with per-kid sheets at the pin.)
 > goal from understanding. Not a contradiction, just don't expect them to move
 > comprehension.
 
+## Drill-method animations — [`animations/`](animations/README.md)
+
+Added 2026-08-01 at Asif's request. Four step-through animations of the **written
+methods** the drill sheets require — kid1 × and ÷, kid2 × and ÷ — each revealing a
+worked example one written mark at a time, with the trap for that method called out
+where it happens. Self-contained `index.html`, no dependencies.
+
+```bash
+open -a "Google Chrome" ~/code/experiments/personal/math-worksheets/animations/index.html
+```
+
+⚠️ **This is a deliberate, narrow exception to "Paper only. No screen." in the Hard
+requirements above.** Asif asked for it knowing the rule. It is a teaching aid for the
+5-minute go-over-it slot in the daily session — *watch one, then do the paper drill*.
+It replaces nothing. **Do not generalize it** into moving worksheets, logic sheets, or
+anything else on-screen; that rule still stands everywhere else.
+
+Same discipline as the sheets: content is generated (`build_animations.py` + `specs.py`),
+`index.html` is overwritten on every build, and `verify_animations.py` re-derives every
+digit independently and must exit 0. **It is mutation-tested** — 9 deliberate corruptions
+were each confirmed to fail it.
+
+> **Data checks are not enough here — render it.** Two real bugs passed all 527 data
+> checks and were caught only in headless Chromium: a stray `opacity:.001` that made a
+> carry digit invisible, and a CSS class collision (`.sub` as both a board token class and
+> a page subtitle class) that shrank every long-division subtraction row to 13px. If you
+> touch the CSS, re-render and look at it.
+
 ## Two sheet types (applies to the MATH sheet)
 
 The kids are not doing Khan or any app, so a sheet introducing a brand-new skill has to *teach* it, not just test it. Which type you write depends on whether the skill is new.
@@ -271,5 +299,6 @@ answer independently and must exit 0 before any of them is printed.
 - `day-guard.sh` — sourced by both print scripts. The one-day-at-a-time enforcement (guards A, B, C).
 - `print-ledger.tsv` — tracked record of what paper exists, per target day. Guard C reads it.
 - `test-day-guard.sh` — 17 regression cases for the guard. Run after any change to it.
+- `animations/` — drill-method animations (one written mark at a time). See [`animations/README.md`](animations/README.md).
 - `README.md` — human-facing overview.
 - `AGENTS.md` — this file.

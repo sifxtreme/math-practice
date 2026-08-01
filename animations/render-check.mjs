@@ -1,0 +1,158 @@
+import fs from 'fs';
+import { createRequire } from 'module';
+import { pathToFileURL } from 'url';
+
+// Playwright isn't a dependency of this folder — resolve it from wherever it already
+// lives on this machine rather than adding a node_modules tree next to the worksheets.
+const CANDIDATES = [
+  process.env.PLAYWRIGHT_PATH,
+  `${process.env.HOME}/code/e2e/node_modules/playwright`,
+  'playwright',
+].filter(Boolean);
+let chromium;
+for (const c of CANDIDATES) {
+  try {
+    const req = createRequire(import.meta.url);
+    const resolved = c === 'playwright' ? 'playwright' : pathToFileURL(req.resolve(c)).href;
+    // playwright's entry is CJS; Node's named-export detection misses `chromium`,
+    // so fall back to the default export rather than silently binding undefined.
+    const m = await import(resolved);
+    chromium = m.chromium ?? m.default?.chromium;
+    if (chromium) break;
+  } catch { /* try the next one */ }
+}
+if (!chromium) {
+  console.error('playwright not found. Tried:\n  ' + CANDIDATES.join('\n  ') +
+    '\nSet PLAYWRIGHT_PATH=/abs/path/to/node_modules/playwright');
+  process.exit(2);
+}
+
+// Renders index.html in headless Chromium and asserts what JSON inspection cannot see.
+// Run:  node render-check.mjs      (needs playwright on NODE_PATH, or `npm i playwright`)
+// Exits non-zero on any failure. Screenshots land in ./shots/ (gitignored).
+import path from 'path';
+import { fileURLToPath } from 'url';
+const DIR = path.dirname(fileURLToPath(import.meta.url));
+const OUT = path.join(DIR, 'shots');
+fs.mkdirSync(OUT, { recursive: true });
+
+const b = await chromium.launch();
+const page = await b.newPage({ viewport: { width: 1180, height: 1000 }, deviceScaleFactor: 2 });
+
+const errs = [];
+const fails = [];
+page.on('console', m => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+page.on('pageerror', e => errs.push('pageerror: ' + e.message));
+
+await page.goto('file://' + DIR + '/index.html');
+await page.waitForTimeout(400);
+
+const report = [];
+
+for (let i = 0; i < 4; i++) {
+  await page.keyboard.press(String(i + 1));
+  await page.waitForTimeout(250);
+  const nSteps = await page.evaluate(() => document.querySelectorAll('.dot').length);
+
+  await page.screenshot({ path: `${OUT}/${i}-a-start.png`, fullPage: true });
+  for (let s = 0; s < Math.floor(nSteps / 2); s++) await page.keyboard.press(' ');
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: `${OUT}/${i}-b-mid.png`, fullPage: true });
+  for (let s = 0; s < nSteps; s++) await page.keyboard.press(' ');
+  await page.waitForTimeout(700);
+  await page.screenshot({ path: `${OUT}/${i}-c-final.png`, fullPage: true });
+
+  const r = await page.evaluate((idx) => {
+    const A = JSON.parse(document.getElementById('ANIM').textContent)[idx];
+    // every key any step reveals must actually be on screen at the end
+    const want = new Set(); A.steps.forEach(s => (s.show || []).forEach(k => want.add(k)));
+    const invisible = [];
+    const rows = {};
+    document.querySelectorAll('.board .tok, .board .decor').forEach(el => {
+      const k = el.dataset.k, cs = getComputedStyle(el);
+      const box = el.getBoundingClientRect();
+      const seen = parseFloat(cs.opacity) > 0.35 && box.width > 0 && box.height >= 0;
+      if (want.has(k) && !seen) invisible.push({ k, opacity: cs.opacity, w: box.width, h: box.height });
+      if (el.classList.contains('tok') && seen) {
+        const rr = el.parentElement.style.gridRow;
+        (rows[rr] ||= []).push({ t: el.textContent, x: box.x, struck: el.classList.contains('struck') });
+      }
+    });
+    const board = {};
+    for (const [rr, cells] of Object.entries(rows)) {
+      cells.sort((a, b) => a.x - b.x);
+      board[rr] = cells.map(c => c.struck ? `(${c.t})` : c.t).join(' ');
+    }
+    // no two marks may visually overlap
+    const boxes = [...document.querySelectorAll('.board .tok')]
+      .filter(e => parseFloat(getComputedStyle(e).opacity) > 0.35)
+      .map(e => ({ k: e.dataset.k, b: e.getBoundingClientRect() }));
+    const overlaps = [];
+    for (let x = 0; x < boxes.length; x++) for (let y = x + 1; y < boxes.length; y++) {
+      const p = boxes[x].b, q = boxes[y].b;
+      const ox = Math.min(p.right, q.right) - Math.max(p.left, q.left);
+      const oy = Math.min(p.bottom, q.bottom) - Math.max(p.top, q.top);
+      if (ox > 3 && oy > 3) overlaps.push([boxes[x].k, boxes[y].k]);
+    }
+    // every digit on the board must render at the same size; a size outlier means a
+    // page-level class outranked a token style (this is how the .sub collision hid)
+    const sizes = {};
+    document.querySelectorAll('.board .tok').forEach(el => {
+      const grp = el.classList.contains('carry') ? 'carry'
+                : el.classList.contains('rlab') ? 'rlab' : 'digit';
+      (sizes[grp] ||= new Set()).add(getComputedStyle(el).fontSize);
+    });
+    const sizeSpread = Object.fromEntries(
+      Object.entries(sizes).map(([k, v]) => [k, [...v]]));
+    return {
+      id: A.id, nSteps: A.steps.length, invisible, overlaps, board, sizeSpread,
+      pageOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+      boardClipped: (w => w.scrollWidth > w.clientWidth + 1)(document.querySelector('.boardwrap')),
+    };
+  }, i);
+
+  for (const [grp, vals] of Object.entries(r.sizeSpread))
+    if (vals.length > 1) fails.push(`${r.id}: ${grp} marks render at mixed sizes -> ${vals}`);
+  if (r.invisible.length) fails.push(`${r.id}: revealed but INVISIBLE -> ${JSON.stringify(r.invisible)}`);
+  if (r.overlaps.length) fails.push(`${r.id}: marks overlap -> ${JSON.stringify(r.overlaps)}`);
+  if (r.pageOverflow) fails.push(`${r.id}: page scrolls horizontally at 1180px`);
+  if (r.boardClipped) fails.push(`${r.id}: board clipped at 1180px`);
+  if (r.nSteps !== nSteps) fails.push(`${r.id}: dot count ${nSteps} != step count ${r.nSteps}`);
+  report.push(r);
+}
+
+// Back button must actually un-write marks
+await page.keyboard.press('1');
+await page.waitForTimeout(200);
+for (let s = 0; s < 9; s++) await page.keyboard.press(' ');
+await page.waitForTimeout(400);
+const atEnd = await page.evaluate(() => document.querySelectorAll('.board .tok.on').length);
+for (let s = 0; s < 9; s++) await page.keyboard.press('ArrowLeft');
+await page.waitForTimeout(400);
+const atStart = await page.evaluate(() => document.querySelectorAll('.board .tok.on').length);
+if (!(atStart < atEnd)) fails.push(`Back button does not un-write: ${atEnd} -> ${atStart}`);
+
+// narrow viewport
+await page.setViewportSize({ width: 390, height: 900 });
+await page.keyboard.press('4');
+await page.waitForTimeout(200);
+for (let s = 0; s < 20; s++) await page.keyboard.press(' ');
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${OUT}/narrow-final.png`, fullPage: true });
+const narrow = await page.evaluate(() => ({
+  overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+}));
+if (narrow.overflow) fails.push('page scrolls horizontally at 390px');
+
+// dark mode
+const dark = await b.newPage({ viewport: { width: 1180, height: 1000 }, colorScheme: 'dark', deviceScaleFactor: 2 });
+await dark.goto('file://' + DIR + '/index.html');
+await dark.keyboard.press('3');
+await dark.waitForTimeout(200);
+for (let s = 0; s < 20; s++) await dark.keyboard.press(' ');
+await dark.waitForTimeout(600);
+await dark.screenshot({ path: `${OUT}/dark-final.png`, fullPage: true });
+
+console.log(JSON.stringify({ errs, fails, narrow, report }, null, 1));
+await b.close();
+process.exit(fails.length || errs.length ? 1 : 0);
