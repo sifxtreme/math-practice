@@ -38,6 +38,29 @@ understanding — and that is exactly the kid who falls apart when the numbers g
 > 5-minute go-over-it slot in the daily session, not a replacement for the paper drill —
 > watch one, then do the sheet. Don't take this as licence to move anything else on-screen.
 
+## The rule this thing was built by
+
+Asif found the same defect three times in one session, in three costumes:
+
+| what was shown | what was missing |
+|---|---|
+| `2` and `4` appear in two places | the **42** they came out of |
+| `6`, `2`, a carry, then `14` | the **12** and the **+ 2** |
+| "how many 7s fit in 42? **Six**" | the **hunt** that found the six |
+
+Each time the animation showed a step's *result* and skipped the object the kid actually
+needs to hold in their head. Each time it looked fine until someone asked "but where did
+that come from?"
+
+**So: before adding any method here, list every number a solver holds mentally between one
+written mark and the next. Each one of those has to exist on screen, and it has to linger
+under a keypress you control — not on a timer.** That is the entire difference between an
+animation that demonstrates an algorithm and one that teaches it.
+
+The three methods the ladder still wants — 2-digit divisors, 3-digit × 3-digit, decimal
+quotients — each have their own hidden object. The 2-digit divisor's is the estimate
+("how many 23s in 147?" is a *guess* you then check), and it is the biggest one in the set.
+
 ## What's covered
 
 | Tab | Kid | Method | Matching drill slug |
