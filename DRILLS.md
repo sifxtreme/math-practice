@@ -63,6 +63,47 @@ The division names are dense and easy to pick wrong:
 
 `_d` (decimal quotients) is the natural next step for kid2's decimals target, but it isn't in the table above — introduce it on a TEACH sheet before drilling it.
 
+## The next rung — verified 2026-08-01
+
+Same live check as the table above (page resolves, non-`qp` PDF exists and is 2 pages,
+10 variants each), with a deliberately-bogus slug checked alongside so the check could
+actually fail. It did.
+
+> ⚠️ **Before reaching for any of these, check the variants aren't the answer.**
+> One slug is **ten sheets** (`_001`…`_010`). As of 2026-08-01 only variant **A** is
+> spent on the current slugs, so there are **nine more sheets of the same shape** for
+> each. If the goal is "get better at *this*", that is the work — a harder slug changes
+> the skill instead of deepening it. Step up only on the existing rule in
+> [`AGENTS.md`](AGENTS.md) § "When to move the pin again": **zero errors, under time,
+> twice in a row.**
+
+### kid1 (3rd → 4th)
+
+| Order | Skill | Category / slug | Kind of step |
+|---|---|---|---|
+| 1 | 4-digit × 1-digit | `multiplication2` / `multiplication_0401` | size only — same method |
+| 2 | 3-digit ÷ 1-digit, remainder | `division` / `division_long_1dd3dd_r` | size only — same method |
+| 3 | **2-digit × 2-digit** | `multiplication2` / `multiplication_0202` | 🆕 **new method** — the placeholder zero |
+
+### kid2 (4th → 5th)
+
+| Order | Skill | Category / slug | Kind of step |
+|---|---|---|---|
+| 1 | 3-digit × 2-digit | `multiplication2` / `multiplication_0302` | size only — still two partial products |
+| 2 | **2-digit divisor**, 3-digit dividend, remainder | `division` / `division_long_2dd3dd_r` | 🆕 **new method** — estimation |
+| 3 | 2-digit divisor, 4-digit dividend | `division` / `division_long_2dd4dd_r` | size, once #2 lands |
+| 4 | **3-digit × 3-digit** | `multiplication2` / `multiplication_0303` | 🆕 **new method** — three rows, `0` *and* `00` |
+| 5 | 4-digit ÷ 1-digit, **decimal quotient** | `division` / `division_long_1dd4dd_d` | 🆕 **new method** — feeds the decimals target |
+
+**The 🆕 rows need a TEACH sheet first — do not hand them over as a cold drill.** This
+file already said it about `_d`; it is at least as true of a 2-digit divisor. "How many
+23s go into 147?" is a genuinely different act from "how many 7s go into 42", and no
+amount of long-division fluency with a 1-digit divisor prepares a kid for it. The
+size-only rows need nothing — they are the same marks on a longer page.
+
+Tabs 1 and 3 of [`animations/`](animations/README.md) already teach kid1's #3
+(2-digit × 2-digit). Nothing yet covers the 2-digit divisor or the decimal quotient.
+
 ## Maintenance sheets
 
 Below the pin, so not for daily use — but useful if a week goes badly and you want a confidence page. From the earlier plan bank:
