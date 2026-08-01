@@ -231,21 +231,96 @@ It also found two things that were **not** bugs, which is worth recording so nob
 One finding is deliberately left alone: the math-drills link is 35px tall. It is an inline
 link inside a sentence, not a button, and padding it to 44px would look wrong.
 
+## Adding a problem — or changing the numbers
+
+**Everything is in [`problems.json`](problems.json). One entry, then rebuild. No code.**
+
+```json
+{ "id": "kid1-mult-b", "kid": "kid1", "theme": "teal",
+  "kind": "mult", "x": 358, "y": 7,
+  "drill": { "category": "multiplication2", "slug": "multiplication_0301" },
+  "standard": "4.NBT.B.5" }
+```
+
+`x` and `y` are the entire input. **Everything else is derived from their shape** by
+[`describe.py`](describe.py): the title, the skill line, the rule card, the traps, the
+area model, and three you-try problems that hit the *same traps* as the worked example
+(same digit counts, and a carry / a remainder / an interior zero if the example has one).
+Nothing is written per problem, because prose written per problem is what stops you adding
+one.
+
+Two constraints the picker enforces, both from real rules rather than taste:
+
+- **Never divide by 1.** Asif 2026-08-01: *"a waste of time for the kid."* `DRILLS.md`
+  measured 7 of 10 math-drills variants leaking divide-by-1 problems.
+- **You-try problems must be the same kind of hard**, not just the same size. A you-try
+  that comes out even when the worked example has a remainder is practising a different
+  thing.
+
+**`problems.json` is read by the builder AND the verifier, deliberately.** If the verifier
+took the problem statement out of `index.html`, it would only ever prove the file is
+self-consistent — a `247` corrupted to `248` would verify happily against its own corrupted
+answer. Two sources, or no check.
+
+## Is it actually generic? — [`sweep-check.py`](sweep-check.py)
+
+Working for the four problems we ship says nothing about whether `247 × 6` works because
+the code is right or because it is the number the code was tuned against. `sweep-check.py`
+runs the **same verification over hundreds of problems nobody picked by hand**:
+
+```
+$ python3 sweep-check.py --n 60
+2-digit x 1-digit    60 tried   8000 checks  ✓ all 60 pass
+3-digit x 1-digit    60 tried  10490 checks  ✓ all 60 pass
+4-digit x 1-digit    60 tried  13033 checks  ✓ all 60 pass
+2-digit x 2-digit    60 tried  15424 checks  ✓ all 60 pass
+3-digit x 2-digit    60 tried  20149 checks  ✓ all 60 pass
+3-digit x 3-digit     1 tried      0 checks  ✗ UNSUPPORTED
+2-digit / 1-digit    60 tried  11214 checks  ✓ all 60 pass
+3-digit / 1-digit    60 tried  15847 checks  ✓ all 60 pass
+4-digit / 1-digit    60 tried  20443 checks  ✓ all 60 pass
+3-digit / 2-digit     1 tried      0 checks  ✗ UNSUPPORTED
+4-digit / 2-digit     1 tried      0 checks  ✗ UNSUPPORTED
+
+114,600 checks over 11 shapes
+```
+
+**It found a real bug on its first run.** `47 × 80` — a multiplier whose ones digit is 0 —
+wrote row 1 as `00` instead of `0`, one zero per column. Correct-looking, wrong number, and
+completely invisible to the four shipped problems. A whole round of zeros now collapses to
+one beat and one mark.
+
+The three ✗ rows are the honest inventory of what the generators **cannot draw yet**, and
+they are exactly the three "🆕 new method" rungs in [`DRILLS.md`](../DRILLS.md):
+
+| shape | blocked by | ladder rung |
+|---|---|---|
+| 3-digit × 3-digit | `mult_two_by_two` assumes 2 rounds | kid2 #4 |
+| N-digit ÷ 2-digit | `long_division` assumes a 1-digit divisor and a 1-column gutter | kid2 #2 and #3 |
+
+`describe.py` already handles both — it produces correct titles, rules and you-try problems
+for `473 × 268` and `147 ÷ 23` today. **Only the two simulators are the gap**, and the
+sweep is what will tell you when they are closed.
+
 ## Files
 
 | File | What it is |
 |---|---|
 | `index.html` | **Generated.** The page. Do not hand-edit — `build_animations.py` overwrites it. |
+| `problems.json` | **The problem set.** One entry per animation. Edit this, not code. |
+| `describe.py` | Derives title / skill / rules / you-try from the shape of (kind, x, y). |
 | `specs.py` | The algorithm simulators. Every digit comes from running the real algorithm. |
 | `build_animations.py` | Problem choices + narration + the HTML/CSS/JS template. **Edit here.** |
 | `verify_animations.py` | Independent re-derivation of the arithmetic, layout and model. Must exit 0. |
 | `render-check.mjs` | Headless-Chromium assertions the data cannot make, incl. choreography. Must exit 0. |
 | `perf-check.mjs` | Measures `apply()` cost, forced layouts, long tasks. Must exit 0. |
+| `sweep-check.py` | Runs the checks over hundreds of unseen problems. Must exit 0. |
 | `user-check.mjs` | Drives it the way a person does. Must exit 0. |
 
 ```bash
 python3 build_animations.py && python3 verify_animations.py \
-  && node render-check.mjs && node perf-check.mjs && node user-check.mjs
+  && python3 sweep-check.py && node render-check.mjs && node perf-check.mjs \
+  && node user-check.mjs
 ```
 
 All four must exit 0. `perf-check.mjs` enforces a budget: `apply()` p95 under 8.3ms (one

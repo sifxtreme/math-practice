@@ -1,0 +1,62 @@
+{
+  "_README": [
+    "THE PROBLEM SET. This file is the whole configuration — adding an animation is one",
+    "entry here and a rebuild. No code changes.",
+    "",
+    "Read by BOTH build_animations.py and verify_animations.py, on purpose. The verifier",
+    "must not take the problem statement from the artifact it is checking, or it would only",
+    "prove index.html is self-consistent — a corrupted 247 would verify happily against its",
+    "own corrupted answer. Checking against this file instead means a drifted build fails.",
+    "",
+    "kind : 'mult' (x times y) or 'div' (x divided by y)",
+    "x, y : the worked example. Everything else — title, skill line, rules, the traps, the",
+    "       area model, the you-try problems — is DERIVED from the shape of these two.",
+    "",
+    "Constraint that is not obvious: y must never be 1 for a division. Asif, 2026-08-01:",
+    "'I really don't like it when we divide by 1 - it's a waste of time for the kid.'",
+    "See DRILLS.md, which measured 7 of 10 math-drills variants leaking divide-by-1."
+  ],
+
+  "animations": [
+    {
+      "id": "kid1-mult",
+      "kid": "kid1",
+      "theme": "teal",
+      "kind": "mult",
+      "x": 247,
+      "y": 6,
+      "drill": { "category": "multiplication2", "slug": "multiplication_0301" },
+      "standard": "4.NBT.B.5"
+    },
+    {
+      "id": "kid1-div",
+      "kid": "kid1",
+      "theme": "teal",
+      "kind": "div",
+      "x": 67,
+      "y": 5,
+      "drill": { "category": "division", "slug": "division_long_1dd2dd_r" },
+      "standard": "4.NBT.B.6"
+    },
+    {
+      "id": "kid2-mult",
+      "kid": "kid2",
+      "theme": "violet",
+      "kind": "mult",
+      "x": 47,
+      "y": 36,
+      "drill": { "category": "multiplication2", "slug": "multiplication_0202" },
+      "standard": "4.NBT.B.5"
+    },
+    {
+      "id": "kid2-div",
+      "kid": "kid2",
+      "theme": "violet",
+      "kind": "div",
+      "x": 4231,
+      "y": 7,
+      "drill": { "category": "division", "slug": "division_long_1dd4dd_r" },
+      "standard": "4.NBT.B.6"
+    }
+  ]
+}

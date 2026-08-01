@@ -225,6 +225,9 @@ def verify_bubbles(a, top, bot):
     want, tdig = [], [int(c) for c in str(top)]
     rounds = [bot] if bot < 10 else [bot % 10, bot // 10]
     for m in rounds:
+        if m == 0:
+            want.append(0)      # a whole round of zeros collapses to ONE mark, not N
+            continue
         carry = 0
         for j, d in enumerate(reversed(tdig)):
             t = m * d + carry
@@ -237,6 +240,8 @@ def verify_bubbles(a, top, bot):
                 if (st.get("bubble") or {}).get("grewFrom") is not None)
     n_need = 0
     for m in rounds:
+        if m == 0:
+            continue
         carry = 0
         for j, d in enumerate(reversed(tdig)):
             t = m * d + carry
@@ -498,16 +503,43 @@ def verify_div(a, dividend, divisor):
 
 # ------------------------------------------------------------ you-try
 
-def verify_try(a, kind, items):
-    got = [(t["q"], t["a"]) for t in a["youTry"]]
-    want = []
-    for x, y in items:
-        if kind == "mul":
-            want.append((f"{x} × {y}", str(x * y)))
+def verify_try(a, kind, x, y):
+    """Re-derive what a you-try problem has to satisfy, rather than compare against a
+    list copied from the producer. Comparing lists only proves two files agree; this
+    proves each problem is arithmetically right AND the same kind of hard as the
+    worked example, which is the thing that actually matters."""
+    items = a["youTry"]
+    check(len(items) == 3, f"[{a['id']}] {len(items)} you-try problems, want 3")
+    want_shape = (len(str(x)), len(str(y)))
+    seen = set()
+    for it in items:
+        m = re.match(r"^(\d+) ([×÷]) (\d+)$", it["q"])
+        if not check(bool(m), f"[{a['id']}] unparseable you-try {it['q']!r}"):
+            continue
+        u, op, v = int(m.group(1)), m.group(2), int(m.group(3))
+        check((op == "×") == (kind == "mult"),
+              f"[{a['id']}] you-try {it['q']} uses the wrong operator for this method")
+        if kind == "mult":
+            check(it["a"] == str(u * v), f"[{a['id']}] {it['q']} = {it['a']!r}, really {u * v}")
         else:
-            want.append((f"{x} ÷ {y}", f"{x // y} R{x % y}"))
-    check(got == want, f"[{a['id']}] you-try answers", f"got {got}, want {want}")
-    check(len({q for q, _ in got}) == len(got), f"[{a['id']}] duplicate you-try problem")
+            # Asif 2026-08-01: dividing by 1 is a waste of the kid's time
+            check(v >= 2, f"[{a['id']}] you-try {it['q']} divides by {v}")
+            check(it["a"] == f"{u // v} R{u % v}",
+                  f"[{a['id']}] {it['q']} = {it['a']!r}, really {u // v} R{u % v}")
+            if x % y:
+                check(u % v != 0,
+                      f"[{a['id']}] you-try {it['q']} comes out even; the worked example "
+                      f"has a remainder, so this practises a different thing")
+            if len(str(x // y)) > 2 and "0" in str(x // y)[1:-1]:
+                check("0" in str(u // v)[1:-1],
+                      f"[{a['id']}] worked example has a zero inside the quotient, "
+                      f"{it['q']} does not")
+        check((len(str(u)), len(str(v))) == want_shape,
+              f"[{a['id']}] you-try {it['q']} is {len(str(u))}x{len(str(v))} digits, "
+              f"worked example is {want_shape[0]}x{want_shape[1]}")
+        check((u, v) != (x, y), f"[{a['id']}] you-try repeats the worked example")
+        check((u, v) not in seen, f"[{a['id']}] duplicate you-try {it['q']}")
+        seen.add((u, v))
 
 
 # ------------------------------------------------------------ page-level
@@ -527,32 +559,36 @@ def page_checks(html, anims):
 def main():
     anims, html = load()
     by_id = {a["id"]: a for a in anims}
-    check(set(by_id) == {"kid1-mult", "kid1-div", "kid2-mult", "kid2-div"},
-          "unexpected set of animations", str(sorted(by_id)))
 
-    for a in anims:
+    # The problem set comes from problems.json, NOT from the artifact. Reading it out of
+    # index.html would only prove the file is self-consistent: a 247 corrupted to 248
+    # would verify happily against its own corrupted answer. Two sources, or no check.
+    declared = json.loads((HERE / "problems.json").read_text(encoding="utf-8"))["animations"]
+    check(set(by_id) == {p["id"] for p in declared},
+          "index.html and problems.json disagree about which animations exist",
+          f"built {sorted(by_id)} vs declared {sorted(p['id'] for p in declared)}")
+
+    for spec in declared:
+        a = by_id.get(spec["id"])
+        if not check(a is not None, f"[{spec['id']}] declared but not built"):
+            continue
+        kind, x, y = spec["kind"], spec["x"], spec["y"]
+        check((a.get("kind"), a.get("x"), a.get("y")) == (kind, x, y),
+              f"[{spec['id']}] built {a.get('x')} {a.get('kind')} {a.get('y')}, "
+              f"declared {x} {kind} {y}")
+        check(a.get("kid") == spec["kid"], f"[{spec['id']}] wrong kid")
+
         structural(a)
-
-    if "kid1-mult" in by_id:
-        verify_mult1(by_id["kid1-mult"], 247, 6)
-        verify_model(by_id["kid1-mult"], 247, 6, "area")
-        verify_bubbles(by_id["kid1-mult"], 247, 6)
-        verify_try(by_id["kid1-mult"], "mul", [(138, 4), (306, 7), (429, 8)])
-    if "kid1-div" in by_id:
-        verify_div(by_id["kid1-div"], 67, 5)
-        verify_model(by_id["kid1-div"], 67, 5, "ladder")
-        verify_trials(by_id["kid1-div"], 67, 5)
-        verify_try(by_id["kid1-div"], "div", [(83, 6), (59, 4), (74, 8)])
-    if "kid2-mult" in by_id:
-        verify_mult2(by_id["kid2-mult"], 47, 36)
-        verify_model(by_id["kid2-mult"], 47, 36, "area")
-        verify_bubbles(by_id["kid2-mult"], 47, 36)
-        verify_try(by_id["kid2-mult"], "mul", [(58, 24), (73, 46), (89, 37)])
-    if "kid2-div" in by_id:
-        verify_div(by_id["kid2-div"], 4231, 7)
-        verify_model(by_id["kid2-div"], 4231, 7, "ladder")
-        verify_trials(by_id["kid2-div"], 4231, 7)
-        verify_try(by_id["kid2-div"], "div", [(3025, 6), (5138, 9), (2417, 4)])
+        if kind == "mult":
+            (verify_mult1 if len(str(y)) == 1 else verify_mult2)(a, x, y)
+            verify_model(a, x, y, "area")
+            verify_bubbles(a, x, y)
+        else:
+            check(y >= 2, f"[{spec['id']}] worked example divides by {y} — never by 1")
+            verify_div(a, x, y)
+            verify_model(a, x, y, "ladder")
+            verify_trials(a, x, y)
+        verify_try(a, kind, x, y)
 
     page_checks(html, anims)
 

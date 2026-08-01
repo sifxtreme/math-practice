@@ -12,117 +12,56 @@ worked example; do NOT hand-edit index.html, it is overwritten on every build.
 import json
 import pathlib
 
+from describe import describe, pick_try
 from specs import mult_by_one_digit, mult_two_by_two, long_division
 
 HERE = pathlib.Path(__file__).parent
 DRILL = "https://math-drills.com"
 
-# --------------------------------------------------------------- the four
+# --------------------------------------------------------- the problem set
+#
+# There is no problem list in this file on purpose. `problems.json` holds it, and
+# `describe.py` derives the title, the skill line, the rule card and the you-try
+# problems from the shape of (kind, x, y). Adding an animation is one entry in the
+# JSON — no prose, no code. If you find yourself writing a lambda here again, the
+# generator is missing a shape; fix the generator.
 
-SPECS = [
-    dict(
-        id="kid1-mult", kid="kid1", grade="3rd → 4th", theme="teal",
-        title="Multiplying by one digit",
-        skill="3-digit × 1-digit, with carrying",
-        drill_slug="multiplication_0301",
-        drill_url=f"{DRILL}/multiplication2/multiplication_0301_001.php",
-        why="The bottom number visits every digit on top, one at a time, right to left. "
-            "Anything too big for its box gets parked on the shelf above the next column.",
-        build=lambda: mult_by_one_digit(247, 6),
-        rules=[
-            "Line up the <b>ones</b> column. Always.",
-            "Work <b>right to left</b> — ones, then tens, then hundreds.",
-            "<b>Multiply first, then add the carry.</b> Never the other way round.",
-            "A carry gets <b>written above</b>, not remembered.",
-        ],
-        try_kind="m1", try_items=[(138, 4), (306, 7), (429, 8)],
-        try_note="The middle one has a <b>0</b> in it on purpose — 7 × 0 is still 0, "
-                 "but the carry coming in still has to be added.",
-    ),
-    dict(
-        id="kid1-div", kid="kid1", grade="3rd → 4th", theme="teal",
-        title="Long division with a remainder",
-        skill="2-digit ÷ 1-digit, remainder left over",
-        drill_slug="division_long_1dd2dd_r",
-        drill_url=f"{DRILL}/division/division_long_1dd2dd_r_001.php",
-        why="Four moves, in the same order, over and over until you run out of digits: "
-            "<b>Divide, Multiply, Subtract, Bring down.</b> Never skip one, never reorder them.",
-        build=lambda: long_division(67, 5),
-        rules=[
-            "<b>D</b>ivide → <b>M</b>ultiply → <b>S</b>ubtract → <b>B</b>ring down. Repeat.",
-            "The answer digit goes <b>directly above</b> the digit you just used.",
-            "After subtracting, the leftover must be <b>smaller than the divisor</b>. "
-            "If it isn't, your digit was too small.",
-            "When there is nothing left to bring down, whatever is left is the <b>remainder</b>.",
-        ],
-        try_kind="dv", try_items=[(83, 6), (59, 4), (74, 8)],
-        try_note="Say the four moves out loud on every single one. Out loud is the point.",
-    ),
-    dict(
-        id="kid2-mult", kid="kid2", grade="4th → 5th", theme="violet",
-        title="Two digits times two digits",
-        skill="2-digit × 2-digit, two partial products",
-        drill_slug="multiplication_0202",
-        drill_url=f"{DRILL}/multiplication2/multiplication_0202_001.php",
-        why="Two digits on the bottom means two rounds, so two answer rows, then you add them. "
-            "Round 2 is multiplying by a <b>tens</b> digit, which is why it starts with a 0.",
-        build=lambda: mult_two_by_two(47, 36),
-        rules=[
-            "Round 1 = the <b>ones</b> digit. Round 2 = the <b>tens</b> digit.",
-            "<b>Row 2 starts with a 0 in the ones column.</b> Write the 0 before you multiply anything.",
-            "<b>Cross out the row-1 carries</b> before starting row 2.",
-            "Add the two rows at the end — that is the answer, not row 2 on its own.",
-        ],
-        try_kind="m2", try_items=[(58, 24), (73, 46), (89, 37)],
-        try_note="Before you add the two rows, point at the 0 and check it is there. Every time.",
-    ),
-    dict(
-        id="kid2-div", kid="kid2", grade="4th → 5th", theme="violet",
-        title="Long division, big numbers",
-        skill="4-digit ÷ 1-digit, remainder — and a zero in the answer",
-        drill_slug="division_long_1dd4dd_r",
-        drill_url=f"{DRILL}/division/division_long_1dd4dd_r_001.php",
-        why="Same four moves as always — but with more digits you hit the two traps that eat "
-            "long division: the divisor not fitting in the first digit, and a <b>0 landing in the "
-            "middle of the answer</b>.",
-        build=lambda: long_division(4231, 7),
-        rules=[
-            "<b>D</b>ivide → <b>M</b>ultiply → <b>S</b>ubtract → <b>B</b>ring down. Repeat.",
-            "Doesn't fit in the first digit? Take <b>two</b> digits, and write nothing above the first.",
-            "Doesn't fit after a bring-down? <b>Write a 0 up top</b> and keep going.",
-            "A zero at the <b>front</b> you skip. A zero in the <b>middle</b> you must write.",
-        ],
-        try_kind="dv", try_items=[(3025, 6), (5138, 9), (2417, 4)],
-        try_note="All three of these have a <b>0 in the answer</b>. That is not a coincidence — "
-                 "it is the thing being practised.",
-    ),
-]
+PROBLEMS = json.loads((HERE / "problems.json").read_text(encoding="utf-8"))["animations"]
 
 
-# --------------------------------------------------------------- assemble
+def generate(kind, x, y):
+    """Pick the simulator that can draw this shape, and say plainly when none can."""
+    if kind == "div":
+        return long_division(x, y)
+    if kind == "mult":
+        return (mult_by_one_digit if len(str(y)) == 1 else mult_two_by_two)(x, y)
+    raise ValueError(f"unknown kind {kind!r}")
+
 
 def try_block(kind, items):
     out = []
     for a, b in items:
-        if kind in ("m1", "m2"):
-            out.append({"q": f"{a} × {b}", "a": f"{a * b}"})
-        else:
-            out.append({"q": f"{a} ÷ {b}", "a": f"{a // b} R{a % b}"})
+        out.append({"q": f"{a} × {b}", "a": f"{a * b}"} if kind == "mult"
+                   else {"q": f"{a} ÷ {b}", "a": f"{a // b} R{a % b}"})
     return out
 
 
 def build():
     anims = []
-    for s in SPECS:
-        core = s["build"]()
-        traps = [st["trap"] for st in core["steps"] if st.get("trap")]
+    for spec in PROBLEMS:
+        kind, x, y = spec["kind"], spec["x"], spec["y"]
+        core = generate(kind, x, y)
+        d = describe(kind, x, y)
+        drill = spec["drill"]
         anims.append({
-            "id": s["id"], "kid": s["kid"], "grade": s["grade"], "theme": s["theme"],
-            "title": s["title"], "skill": s["skill"], "why": s["why"],
-            "drillSlug": s["drill_slug"], "drillUrl": s["drill_url"],
-            "rules": s["rules"], "traps": traps,
-            "youTry": try_block(s["try_kind"], s["try_items"]),
-            "tryNote": s["try_note"],
+            "id": spec["id"], "kid": spec["kid"], "theme": spec["theme"],
+            "kind": kind, "x": x, "y": y, "standard": spec.get("standard", ""),
+            "title": d["title"], "skill": d["skill"], "why": d["why"], "rules": d["rules"],
+            "drillSlug": drill["slug"],
+            "drillUrl": f"{DRILL}/{drill['category']}/{drill['slug']}_001.php",
+            "traps": [st["trap"] for st in core["steps"] if st.get("trap")],
+            "youTry": try_block(kind, pick_try(kind, x, y)),
+            "tryNote": d["tryNote"],
             "cols": core["cols"], "rows": core["rows"],
             "toks": core["toks"], "decor": core["decor"], "steps": core["steps"],
             "model": core["model"],
@@ -458,7 +397,7 @@ footer{margin-top:26px;font-size:12.5px;color:var(--mute);text-align:center}
             </select></span>
         </div>
         <p class="hint"><kbd>space</kbd> next · <kbd>←</kbd> back · <kbd>R</kbd> restart ·
-           <kbd>P</kbd> play · <kbd>1</kbd>–<kbd>4</kbd> switch sheet</p>
+           <kbd>P</kbd> play · <span id="tabHint"></span></p>
       </div>
 
       <div class="card">
@@ -500,6 +439,8 @@ const $ = id => document.getElementById(id);
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let ai = 0, si = 0, timer = null, playing = false;
 
+$('tabHint').innerHTML = A.length > 1
+  ? `<kbd>1</kbd>${A.length > 2 ? '–<kbd>' + A.length + '</kbd>' : ''} switch sheet` : '';
 A.forEach((a, i) => {
   const b = document.createElement('button');
   b.className = 'tab'; b.setAttribute('role', 'tab');
@@ -1043,7 +984,7 @@ addEventListener('keydown', e => {
   else if (e.key === 'ArrowLeft') { e.preventDefault(); stop(); step(-1); }
   else if (e.key.toLowerCase() === 'r') { stop(); si = 0; apply(); }
   else if (e.key.toLowerCase() === 'p') { playing ? stop() : start(); }
-  else if ('1234'.includes(e.key)) pick(Math.min(A.length - 1, +e.key - 1));
+  else if (/^[1-9]$/.test(e.key) && +e.key <= A.length) pick(+e.key - 1);
 });
 
 pick(0);
@@ -1059,8 +1000,9 @@ def main():
 
     print(f"wrote {path}  ({len(out):,} bytes)")
     for a in anims:
-        print(f"  {a['id']:<12} {a['kid']:<6} {len(a['steps']):>2} steps  "
-              f"{a['cols']}×{a['rows']} grid  model={a['model']['kind']:<6} answer={a['answer']}")
+        op = "×" if a["kind"] == "mult" else "÷"
+        print(f"  {a['id']:<12} {a['kid']:<6} {a['x']} {op} {a['y']:<5} "
+              f"{len(a['steps']):>2} steps  {a['cols']}×{a['rows']}  = {a['answer']}")
 
 
 if __name__ == "__main__":

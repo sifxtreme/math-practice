@@ -378,9 +378,26 @@ def mult_two_by_two(top, bot):
 
     # ---- round 1: the ones digit
     carry = 0
-    for j, d in enumerate(reversed(tdig)):
-        carry = digit_beats(b_ones, d, carry, j, j == len(tdig) - 1, j,
-                            R_P1, "p1_", "cA", "bo", 1, 1)
+    if b_ones == 0:
+        # A whole round of zeros. Walking it digit by digit writes one 0 per column
+        # ("00"), which is not the number 0 and is not what anyone writes on paper.
+        # One beat, one mark.
+        toks.append({"k": "p1_0", "r": R_P1, "c": col(0), "t": "0", "cls": "d p1"})
+        steps.append({
+            "label": f"× {b_ones}", "beat": None,
+            "say": f"Round 1 multiplies by <b>0</b>. Anything times 0 is 0, so the whole "
+                   f"row is just <b>0</b> — no carrying, nothing to line up.",
+            "why": f"<b>{top} × 0 = 0.</b> The row is still there and still matters: it is "
+                   f"holding the ones place open so round 2 lands in the right columns.",
+            "show": ["p1_0"], "flash": ["bo"],
+            "bubble": {"cells": [{"t": "0", "part": 0}], "reserveW": 62},
+            "split": [{"part": 0, "to": "p1_0"}],
+            "modelRow": 1, "dwell": 4.0,
+        })
+    else:
+        for j, d in enumerate(reversed(tdig)):
+            carry = digit_beats(b_ones, d, carry, j, j == len(tdig) - 1, j,
+                                R_P1, "p1_", "cA", "bo", 1, 1)
 
     carriesA = [t["k"] for t in toks if t["k"].startswith("cA")]
     steps.append({
