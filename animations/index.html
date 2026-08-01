@@ -191,7 +191,7 @@ ul.rules b{color:var(--accent)}
 .tryrow:last-child{border-bottom:0}
 .tryq{font-family:ui-monospace,monospace;font-weight:600;min-width:9ch}
 .tryrow button{font:inherit;font-size:12.5px;cursor:pointer;background:var(--accent-soft);
-     border:1px solid var(--line);color:var(--accent);border-radius:7px;padding:4px 10px}
+     border:1px solid var(--line);color:var(--accent);border-radius:7px;padding:6px 12px}
 .trya{font-family:ui-monospace,monospace;font-weight:700;color:var(--ok);visibility:hidden}
 .trya.shown{visibility:visible}
 .trynote{font-size:13.5px;color:var(--mute);margin:11px 0 0}
@@ -199,6 +199,38 @@ ul.rules b{color:var(--accent)}
 .watch li{margin-bottom:8px}
 .watch b{color:var(--ink)}
 footer{margin-top:26px;font-size:12.5px;color:var(--mute);text-align:center}
+
+/* ---------- phone / iPad portrait ----------
+   Measured on a 390px viewport: the board started 589px down and Next/Play sat at
+   1128px, so you could not see the problem and advance it at the same time — which
+   is the entire interaction. Four stacked tabs alone ate 600px. */
+@media (max-width:700px){
+  header .thesis{font-size:13.5px;margin-bottom:12px}
+  header h1{font-size:22px}
+  .wrap{padding:16px 14px 104px}
+  .tabs{flex-wrap:nowrap;overflow-x:auto;gap:6px;padding-bottom:4px;
+        scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;padding:9px 13px;font-size:0;min-height:44px;display:flex;align-items:center}
+  .tab b{font-size:13.5px;white-space:nowrap}
+  /* the controls follow you down the page — nothing else about this works without it */
+  .controls{position:fixed;left:0;right:0;bottom:0;z-index:40;margin:0;gap:7px;
+            padding:9px 12px calc(9px + env(safe-area-inset-bottom,0px));
+            background:var(--card);border-top:1.5px solid var(--line);
+            box-shadow:0 -6px 22px rgba(20,20,43,.13)}
+  button.ctl{padding:11px 14px;min-height:44px}
+  button.ctl.primary{min-width:96px}
+  .spd select{min-height:40px}
+  .hint{display:none}
+  .say{font-size:16.5px;min-height:0}
+  .tryrow button{min-height:40px;padding:8px 14px}
+  .beat{padding:5px 0;flex:1;text-align:center;font-size:12px}
+  .beat .word{display:none}
+  .beats{gap:5px}
+}
+@media (prefers-color-scheme:dark) and (max-width:700px){
+  .controls{box-shadow:0 -6px 22px rgba(0,0,0,.5)}
+}
 
 @media (prefers-reduced-motion:reduce){
   .board .tok,.decor,.pen,.acell,.ladder tr{transition:none}
@@ -209,7 +241,7 @@ footer{margin-top:26px;font-size:12.5px;color:var(--mute);text-align:center}
 }
 @media print{
   body{background:#fff}
-  .tabs,.controls,.dots,.hint,footer,.trap,.say,.stepbadge,.pen,.beats{display:none}
+  .tabs,.controls,.dots,.hint,footer,.trap,.say,.stepbadge,.pen,.beats{display:none!important}
   .board .tok,.decor{opacity:1!important;transform:none!important}
   .acell,.ladder tr{opacity:1!important}
   .card{break-inside:avoid;box-shadow:none}
@@ -315,7 +347,10 @@ function pick(i){
   stop(); ai = i; si = 0;
   const a = A[i];
   document.documentElement.setAttribute('data-theme', a.theme);
-  [...$('tabs').children].forEach((t, k) => t.setAttribute('aria-selected', k === i));
+  [...$('tabs').children].forEach((t, k) => {
+    t.setAttribute('aria-selected', k === i);
+    if (k === i) t.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
+  });
   $('bTitle').textContent = `${a.kid} · ${a.title}`;
   $('bSkill').textContent = `${a.skill} — worked example, one mark at a time`;
   $('whyShort').innerHTML = a.why;
@@ -377,7 +412,7 @@ function buildBeats(a){
   const has = a.steps.some(s => s.beat);
   $('beats').innerHTML = has
     ? ['D','M','S','B'].map((x, i) =>
-        `<span class="beat" data-beat="${x}">${x} · ${['Divide','Multiply','Subtract','Bring down'][i]}</span>`
+        `<span class="beat" data-beat="${x}">${x}<span class="word"> · ${['Divide','Multiply','Subtract','Bring down'][i]}</span></span>`
       ).join('') : '';
 }
 

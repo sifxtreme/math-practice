@@ -100,6 +100,31 @@ Window resize is rAF-throttled to one re-layout per frame.
 Controls: `space` next · `←` back · `R` restart · `P` play/pause · `1`–`4` switch tab.
 Play auto-advances with a per-step dwell; traps and `why` steps get a longer pause.
 
+## Using it like a person
+
+`user-check.mjs` exists because everything above can pass while the page is still
+unusable. It mashes Next 25 times faster than key-repeat, mashes Back the same way,
+switches tabs mid-draw, jumps around with the progress dots, lets autoplay run to the
+end, and then does the whole thing again on a 390 x 844 phone.
+
+**What it caught that nothing else could:** on a phone the board started **589px** down
+and Next/Play sat at **1128px** — so you could not see the problem and advance it at the
+same time, which is the entire interaction. Four stacked tabs alone ate 600px. Fixed with
+a horizontally-scrolling tab strip and a control bar pinned to the bottom of the viewport:
+board now starts at **322px**, controls at **732px**, both on screen at once.
+
+It also found two things that were **not** bugs, which is worth recording so nobody
+"fixes" them again:
+
+- Sampling the board 260ms after a step change shows marks still at `opacity:0`. That is
+  the chain working — they are queued behind the pen. At 1.5s every one is correct.
+- "An animation was still running when the next step began" fires on every correct run,
+  because `apply()` itself starts the next step's animations. The meaningful check is
+  whether the autoplay gap exceeds the ~700ms drawing time. It does, by 3.5s+.
+
+One finding is deliberately left alone: the math-drills link is 35px tall. It is an inline
+link inside a sentence, not a button, and padding it to 44px would look wrong.
+
 ## Files
 
 | File | What it is |
@@ -110,10 +135,11 @@ Play auto-advances with a per-step dwell; traps and `why` steps get a longer pau
 | `verify_animations.py` | Independent re-derivation of the arithmetic, layout and model. Must exit 0. |
 | `render-check.mjs` | Headless-Chromium assertions the data cannot make, incl. choreography. Must exit 0. |
 | `perf-check.mjs` | Measures `apply()` cost, forced layouts, long tasks. Must exit 0. |
+| `user-check.mjs` | Drives it the way a person does. Must exit 0. |
 
 ```bash
 python3 build_animations.py && python3 verify_animations.py \
-  && node render-check.mjs && node perf-check.mjs
+  && node render-check.mjs && node perf-check.mjs && node user-check.mjs
 ```
 
 All four must exit 0. `perf-check.mjs` enforces a budget: `apply()` p95 under 8.3ms (one
