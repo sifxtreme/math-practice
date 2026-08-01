@@ -98,65 +98,82 @@ def mult_by_one_digit(top, bot):
         total = raw + carry
         last = (j == len(tdig) - 1)
         real_d = d * 10 ** j
-        real_raw = raw * 10 ** j
+        digits = list(str(total))
 
-        show, flash, fly = [], ["b0", f"t{j}"], []
+        # ---------- beat 1: WHAT IS IT? The product exists as one number, and the
+        # ---------- animation stops here so it can be looked at before it is split.
+        flash1 = ["b0", f"t{j}"]
         if carry:
-            flash.append(f"cy{j-1}")
-
-        if carry == 0:
-            say = f"<b>{bot} × {d} = {raw}.</b>"
+            flash1.append(f"cy{j-1}")
+        say1 = (f"<b>{bot} × {d} = {raw}.</b>" if carry == 0 else
+                f"<b>{bot} × {d} = {raw}</b>, and <i>now</i> add the carry: "
+                f"<b>{raw} + {carry} = {total}</b>.")
+        if j == 0:
+            why1 = (f"<b>{raw} ones.</b> But a column only holds <i>one</i> digit — "
+                    f"{raw} cannot all stay here. Watch where each half goes next."
+                    if raw >= 10 else
+                    f"<b>{raw} ones</b>, and that fits in a single column.")
         else:
-            say = (f"<b>{bot} × {d} = {raw}</b>, and <i>now</i> add the carry: "
-                   f"<b>{raw} + {carry} = {total}</b>.")
-
-        why = (f"That {d} is really <b>{real_d}</b>, so this move is really "
-               f"<b>{bot} × {real_d} = {real_raw}</b>.")
+            why1 = (f"That {d} is really <b>{real_d}</b>, so this move is really "
+                    f"<b>{bot} × {real_d} = {raw * 10 ** j}</b>.")
         if carry:
-            why += (f" And the carry is not a {carry} — it is <b>{carry * 10 ** j}</b>. "
-                    f"{real_raw} + {carry * 10 ** j} = <b>{total * 10 ** j}</b>.")
+            why1 += (f" And the carry is not a {carry} — it is <b>{carry * 10 ** j}</b>, "
+                     f"which is why it gets added in at this column and not the last one.")
+        trap1 = None
+        if carry:
+            wrong = (d + carry) * bot
+            trap1 = (f"<b>Multiply first, then add.</b> Doing it backwards — "
+                     f"{d} + {carry} = {d+carry}, then {d+carry} × {bot} = {wrong} — "
+                     f"is the mistake almost everybody makes here.")
+        steps.append({
+            "label": f"{bot} × {d}", "beat": None, "say": say1, "why": why1,
+            "show": [], "flash": flash1, "bubble": {"digits": digits},
+            "trap": trap1, "modelCell": strip_index.get(j),
+            "dwell": 4.8 if trap1 else 4.0,
+        })
 
-        trap = None
+        # ---------- beat 2: WHERE DOES EACH DIGIT GO?
+        show, split = [], []
         if last:
-            if total >= 10:
-                for i, ch in enumerate(reversed(str(total))):
-                    toks.append({"k": f"a{j+i}", "r": R_ANS, "c": col(j + i), "t": ch, "cls": "d ans"})
-                    show.append(f"a{j+i}")
-                say += f" Nothing left to multiply, so the whole <b>{total}</b> goes down."
+            for i, ch in enumerate(reversed(digits)):
+                toks.append({"k": f"a{j+i}", "r": R_ANS, "c": col(j + i), "t": ch, "cls": "d ans"})
+                show.append(f"a{j+i}")
+                split.append({"part": len(digits) - 1 - i, "to": f"a{j+i}"})
+            if len(digits) > 1:
+                say2 = (f"Nothing left to multiply, so <b>both digits go down</b> — the "
+                        f"<b>{digits[0]}</b> into the {PLACE[j+1]} column and the "
+                        f"<b>{digits[1]}</b> into the {PLACE[j]} column.")
+                why2 = (f"<b>{total * 10 ** j}</b> = {int(digits[0]) * 10 ** (j+1)} + "
+                        f"{int(digits[1]) * 10 ** j}. Each digit sits in the column that "
+                        f"gives it the right size.")
             else:
-                toks.append({"k": f"a{j}", "r": R_ANS, "c": col(j), "t": str(total), "cls": "d ans"})
-                show.append(f"a{j}")
-                say += f" Write the <b>{total}</b>."
+                say2 = f"Write the <b>{total}</b> in the {PLACE[j]} column."
+                why2 = f"That {total} is really <b>{total * 10 ** j}</b>."
         elif total >= 10:
             ones, tens = total % 10, total // 10
             toks.append({"k": f"a{j}", "r": R_ANS, "c": col(j), "t": str(ones), "cls": "d ans"})
             toks.append({"k": f"cy{j}", "r": R_CARRY, "c": col(j + 1), "t": str(tens), "cls": "carry"})
             show += [f"a{j}", f"cy{j}"]
-            fly.append({"k": f"cy{j}", "from": f"a{j}"})
-            say += (f" That's too big for one box — the <b>{ones}</b> goes down in the "
-                    f"{PLACE[j]} column, and the <b>{tens}</b> flies <b>up to the shelf</b> "
-                    f"above the next column.")
-            why += (f" You can only keep <b>{ones * 10 ** j}</b> here; the other "
-                    f"<b>{tens * 10 ** (j+1)}</b> does not fit in the {PLACE[j]} column, "
-                    f"so it moves left to where {tens * 10 ** (j+1)} belongs.")
-            if j == 0:
-                trap = ("The carry lives <b>on the paper</b>, not in your head. Write it up top "
-                        "every single time — that is the whole reason this method exists.")
+            split = [{"part": 1, "to": f"a{j}"}, {"part": 0, "to": f"cy{j}"}]
+            say2 = (f"<b>{total}</b> is two digits and only one fits in a box. "
+                    f"The <b>{ones}</b> drops <b>down</b> into the {PLACE[j]} column. "
+                    f"The <b>{tens}</b> flies <b>up</b> to the shelf above the next column.")
+            why2 = (f"Split it by size: <b>{total * 10 ** j} = {ones * 10 ** j} + "
+                    f"{tens * 10 ** (j+1)}</b>. The {ones * 10 ** j} fits in the {PLACE[j]} "
+                    f"column. The {tens * 10 ** (j+1)} does not — so it moves one column left, "
+                    f"to where {tens * 10 ** (j+1)} belongs. That is all a carry is.")
         else:
             toks.append({"k": f"a{j}", "r": R_ANS, "c": col(j), "t": str(total), "cls": "d ans"})
             show.append(f"a{j}")
-            say += f" Write the <b>{total}</b>."
+            split = [{"part": 0, "to": f"a{j}"}]
+            say2 = f"<b>{total}</b> is one digit, so it drops straight down into the {PLACE[j]} column."
+            why2 = f"That {total} is really <b>{total * 10 ** j}</b>, and nothing needs to move left."
 
-        if carry and trap is None:
-            wrong = (d + carry) * bot
-            trap = (f"<b>Multiply first, then add.</b> Doing it backwards — "
-                    f"{d} + {carry} = {d+carry}, then {d+carry} × {bot} = {wrong} — "
-                    f"is the mistake almost everybody makes here.")
-
-        steps.append({"label": f"× {d}", "beat": None, "say": say, "why": why, "show": show,
-                      "flash": flash, "fly": fly, "trap": trap,
-                      "modelCell": strip_index.get(j), "dwell": 4.6 if trap else 3.6})
-
+        steps.append({
+            "label": "WHERE IT GOES", "beat": None, "say": say2, "why": why2,
+            "show": show, "flash": [], "bubble": {"digits": digits}, "split": split,
+            "modelCell": strip_index.get(j), "dwell": 4.4,
+        })
         carry = 0 if last else total // 10
 
     rough = round(top, -1)
@@ -232,44 +249,83 @@ def mult_two_by_two(top, bot):
         "show": setup, "flash": ["bo", "bt"], "dwell": 5.0, "modelRow": None,
     })
 
+    def digit_beats(mult, d, carry, j, last, slot, ans_row, ans_pre, carry_pre,
+                    hot_key, mrow, tens_scale):
+        """Two beats for one digit of a round: what the product IS, then where each
+        half of it goes. The product has to exist as a number before it is split, or
+        the kid never sees the thing the carry came out of."""
+        raw = mult * d
+        total = raw + carry
+        digits = list(str(total))
+        flash1 = [hot_key, f"t{j}"]
+        if carry:
+            flash1.append(f"{carry_pre}{j-1}")
+        say1 = (f"<b>{mult} × {d} = {raw}.</b>" if carry == 0 else
+                f"<b>{mult} × {d} = {raw}</b>, then add the carry: <b>{raw} + {carry} = {total}</b>.")
+        why1 = (f"<b>{raw}</b> — and a column holds one digit, so watch where each "
+                f"half of it goes."
+                if (j == 0 and tens_scale == 1 and raw >= 10) else
+                f"Really <b>{mult * tens_scale} × {d * 10 ** j} = "
+                f"{raw * 10 ** j * tens_scale}</b>.")
+        trap1 = None
+        if carry:
+            trap1 = (f"<b>Multiply first, then add the carry.</b> Not "
+                     f"{d} + {carry} = {d+carry}, then × {mult} = {(d+carry)*mult}.")
+        steps.append({
+            "label": f"{mult} × {d}", "beat": None, "say": say1, "why": why1,
+            "show": [], "flash": flash1, "bubble": {"digits": digits},
+            "trap": trap1, "modelRow": mrow, "dwell": 4.4 if trap1 else 3.6,
+        })
+
+        show, split = [], []
+        if last:
+            for i, ch in enumerate(reversed(digits)):
+                k = f"{ans_pre}{slot+i}"
+                toks.append({"k": k, "r": ans_row, "c": col(slot + i), "t": ch,
+                             "cls": f"d {ans_pre[:2]}"})
+                show.append(k)
+                split.append({"part": len(digits) - 1 - i, "to": k})
+            say2 = (f"Nothing left on top, so <b>both digits go down</b>."
+                    if len(digits) > 1 else f"Write the <b>{total}</b>.")
+            why2 = (f"<b>{total}</b> lands across two columns because that is where its "
+                    f"two place values belong.") if len(digits) > 1 else \
+                   f"One digit, one column."
+        elif total >= 10:
+            ones, tens = total % 10, total // 10
+            k_ans, k_car = f"{ans_pre}{slot}", f"{carry_pre}{j}"
+            toks.append({"k": k_ans, "r": ans_row, "c": col(slot), "t": str(ones),
+                         "cls": f"d {ans_pre[:2]}"})
+            toks.append({"k": k_car, "r": R_CARRY, "c": col(j + 1), "t": str(tens),
+                         "cls": "carry" + (" carry2" if carry_pre == "cB" else "")})
+            show += [k_ans, k_car]
+            split = [{"part": 1, "to": k_ans}, {"part": 0, "to": k_car}]
+            say2 = (f"<b>{total}</b> is two digits and only one fits in a box. The "
+                    f"<b>{ones}</b> drops <b>down</b>; the <b>{tens}</b> flies <b>up</b> "
+                    f"to the shelf above the next column.")
+            why2 = (f"Split it by size: <b>{total} = {ones} + {tens}0</b> in this round's "
+                    f"columns. The part that does not fit moves one column left, which is "
+                    f"the only thing a carry ever is.")
+        else:
+            k_ans = f"{ans_pre}{slot}"
+            toks.append({"k": k_ans, "r": ans_row, "c": col(slot), "t": str(total),
+                         "cls": f"d {ans_pre[:2]}"})
+            show.append(k_ans)
+            split = [{"part": 0, "to": k_ans}]
+            say2 = f"<b>{total}</b> is one digit — it drops straight down."
+            why2 = "Nothing needs to move left."
+
+        steps.append({
+            "label": "WHERE IT GOES", "beat": None, "say": say2, "why": why2,
+            "show": show, "flash": [], "bubble": {"digits": digits}, "split": split,
+            "modelRow": mrow, "dwell": 4.2,
+        })
+        return 0 if last else total // 10
+
     # ---- round 1: the ones digit
     carry = 0
     for j, d in enumerate(reversed(tdig)):
-        raw = b_ones * d
-        total = raw + carry
-        last = (j == len(tdig) - 1)
-        show, flash, fly = [], ["bo", f"t{j}"], []
-        if carry:
-            flash.append(f"cA{j-1}")
-        say = (f"<b>{b_ones} × {d} = {raw}.</b>" if carry == 0 else
-               f"<b>{b_ones} × {d} = {raw}</b>, then add the carry: <b>{raw} + {carry} = {total}</b>.")
-        why = (f"Really <b>{b_ones} × {d * 10**j} = {raw * 10**j}</b>."
-               + (f" Plus the carried <b>{carry * 10**j}</b>." if carry else ""))
-        trap = None
-        if last:
-            for i, ch in enumerate(reversed(str(total))):
-                toks.append({"k": f"p1_{j+i}", "r": R_P1, "c": col(j + i), "t": ch, "cls": "d p1"})
-                show.append(f"p1_{j+i}")
-            say += f" Nothing left on top, so all of <b>{total}</b> goes down."
-        else:
-            toks.append({"k": f"p1_{j}", "r": R_P1, "c": col(j), "t": str(total % 10), "cls": "d p1"})
-            show.append(f"p1_{j}")
-            if total >= 10:
-                toks.append({"k": f"cA{j}", "r": R_CARRY, "c": col(j + 1), "t": str(total // 10), "cls": "carry"})
-                show.append(f"cA{j}")
-                fly.append({"k": f"cA{j}", "from": f"p1_{j}"})
-                say += f" Write <b>{total % 10}</b>, carry the <b>{total // 10}</b>."
-                why += f" The carry is <b>{(total // 10) * 10 ** (j+1)}</b>, not {total // 10}."
-            else:
-                say += f" Write <b>{total}</b>."
-        if carry and trap is None:
-            wrong = (d + carry) * b_ones
-            trap = (f"<b>Multiply first, then add the carry.</b> Not "
-                    f"{d} + {carry} = {d+carry}, then × {b_ones} = {wrong}.")
-        steps.append({"label": f"× {b_ones}", "beat": None, "say": say, "why": why, "show": show,
-                      "flash": flash, "fly": fly, "trap": trap, "modelRow": 1,
-                      "dwell": 4.2 if trap else 3.2})
-        carry = 0 if last else total // 10
+        carry = digit_beats(b_ones, d, carry, j, j == len(tdig) - 1, j,
+                            R_P1, "p1_", "cA", "bo", 1, 1)
 
     carriesA = [t["k"] for t in toks if t["k"].startswith("cA")]
     steps.append({
@@ -309,35 +365,8 @@ def mult_two_by_two(top, bot):
 
     carry = 0
     for j, d in enumerate(reversed(tdig)):
-        raw = b_tens * d
-        total = raw + carry
-        last = (j == len(tdig) - 1)
-        slot = j + 1                                    # shifted one left by the placeholder
-        show, flash, fly = [], ["bt", f"t{j}"], []
-        if carry:
-            flash.append(f"cB{j-1}")
-        say = (f"<b>{b_tens} × {d} = {raw}.</b>" if carry == 0 else
-               f"<b>{b_tens} × {d} = {raw}</b>, then add the carry: <b>{raw} + {carry} = {total}</b>.")
-        why = f"Really <b>{b_tens*10} × {d * 10**j} = {raw * 10**(j+1)}</b>."
-        if last:
-            for i, ch in enumerate(reversed(str(total))):
-                toks.append({"k": f"p2_{slot+i}", "r": R_P2, "c": col(slot + i), "t": ch, "cls": "d p2"})
-                show.append(f"p2_{slot+i}")
-            say += f" All of <b>{total}</b> goes down."
-        else:
-            toks.append({"k": f"p2_{slot}", "r": R_P2, "c": col(slot), "t": str(total % 10), "cls": "d p2"})
-            show.append(f"p2_{slot}")
-            if total >= 10:
-                toks.append({"k": f"cB{j}", "r": R_CARRY, "c": col(j + 1), "t": str(total // 10),
-                             "cls": "carry carry2"})
-                show.append(f"cB{j}")
-                fly.append({"k": f"cB{j}", "from": f"p2_{slot}"})
-                say += f" Write <b>{total % 10}</b>, carry the <b>{total // 10}</b>."
-            else:
-                say += f" Write <b>{total}</b>."
-        steps.append({"label": f"× {b_tens}", "beat": None, "say": say, "why": why, "show": show,
-                      "flash": flash, "fly": fly, "modelRow": 0, "dwell": 3.2})
-        carry = 0 if last else total // 10
+        carry = digit_beats(b_tens, d, carry, j, j == len(tdig) - 1, j + 1,
+                            R_P2, "p2_", "cB", "bt", 0, 10)
 
     steps.append({
         "label": "ROW 2 DONE", "beat": None,

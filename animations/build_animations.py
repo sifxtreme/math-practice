@@ -219,6 +219,22 @@ header .thesis b{color:var(--ink)}
      border-top-left-radius:14px;height:100%;align-self:stretch;opacity:1;
      margin-left:-6px;width:calc(100% + 6px)}
 
+/* The product exists as a NUMBER before it is split. Without this the 2 and the 4
+   just appear in two places at once and the kid never sees the 42 they came out of. */
+.bubble{position:absolute;left:0;top:0;display:none;align-items:center;gap:1px;
+  padding:5px 13px;z-index:4;pointer-events:none;
+  font-family:"SF Mono",ui-monospace,"Menlo",monospace}
+.bubble .shell{position:absolute;inset:0;border-radius:13px;background:var(--card);
+  border:2.5px solid var(--accent);box-shadow:0 7px 22px rgba(20,20,43,.14)}
+@media (prefers-color-scheme:dark){.bubble .shell{box-shadow:0 7px 22px rgba(0,0,0,.5)}}
+.bubble.up{display:flex;animation:bubblePop .34s cubic-bezier(.2,.9,.3,1.45)}
+@keyframes bubblePop{from{opacity:0;transform:scale(.62)}to{opacity:1;transform:none}}
+.bubble .bd{position:relative;font-size:clamp(25px,5.4vw,40px);font-weight:700;
+  color:var(--accent);line-height:1.06;display:block}
+/* a digit bound for the shelf already looks like a carry while it flies, so there
+   is no colour jump at the handoff */
+.bubble .bd.to-carry{color:var(--warn)}
+
 /* the pen goes to the spot BEFORE the mark appears, so writing order is visible */
 .pen{position:absolute;left:0;top:0;pointer-events:none;z-index:5;opacity:0;
      will-change:transform,opacity}
@@ -371,10 +387,12 @@ footer{margin-top:26px;font-size:12.5px;color:var(--mute);text-align:center}
   .board .tok.struck::after{transform:rotate(-16deg) scaleX(1)}
   .board .tok.flash::before{opacity:1}
   .pen{display:none}
+  .bubble.up{animation:none}
 }
 @media print{
   body{background:#fff}
-  .tabs,.controls,.dots,.hint,footer,.trap,.say,.stepbadge,.pen,.beats{display:none!important}
+  .tabs,.controls,.dots,.hint,footer,.trap,.say,.stepbadge,.pen,.beats,
+  .bubble{display:none!important}
   .board .tok,.decor{opacity:1!important;transform:none!important}
   .acell,.ladder tr{opacity:1!important}
   .card{break-inside:avoid;box-shadow:none}
@@ -399,6 +417,7 @@ footer{margin-top:26px;font-size:12.5px;color:var(--mute);text-align:center}
         <p class="boardsub" id="bSkill">—</p>
         <div class="boardwrap" id="boardwrap">
           <div class="board" id="board"></div>
+          <div class="bubble" id="bubble" aria-hidden="true"></div>
           <svg class="pen" id="pen" width="38" height="46" viewBox="0 0 38 46" aria-hidden="true">
             <path class="body" d="M6.5 9.5 L10.5 5.8 L34 34.5 A4.4 4.4 0 0 1 27.5 40.5 Z"/>
             <path class="nib" d="M2 2 L11 6.4 L7.2 10.2 Z"/>
@@ -620,7 +639,7 @@ function buildDots(a){
    the thing that made it. Marks within a step are also chained, not simultaneous —
    a hand writes one thing at a time. */
 const T = {
-  ink: 165, inkOut: 95, drop: 450, arc: 610,
+  ink: 165, inkOut: 95, drop: 450, arc: 610, split: 820,
   travelMin: 95, travelMax: 330, pxPerMs: 0.62,
   chain: 0.5,     // how much the next mark overlaps the previous one settling
   sweep: 50,      // stagger when a step PLACES many marks (setup) rather than writing them
@@ -685,6 +704,51 @@ function inkIn(node, fromBox, myBox){
               { duration: T.ink, easing: T.ease.ink, fill: 'backwards' });
 }
 
+/* Positioned to the RIGHT of the board so the split reads correctly: the ones digit
+   travels down-left to the answer row, the carry travels up-left to the shelf. Both
+   directions match what you tell the kid. Falls back to above the board when there
+   is no room to the right, which is the case on a phone. */
+function showBubble(digits, wrap, boardRect){
+  const bub = $('bubble'), key = digits.join('');
+  if (bub.dataset.key !== key) { bub.dataset.key = key;
+    bub.innerHTML = '<span class="shell"></span>' +
+      digits.map((d, i) => `<span class="bd" data-part="${i}">${d}</span>`).join(''); }
+  const estW = digits.length * 30 + 32;
+  const wrapW = $('boardwrap').clientWidth;
+  const rightX = boardRect.right - wrap.left + 20;
+  const fits = rightX + estW <= wrapW - 4;
+  bub.style.left = (fits ? rightX : Math.max(4, (wrapW - estW) / 2)) + 'px';
+  bub.style.top  = (fits ? boardRect.top - wrap.top + 6 : 0) + 'px';
+  bub.classList.add('up');
+}
+function splitBubble(split, partBoxes, el, box){
+  const bub = $('bubble'), shell = bub.querySelector('.shell');
+  if (shell) play(shell, [{ opacity: 1 }, { opacity: 0 }],
+                  { duration: 260, easing: T.ease.out, fill: 'forwards' });
+  split.forEach(sp => {
+    const span = bub.querySelector(`.bd[data-part="${sp.part}"]`);
+    const from = partBoxes[sp.part], to = box[sp.to];
+    if (!span || !from || !to) return;
+    span.classList.toggle('to-carry', /carry/.test(el[sp.to].className));
+    const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+    const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+    const sc = to.height / from.height;
+    play(span, [
+      { transform: 'none', opacity: 1, offset: 0 },
+      { transform: `translate(${dx * .5}px,${dy * .5 - 14}px) scale(${(1 + sc) / 2})`,
+        opacity: 1, offset: .55 },
+      { transform: `translate(${dx}px,${dy}px) scale(${sc})`, opacity: 1, offset: .88 },
+      { transform: `translate(${dx}px,${dy}px) scale(${sc})`, opacity: 0, offset: 1 },
+    ], { duration: T.split, easing: T.ease.arc, fill: 'forwards' });
+    // the real mark takes over exactly as the flying digit lands on it
+    after(T.split * .86, () => {
+      release(el[sp.to]);
+      play(el[sp.to], [{ opacity: 0 }, { opacity: 1 }], { duration: 130, easing: T.ease.ink });
+    });
+  });
+  after(T.split + 30, () => { $('bubble').classList.remove('up'); $('bubble').dataset.key = ''; });
+}
+
 function penTarget(b, wrap){
   return { x: b.left - wrap.left + b.width / 2 + 7, y: b.top - wrap.top + b.height - 7 };
 }
@@ -722,10 +786,20 @@ function apply(instant){
   const flyFrom = {};
   (cur.fly || []).forEach(f => { flyFrom[f.k] = f.from; });
   const wrap = $('boardwrap').getBoundingClientRect();
+  const boardRect = board.getBoundingClientRect();
   const box = {};
   new Set([...newly, ...Object.values(flyFrom)]).forEach(k => {
     if (el[k]) box[k] = el[k].getBoundingClientRect();
   });
+  // The bubble is already on screen from the compute beat, so its parts can be
+  // measured here in the read phase. If it is NOT up (someone jumped straight to
+  // this step), there is nothing to fly and the marks simply appear.
+  const bub = $('bubble');
+  const bubKey = cur.bubble ? cur.bubble.digits.join('') : null;
+  const canSplit = !!(cur.split && !instant && !back && !REDUCED
+                      && bub.classList.contains('up') && bub.dataset.key === bubKey);
+  const partBoxes = canSplit
+    ? [...bub.querySelectorAll('.bd')].map(n => n.getBoundingClientRect()) : [];
 
   /* ---------- WRITE PHASE ---------- */
   for (const k in el) {
@@ -736,11 +810,18 @@ function apply(instant){
 
   if (!REDUCED && !instant && !back) newly.forEach(k => holdHidden(el[k]));
 
+  if (cur.bubble && !canSplit) showBubble(cur.bubble.digits, wrap, boardRect);
+  else if (!cur.bubble) { bub.classList.remove('up'); bub.dataset.key = ''; }
+
   const litFlash = () => flash.forEach(k => {
     if (el[k] && el[k].classList.contains('on')) el[k].classList.add('flash');
   });
 
-  if (REDUCED || instant) {
+  if (canSplit) {
+    pen.classList.remove('up');
+    splitBubble(cur.split, partBoxes, el, box);
+    after(T.split + 90, litFlash);
+  } else if (REDUCED || instant) {
     litFlash();
     parkPen(newly.length ? penTarget(box[newly[0]], wrap) : penXY,
             !REDUCED && newly.length > 0 && si > 0);

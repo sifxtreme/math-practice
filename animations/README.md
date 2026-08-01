@@ -57,6 +57,39 @@ and so each one lands on its own trap:
 - **kid2 ÷** — 4231 ÷ 7 = 604 R3, which hits *both* the "doesn't fit in the first digit"
   case and a **0 in the middle of the quotient**. Skip that 0 and 604 becomes 64.
 
+## Two beats per digit: *what is it?* then *where does it go?*
+
+Asked for by Asif 2026-08-01: *"when we multiply 7×6 that equals 42, we should linger a
+bit there, and then show where the 2 goes and where the 4 goes."*
+
+He was right, and the old version was hiding the most important object on the page. It
+computed 42 and wrote the `2` and the `4` into two places **in the same instant** — so the
+42 never existed. A kid watching it sees two digits appear from nowhere and has no reason
+to believe they are halves of the same thing.
+
+So each digit of a multiplication is now **two steps**, not one:
+
+| beat | what happens |
+|---|---|
+| **`6 × 7`** | the product appears as a **whole number in a chip** beside the board, and stops there. Nothing else moves. You can talk about it, then press space. |
+| **`WHERE IT GOES`** | the chip's outline fades and its two digits **fly apart** — the `2` down-left into the ones column, the `4` up-left onto the shelf |
+
+Two details that matter:
+
+- **The `4` is already orange inside the chip**, before it moves. It looks like a carry
+  while it is still part of 42, so there is no colour jump when it lands — and you can
+  point at it and say "that one's leaving" before it does.
+- The directions are real. The chip sits to the **right** of the board precisely so the
+  ones digit travels **down** and the carry travels **up**, matching what you say out loud.
+  On a phone, where there is no room to the right, it falls back to above the board.
+
+The `why` line under it does the place-value half: *"Split it by size: 42 = 2 + 40. The 2
+fits in the ones column. The 40 does not — so it moves one column left, to where 40
+belongs. **That is all a carry is.**"*
+
+This roughly doubles the step count on the multiplication tabs (kid1 5 → 8, kid2 11 → 15).
+That is the point — the linger is under your thumb, not on a timer.
+
 ## The model — the same sum drawn a second way
 
 Under the board, every animation shows the calculation again **without the shorthand**,
@@ -176,13 +209,19 @@ the embedded JSON back out of `index.html` and checks it three ways:
    products. For the ladder: every partial quotient a clean place value, each product
    `q × divisor`, the leftover chain intact, and the partial quotients summing to the
    real quotient. Plus: every step must have a `why`, and every model reference in range.
+4. **The product chip** — the sequence of chips must be the real running products,
+   re-derived here; every chip digit must be accounted for by the split; and **the digit
+   that flies must be the digit that lands** (chip digit vs. the text of the token it flies
+   to). A chip that says 42 while a 3 lands on the board is the exact failure this catches.
 
 It was **mutation-tested twice** — 9 corruptions against the board checks (flipped digits,
 a deleted placeholder zero, a shifted quotient digit, a widened rule line, a misaligned
 subtraction, narration that stops teaching the zero) and 7 against the model checks (a
 wrong area cell, a band that isn't a place value, rowSums that stop matching the partial
 products, a broken partial quotient, a broken leftover chain, a step that loses its `why`,
-a model reference off the end). All 16 were confirmed to fail it. A check that cannot fail
+a model reference off the end) and 4 against the chip checks (a flying digit that does not
+match the digit it lands on, a chip digit that goes nowhere, a chip showing the wrong
+product, a split aimed at a mark that does not exist). All 20 were confirmed to fail it. A check that cannot fail
 isn't a check.
 
 **The data checks are not sufficient on their own.** Three real bugs passed every one of

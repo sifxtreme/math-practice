@@ -157,6 +157,46 @@ def verify_model(a, x, y, kind):
                   f"[{a['id']}] step {i} {field}={v} outside 0..{limit-1}")
 
 
+def verify_bubbles(a, top, bot):
+    """The product bubble is the number the algorithm normally hides. Two things must
+    hold or it teaches a lie: the sequence of bubbles must be the real running products,
+    and the digit that flies out of the bubble must be the digit that lands on the board."""
+    toks = {t["k"]: t for t in a["toks"]}
+
+    # --- every bubble digit must physically land where the split says it does
+    for i, st in enumerate(a["steps"]):
+        if st.get("split"):
+            check(bool(st.get("bubble")), f"[{a['id']}] step {i} splits with no bubble to split")
+            digits = (st.get("bubble") or {}).get("digits", [])
+            seen = set()
+            for sp in st["split"]:
+                check(0 <= sp["part"] < len(digits),
+                      f"[{a['id']}] step {i} flies part {sp['part']} of a {len(digits)}-digit bubble")
+                check(sp["to"] in toks, f"[{a['id']}] step {i} flies to unknown mark {sp['to']}")
+                if 0 <= sp["part"] < len(digits) and sp["to"] in toks:
+                    check(digits[sp["part"]] == toks[sp["to"]]["t"],
+                          f"[{a['id']}] step {i}: bubble digit {digits[sp['part']]!r} flies to "
+                          f"{sp['to']} which reads {toks[sp['to']]['t']!r}")
+                seen.add(sp["part"])
+                check(sp["to"] in st.get("show", []),
+                      f"[{a['id']}] step {i} flies to {sp['to']} but never reveals it")
+            check(seen == set(range(len(digits))),
+                  f"[{a['id']}] step {i} leaves bubble digits unaccounted for", str(sorted(seen)))
+
+    # --- the bubbles, in order, must be the real running products
+    got = [int("".join(st["bubble"]["digits"]))
+           for st in a["steps"] if st.get("bubble") and not st.get("split")]
+    want, tdig = [], [int(c) for c in str(top)]
+    rounds = [bot] if bot < 10 else [bot % 10, bot // 10]
+    for m in rounds:
+        carry = 0
+        for j, d in enumerate(reversed(tdig)):
+            total = m * d + carry
+            want.append(total)
+            carry = 0 if j == len(tdig) - 1 else total // 10
+    check(got == want, f"[{a['id']}] bubble sequence", f"got {got}, want {want}")
+
+
 # ------------------------------------------------------------ structural
 
 def structural(a):
@@ -379,6 +419,7 @@ def main():
     if "kid1-mult" in by_id:
         verify_mult1(by_id["kid1-mult"], 247, 6)
         verify_model(by_id["kid1-mult"], 247, 6, "area")
+        verify_bubbles(by_id["kid1-mult"], 247, 6)
         verify_try(by_id["kid1-mult"], "mul", [(138, 4), (306, 7), (429, 8)])
     if "kid1-div" in by_id:
         verify_div(by_id["kid1-div"], 67, 5)
@@ -387,6 +428,7 @@ def main():
     if "kid2-mult" in by_id:
         verify_mult2(by_id["kid2-mult"], 47, 36)
         verify_model(by_id["kid2-mult"], 47, 36, "area")
+        verify_bubbles(by_id["kid2-mult"], 47, 36)
         verify_try(by_id["kid2-mult"], "mul", [(58, 24), (73, 46), (89, 37)])
     if "kid2-div" in by_id:
         verify_div(by_id["kid2-div"], 4231, 7)

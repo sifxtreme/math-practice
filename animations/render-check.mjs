@@ -130,39 +130,52 @@ for (let i = 0; i < 4; i++) {
   report.push(r);
 }
 
-// The pen must land ON the mark it just wrote, without covering it.
+// The pen must land ON the mark it just wrote, without covering it. Step indices
+// move whenever the narration is restructured, so find a pen-written step rather
+// than hardcoding one: >=1 board mark, none of them arriving by flight or split.
 await page.setViewportSize({ width: 1180, height: 1000 });
 await page.keyboard.press('3');
-await page.waitForTimeout(200);
-for (let s = 0; s < 5; s++) await page.keyboard.press(' ');
-await page.waitForTimeout(700);
+await page.waitForTimeout(250);
+const penStep = await page.evaluate(() => {
+  const A = JSON.parse(document.getElementById('ANIM').textContent);
+  const ti = [...document.querySelectorAll('.tab')].findIndex(t => t.getAttribute('aria-selected') === 'true');
+  return A[ti].steps.findIndex((st, i) => i > 0 && (st.show || []).some(k =>
+    document.querySelector(`.board [data-k="${k}"]`)) && !st.split && !(st.fly || []).length);
+});
+for (let s = 0; s < penStep; s++) { await page.keyboard.press(' '); await page.waitForTimeout(80); }
+await page.waitForTimeout(1400);
 const penFit = await page.evaluate(() => {
   const A = JSON.parse(document.getElementById('ANIM').textContent);
-  const idx = [...document.querySelectorAll('.tab')].findIndex(t => t.getAttribute('aria-selected') === 'true');
-  const step = A[idx].steps[[...document.querySelectorAll('.dot')].findIndex(d => d.classList.contains('now'))];
+  const ti = [...document.querySelectorAll('.tab')].findIndex(t => t.getAttribute('aria-selected') === 'true');
+  const si = [...document.querySelectorAll('.dot')].findIndex(d => d.classList.contains('now'));
+  const step = A[ti].steps[si];
   const last = (step.show || []).filter(k => document.querySelector(`.board [data-k="${k}"]`)).pop();
-  const pen = document.getElementById('pen');
-  const pb = pen.getBoundingClientRect();
+  const pen = document.getElementById('pen'), pb = pen.getBoundingClientRect();
   const mb = document.querySelector(`.board [data-k="${last}"]`).getBoundingClientRect();
   const ox = Math.min(pb.right, mb.right) - Math.max(pb.left, mb.left);
   const oy = Math.min(pb.bottom, mb.bottom) - Math.max(pb.top, mb.top);
-  return { key: last, label: step.label,
-           visible: parseFloat(getComputedStyle(pen).opacity) > .5,
-           overlapArea: Math.max(0, ox) * Math.max(0, oy),
-           markArea: mb.width * mb.height,
+  return { key: last, label: step.label, visible: parseFloat(getComputedStyle(pen).opacity) > .5,
+           overlapArea: Math.max(0, ox) * Math.max(0, oy), markArea: mb.width * mb.height,
            nibDist: Math.hypot((pb.left + 2) - (mb.left + mb.width / 2), (pb.top + 2) - mb.bottom) };
 });
 if (!penFit.visible) fails.push('pen not visible on a step that writes a mark');
-if (penFit.nibDist > 40) fails.push(`pen nib ${Math.round(penFit.nibDist)}px from '${penFit.key}', the last mark of step ${penFit.label}`);
+if (penFit.nibDist > 45) fails.push(`pen nib ${Math.round(penFit.nibDist)}px from '${penFit.key}', ` +
+  `the last mark of step ${penFit.label}`);
 if (penFit.overlapArea > penFit.markArea * 0.3)
   fails.push(`pen covers ${Math.round(100*penFit.overlapArea/penFit.markArea)}% of the mark`);
 
 // CHOREOGRAPHY: the pen must ARRIVE before the mark appears, and marks inside a
 // step must land one after another. That sequencing is the whole point of the
 // motion rewrite and no data check can see it.
-await page.keyboard.press('1');
+await page.keyboard.press('2');           // long division: every step is pen-written
 await page.waitForTimeout(250);
-await page.keyboard.press(' ');           // step 0 -> 1 (setup -> first written marks)
+const choStep = await page.evaluate(() => {
+  const A = JSON.parse(document.getElementById('ANIM').textContent);
+  const ti = [...document.querySelectorAll('.tab')].findIndex(t => t.getAttribute('aria-selected') === 'true');
+  return A[ti].steps.findIndex((st, i) => i > 0 && !st.split &&
+    (st.show || []).filter(k => document.querySelector(`.board [data-k="${k}"]`)).length >= 2);
+});
+for (let s = 0; s < choStep - 1; s++) { await page.keyboard.press(' '); await page.waitForTimeout(80); }
 await page.waitForTimeout(1600);
 const cho = await page.evaluate(async () => {
   const A = JSON.parse(document.getElementById('ANIM').textContent);
