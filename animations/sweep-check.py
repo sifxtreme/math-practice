@@ -35,6 +35,12 @@ SHAPES = [
     ("4-digit / 1-digit",  "div", 4, 1),
     ("3-digit / 2-digit",  "div", 3, 2),
     ("4-digit / 2-digit",  "div", 4, 2),
+    # past the ladder on purpose. 5th grade tops out at 4-digit / 2-digit
+    # (5.NBT.B.6); everything below is 6th-grade size with no new method. Kept so a
+    # future change cannot quietly reintroduce a ceiling.
+    ("5-digit x 1-digit", "mult", 5, 1),
+    ("4-digit x 4-digit", "mult", 4, 4),
+    ("6-digit / 3-digit",  "div", 6, 3),
 ]
 
 

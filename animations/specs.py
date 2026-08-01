@@ -31,7 +31,19 @@ Steps reveal tokens by key. Reveal is cumulative and recomputed from scratch on
 every step change, which is what makes the Back button work.
 """
 
-PLACE = ["ones", "tens", "hundreds", "thousands", "ten-thousands"]
+_PLACE = ["ones", "tens", "hundreds", "thousands", "ten-thousands",
+          "hundred-thousands", "millions", "ten-millions", "hundred-millions"]
+
+
+class _Places(list):
+    """Names a column even past the ones we bothered to name. Running off the end used
+    to be an IndexError deep inside narration, which reads as 'the generator is broken'
+    rather than 'nobody named that column'."""
+    def __getitem__(self, i):
+        return _PLACE[i] if i < len(_PLACE) else f"10^{i}"
+
+
+PLACE = _Places(_PLACE)
 NUMWORD = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six"}
 
 
