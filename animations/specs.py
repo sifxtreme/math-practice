@@ -32,6 +32,7 @@ every step change, which is what makes the Back button work.
 """
 
 PLACE = ["ones", "tens", "hundreds", "thousands", "ten-thousands"]
+NUMWORD = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six"}
 
 
 def _digits(n):
@@ -231,70 +232,78 @@ def mult_by_one_digit(top, bot):
             "model": model, "answer": product}
 
 
-# ------------------------------------------------- 2 digit x 2 digit
+# ------------------------------------------------- N digits x M digits
 
 def mult_two_by_two(top, bot):
-    """Standard algorithm with two partial products and the placeholder zero."""
-    assert 10 <= bot < 100, "this layout is for a two-digit multiplier"
+    """Standard algorithm for ANY multi-digit multiplier: one round per digit of `bot`,
+    each row starting with one more placeholder zero than the row above it, then a final
+    addition. The name is historical -- it does 3x3 and beyond. Keep it, `problems.json`
+    and the sweep both reach it through `generate()`."""
+    assert bot >= 10, "use mult_by_one_digit for a single-digit multiplier"
     tdig = _digits(top)
-    b_ones, b_tens = bot % 10, bot // 10
-    p1 = top * b_ones
-    p2 = top * b_tens * 10
+    bdig = _digits(bot)                       # left to right
+    N = len(bdig)
+    rounds = list(reversed(bdig))             # ones first, the order you work in
+    partials = [top * m * 10 ** k for k, m in enumerate(rounds)]
     product = top * bot
     W = len(str(product))
     col = lambda j: W + 1 - j
-    R_CARRY, R_TOP, R_BOT, R_RULE1, R_P1, R_P2, R_RULE2, R_ANS = 1, 2, 3, 4, 5, 6, 7, 8
+    R_CARRY, R_TOP, R_BOT, R_RULE1 = 1, 2, 3, 4
+    R_P = [5 + k for k in range(N)]           # one written row per round
+    R_RULE2, R_ANS = 5 + N, 6 + N
 
     toks, steps = [], []
     for j, d in enumerate(reversed(tdig)):
         toks.append({"k": f"t{j}", "r": R_TOP, "c": col(j), "t": str(d), "cls": "d"})
     toks.append({"k": "op", "r": R_BOT, "c": 1, "t": "×", "cls": "op"})
-    toks.append({"k": "bo", "r": R_BOT, "c": col(0), "t": str(b_ones), "cls": "d hot"})
-    toks.append({"k": "bt", "r": R_BOT, "c": col(1), "t": str(b_tens), "cls": "d hot2"})
-    toks.append({"k": "plus", "r": R_P2, "c": 1, "t": "+", "cls": "op"})
+    bot_keys = []
+    for k, m in enumerate(rounds):
+        toks.append({"k": f"b{k}", "r": R_BOT, "c": col(k), "t": str(m),
+                     "cls": "d hot" if k == 0 else "d hot2"})
+        bot_keys.append(f"b{k}")
+    for k in range(1, N):
+        toks.append({"k": f"plus{k}", "r": R_P[k], "c": 1, "t": "+", "cls": "op"})
 
     decor = [
         {"kind": "rule", "k": "rule1", "r": R_RULE1, "c0": 1, "c1": W + 1},
         {"kind": "rule", "k": "rule2", "r": R_RULE2, "c0": 1, "c1": W + 1},
     ]
 
-    # --- the area model: a 2x2 grid whose ROWS are the two written answer rows
+    # --- area model: one strip per digit of the multiplier, biggest place on top
     tcols = []
     for j, d in enumerate(reversed(tdig)):
         if d or j == 0:
             tcols.append(d * 10 ** j)
     tcols.reverse()
-    cells, model_rows = [], [{"v": b_tens * 10, "maps": "p2"}, {"v": b_ones, "maps": "p1"}]
-    for ri, r in enumerate(model_rows):
-        for ci, cv in enumerate(tcols):
-            cells.append({"r": ri, "c": ci, "v": r["v"] * cv})
+    model_rows = [{"v": rounds[k] * 10 ** k, "maps": f"p{k + 1}"}
+                  for k in reversed(range(N))]
+    cells = [{"r": ri, "c": ci, "v": r["v"] * cv}
+             for ri, r in enumerate(model_rows) for ci, cv in enumerate(tcols)]
     model = {
-        "kind": "area", "h": bot,
-        "rows": model_rows, "cols": [{"v": v} for v in tcols], "cells": cells,
-        "rowSums": [p2, p1], "total": product,
-        "caption": f"{top} × {bot} as a rectangle. The bottom strip is the <b>{b_ones}</b> — "
-                   f"that is written row 1, {p1}. The top strip is the <b>{b_tens*10}</b>, not the "
-                   f"{b_tens} — that is written row 2, <b>{p2}</b>. It ends in 0 because every "
-                   f"multiple of {b_tens*10} does.",
+        "kind": "area", "h": bot, "rows": model_rows,
+        "cols": [{"v": v} for v in tcols], "cells": cells,
+        "rowSums": [r["v"] * top for r in model_rows], "total": product,
+        "caption": f"{top} × {bot} as a rectangle, one strip per digit of {bot}. "
+                   + " ".join(f"The {r['v']} strip is written row {N - ri}, "
+                              f"<b>{r['v'] * top}</b>." for ri, r in enumerate(model_rows)),
     }
 
-    setup = [f"t{j}" for j in range(len(tdig))] + ["op", "bo", "bt", "rule1"]
+    setup = ([f"t{j}" for j in range(len(tdig))] + ["op"] + bot_keys + ["rule1"])
     steps.append({
         "label": "SET UP", "beat": None,
-        "say": f"Two digits on the bottom means <b>two rounds</b>, so you get <b>two answer rows</b> "
-               f"and then you add them. Round 1 uses the <b>{b_ones}</b>. Round 2 uses the "
-               f"<b>{b_tens}</b> — and that one has a catch.",
-        "why": f"The catch, up front: in {bot} the {b_tens} is not a {b_tens}. It sits in the tens "
-               f"column, so it is <b>{b_tens*10}</b>. Round 2 is really <b>{b_tens*10} × {top}</b>, "
-               f"and that is where the 0 comes from.",
-        "show": setup, "flash": ["bo", "bt"], "dwell": 5.0, "modelRow": None,
+        "say": f"{NUMWORD[N].capitalize()} digits on the bottom means <b>{NUMWORD[N]} "
+               f"rounds</b>, so {NUMWORD[N]} answer rows, and then you add them all up.",
+        "why": "Each digit on the bottom is a different size. The "
+               + ", ".join(f"<b>{m}</b> is really <b>{m * 10 ** k}</b>"
+                           for k, m in enumerate(rounds) if k) +
+               ". That is where each row's zeros come from.",
+        "show": setup, "flash": bot_keys, "dwell": 5.0, "modelRow": None,
     })
 
     def digit_beats(mult, d, carry, j, last, slot, ans_row, ans_pre, carry_pre,
                     hot_key, mrow, tens_scale):
         """Beats for one digit of a round: the multiplication, then (if a carry is
-        coming in) the carry joining it, then where each half of the total goes. The
-        chip has to show `12 + 2 = 14` or the 14 has no visible parentage."""
+        coming in) the carry joining it, then where each half of the total goes."""
         raw = mult * d
         total = raw + carry
         digits = list(str(total))
@@ -317,10 +326,10 @@ def mult_two_by_two(top, bot):
                     if (j == 0 and tens_scale == 1 and raw >= 10) else
                     f"Really <b>{mult * tens_scale} × {d * 10 ** j} = "
                     f"{raw * 10 ** j * tens_scale}</b>."),
-            "show": [], "flash": [hot_key, f"t{j}"], "bubble": {"cells": chip_first, "reserveW": reserve},
+            "show": [], "flash": [hot_key, f"t{j}"],
+            "bubble": {"cells": chip_first, "reserveW": reserve},
             "modelRow": mrow, "dwell": 3.6,
         })
-
         if carry:
             steps.append({
                 "label": "+ THE CARRY", "beat": None,
@@ -328,7 +337,8 @@ def mult_two_by_two(top, bot):
                 "why": f"The carry came from the column on the right, where it did not "
                        f"fit. This is the column it belongs in.",
                 "show": [], "flash": [f"{carry_pre}{j-1}"],
-                "bubble": {"cells": chip_full, "grewFrom": len(chip_first), "reserveW": reserve},
+                "bubble": {"cells": chip_full, "grewFrom": len(chip_first),
+                           "reserveW": reserve},
                 "trap": (f"<b>Multiply first, then add the carry.</b> Not "
                          f"{d} + {carry} = {d+carry}, then × {mult} = {(d+carry)*mult}."),
                 "modelRow": mrow, "dwell": 4.8,
@@ -339,7 +349,7 @@ def mult_two_by_two(top, bot):
             for i, ch in enumerate(reversed(digits)):
                 k = f"{ans_pre}{slot+i}"
                 toks.append({"k": k, "r": ans_row, "c": col(slot + i), "t": ch,
-                             "cls": f"d {ans_pre[:2]}"})
+                             "cls": "d p1"})
                 show.append(k)
                 split.append({"part": len(digits) - 1 - i, "to": k})
             say2 = (f"Nothing left on top, so <b>both digits go down</b>."
@@ -350,9 +360,9 @@ def mult_two_by_two(top, bot):
             ones, tens = total % 10, total // 10
             k_ans, k_car = f"{ans_pre}{slot}", f"{carry_pre}{j}"
             toks.append({"k": k_ans, "r": ans_row, "c": col(slot), "t": str(ones),
-                         "cls": f"d {ans_pre[:2]}"})
+                         "cls": "d p1"})
             toks.append({"k": k_car, "r": R_CARRY, "c": col(j + 1), "t": str(tens),
-                         "cls": "carry" + (" carry2" if carry_pre == "cB" else "")})
+                         "cls": "carry" + ("" if carry_pre == "c0" else " carry2")})
             show += [k_ans, k_car]
             split = [{"part": 1, "to": k_ans}, {"part": 0, "to": k_car}]
             say2 = (f"<b>{total}</b> is two digits and only one fits in a box. The "
@@ -363,7 +373,7 @@ def mult_two_by_two(top, bot):
         else:
             k_ans = f"{ans_pre}{slot}"
             toks.append({"k": k_ans, "r": ans_row, "c": col(slot), "t": str(total),
-                         "cls": f"d {ans_pre[:2]}"})
+                         "cls": "d p1"})
             show.append(k_ans)
             split = [{"part": 0, "to": k_ans}]
             say2 = f"<b>{total}</b> is one digit — it drops straight down."
@@ -371,83 +381,83 @@ def mult_two_by_two(top, bot):
 
         steps.append({
             "label": "WHERE IT GOES", "beat": None, "say": say2, "why": why2,
-            "show": show, "flash": [], "bubble": {"cells": chip_full, "reserveW": reserve}, "split": split,
-            "modelRow": mrow, "dwell": 4.2,
+            "show": show, "flash": [], "bubble": {"cells": chip_full, "reserveW": reserve},
+            "split": split, "modelRow": mrow, "dwell": 4.2,
         })
         return 0 if last else total // 10
 
-    # ---- round 1: the ones digit
-    carry = 0
-    if b_ones == 0:
-        # A whole round of zeros. Walking it digit by digit writes one 0 per column
-        # ("00"), which is not the number 0 and is not what anyone writes on paper.
-        # One beat, one mark.
-        toks.append({"k": "p1_0", "r": R_P1, "c": col(0), "t": "0", "cls": "d p1"})
+    # --- one round per digit of the multiplier
+    for k, m in enumerate(rounds):
+        mrow = N - 1 - k                       # model rows run biggest-place first
+        pre, cpre = f"p{k}_", f"c{k}_"
+
+        if k:
+            # the placeholder zeros: k of them, and they are the whole reason this row
+            # is ten (or a hundred) times the last one
+            zk = []
+            for z in range(k):
+                key = f"z{k}_{z}"
+                toks.append({"k": key, "r": R_P[k], "c": col(z), "t": "0",
+                             "cls": "d p2 zero"})
+                zk.append(key)
+            steps.append({
+                "label": "THE ZERO" + ("S" if k > 1 else ""), "beat": None,
+                "say": f"Round {k+1} uses the <b>{m}</b> — but it is <b>not {m}</b>. It "
+                       f"sits {NUMWORD[k]} place{'s' if k > 1 else ''} to the left, so it "
+                       f"is really <b>{m * 10 ** k}</b>. Before you multiply anything, put "
+                       f"<b>{NUMWORD[k]} 0{'s' if k > 1 else ''}</b> at the end of this row.",
+                "why": f"This row is <b>{m * 10 ** k} × {top} = {partials[k]}</b>. Every "
+                       f"multiple of {m * 10 ** k} ends in {NUMWORD[k]} "
+                       f"zero{'s' if k > 1 else ''}, so this row <i>has</i> to. You are not "
+                       f"adding magic zeros — you are writing down where the number is.",
+                "show": zk + [f"plus{k}"], "flash": [f"b{k}"] + zk, "dwell": 5.6,
+                "modelRow": mrow,
+                "trap": f"<b>This is the most common way to get a multi-digit multiply "
+                        f"wrong.</b> Miss the zeros and you add {partials[k] // 10 ** k} "
+                        f"instead of {partials[k]}.",
+            })
+            prev = [t["k"] for t in toks if t["k"].startswith(f"c{k-1}_")]
+            if prev:
+                steps.append({
+                    "label": "CROSS OUT", "beat": None,
+                    "say": "Cross out the carries from the last round. They belong to that "
+                           "row and nothing else.",
+                    "why": "They were amounts borrowed inside the previous row's "
+                           "calculation. This is a different calculation.",
+                    "show": [], "flash": [], "strike": prev, "dwell": 3.8,
+                    "modelRow": mrow,
+                    "trap": "Leaving them there adds them a second time, and the answer "
+                            "comes out wrong with no obvious sign of why.",
+                })
+
+        if m == 0:
+            # a whole round of zeros: one beat, one mark -- walking it digit by digit
+            # writes one 0 per column, which is not the number 0
+            key = f"{pre}{k}"
+            toks.append({"k": key, "r": R_P[k], "c": col(k), "t": "0", "cls": "d p1"})
+            steps.append({
+                "label": f"× {m}", "beat": None,
+                "say": f"Round {k+1} multiplies by <b>0</b>. Anything times 0 is 0, so the "
+                       f"whole row is just <b>0</b> — no carrying, nothing to line up.",
+                "why": f"<b>{top} × 0 = 0.</b> The row still matters: its zeros are holding "
+                       f"the columns open for the rounds after it.",
+                "show": [key], "flash": [f"b{k}"],
+                "bubble": {"cells": [{"t": "0", "part": 0}], "reserveW": 62},
+                "split": [{"part": 0, "to": key}], "modelRow": mrow, "dwell": 4.0,
+            })
+        else:
+            carry = 0
+            for j, d in enumerate(reversed(tdig)):
+                carry = digit_beats(m, d, carry, j, j == len(tdig) - 1, j + k,
+                                    R_P[k], pre, cpre, f"b{k}", mrow, 10 ** k)
+
         steps.append({
-            "label": f"× {b_ones}", "beat": None,
-            "say": f"Round 1 multiplies by <b>0</b>. Anything times 0 is 0, so the whole "
-                   f"row is just <b>0</b> — no carrying, nothing to line up.",
-            "why": f"<b>{top} × 0 = 0.</b> The row is still there and still matters: it is "
-                   f"holding the ones place open so round 2 lands in the right columns.",
-            "show": ["p1_0"], "flash": ["bo"],
-            "bubble": {"cells": [{"t": "0", "part": 0}], "reserveW": 62},
-            "split": [{"part": 0, "to": "p1_0"}],
-            "modelRow": 1, "dwell": 4.0,
+            "label": f"ROW {k+1} DONE", "beat": None,
+            "say": f"Row {k+1} is <b>{partials[k]}</b> — that is <b>{m * 10 ** k} × {top}</b>.",
+            "why": f"On the rectangle that is the <b>{m * 10 ** k}</b> strip, area "
+                   f"<b>{partials[k]}</b>.",
+            "show": [], "flash": [], "dwell": 3.4, "modelRow": mrow,
         })
-    else:
-        for j, d in enumerate(reversed(tdig)):
-            carry = digit_beats(b_ones, d, carry, j, j == len(tdig) - 1, j,
-                                R_P1, "p1_", "cA", "bo", 1, 1)
-
-    carriesA = [t["k"] for t in toks if t["k"].startswith("cA")]
-    steps.append({
-        "label": "ROW 1 DONE", "beat": None,
-        "say": f"Row 1 is finished: <b>{p1}</b>. That is <b>{b_ones} × {top}</b>.",
-        "why": f"On the rectangle that is the <b>bottom strip</b> — {b_ones} tall, {top} wide, "
-               f"area <b>{p1}</b>.",
-        "show": [], "flash": [f"p1_{i}" for i in range(len(str(p1)))], "dwell": 3.4, "modelRow": 1,
-    })
-    if carriesA:
-        steps.append({
-            "label": "CROSS OUT", "beat": None,
-            "say": "Before round 2, <b>cross out the carries</b> from round 1. They belong to that "
-                   "row and nothing else.",
-            "why": "They were tens and hundreds borrowed inside round 1's calculation. Round 2 is "
-                   "a different calculation; those amounts are already spent.",
-            "show": [], "flash": [], "strike": carriesA, "dwell": 3.8, "modelRow": 1,
-            "trap": "Leaving them there is a quiet disaster — you add them a second time in "
-                    "round 2 and the answer comes out wrong with no obvious sign of why.",
-        })
-
-    # ---- round 2: the tens digit, starting with the placeholder zero
-    toks.append({"k": "zero", "r": R_P2, "c": col(0), "t": "0", "cls": "d p2 zero"})
-    steps.append({
-        "label": "THE ZERO", "beat": None,
-        "say": f"Round 2 uses the <b>{b_tens}</b> — but it is <b>not {b_tens}</b>. It sits in the "
-               f"tens column, so it is really <b>{b_tens*10}</b>. Before you multiply anything, "
-               f"<b>put a 0 in the ones column</b> of row 2.",
-        "why": f"Look at the rectangle: the top strip is <b>{b_tens*10} × {top} = {p2}</b>. Every "
-               f"multiple of {b_tens*10} ends in 0, so row 2 <i>has</i> to end in 0. You are not "
-               f"adding a magic zero — you are writing down where the number actually is.",
-        "show": ["plus", "zero"], "flash": ["bt", "zero"], "dwell": 6.0, "modelRow": 0,
-        "trap": f"<b>This is the single most common way to get a 2-digit × 2-digit wrong.</b> "
-                f"Skip the 0 and you add {p1} + {p2//10} = {p1 + p2//10} instead of "
-                f"{p1} + {p2} = {product}.",
-    })
-
-    carry = 0
-    for j, d in enumerate(reversed(tdig)):
-        carry = digit_beats(b_tens, d, carry, j, j == len(tdig) - 1, j + 1,
-                            R_P2, "p2_", "cB", "bt", 0, 10)
-
-    steps.append({
-        "label": "ROW 2 DONE", "beat": None,
-        "say": f"Row 2 is <b>{p2}</b>, which is <b>{b_tens*10} × {top}</b>. See how the 0 made it "
-               f"ten times bigger than {p2//10}? That is what the 0 is for.",
-        "why": f"Top strip of the rectangle: <b>{p2}</b>. Bottom strip: <b>{p1}</b>. Two strips, "
-               f"two written rows — same thing drawn two ways.",
-        "show": ["rule2"], "flash": [], "dwell": 4.8, "modelRow": 0,
-    })
 
     ans_keys = []
     for i, ch in enumerate(reversed(str(product))):
@@ -455,29 +465,27 @@ def mult_two_by_two(top, bot):
         ans_keys.append(f"a{i}")
     steps.append({
         "label": "ADD", "beat": None,
-        "say": f"Last move: <b>add the two rows</b>. {p1} + {p2} = <b>{product}</b>.",
-        "why": f"Which is the whole rectangle: <b>{p2} + {p1} = {product}</b>.",
-        "show": ans_keys, "flash": ans_keys, "dwell": 3.8, "modelRow": "all",
+        "say": f"Last move: <b>add all {NUMWORD[N]} rows</b>. "
+               f"{' + '.join(str(p) for p in partials)} = <b>{product}</b>.",
+        "why": f"Which is the whole rectangle: <b>{product}</b>.",
+        "show": ans_keys + ["rule2"], "flash": ans_keys, "dwell": 4.0, "modelRow": "all",
     })
-
-    # One reserved width for the whole animation, so the chip appears in the same
-    # spot every time instead of moving between digit groups.
-    _mx = max((st["bubble"]["reserveW"] for st in steps if st.get("bubble")), default=0)
-    for st in steps:
-        if st.get("bubble"):
-            st["bubble"]["reserveW"] = _mx
 
     r_top = round(top, -1)
     steps.append({
         "label": "CHECK", "beat": None,
         "say": f"Sense-check: {top} is about {r_top}, so the answer should land near "
-               f"{r_top} × {bot} = {r_top*bot}. We got <b>{product}</b>. ✓",
-        "why": f"All four little areas: "
-               f"{' + '.join(str(c['v']) for c in cells)} = <b>{product}</b>.",
+               f"{r_top} × {bot} = {r_top * bot}. We got <b>{product}</b>. ✓",
+        "why": f"All the little areas add to <b>{product}</b>.",
         "show": [], "flash": ans_keys, "dwell": 5.4, "modelRow": "all",
     })
 
-    return {"cols": W + 1, "rows": 8, "toks": toks, "decor": decor, "steps": steps,
+    _mx = max((st["bubble"]["reserveW"] for st in steps if st.get("bubble")), default=0)
+    for st in steps:
+        if st.get("bubble"):
+            st["bubble"]["reserveW"] = _mx
+
+    return {"cols": W + 1, "rows": R_ANS, "toks": toks, "decor": decor, "steps": steps,
             "model": model, "answer": product}
 
 
@@ -485,24 +493,30 @@ def mult_two_by_two(top, bot):
 
 def long_division(dividend, divisor):
     """Long division with a remainder: D-M-S-B, one written mark at a time."""
-    assert 0 < divisor < 10, "this layout is for a single-digit divisor"
+    # Asif 2026-08-01: never divide by 1 — the kid copies the number down and no
+    # long division happens. See DRILLS.md, which measured how often it leaks in.
+    assert divisor >= 2, "dividing by 1 is not a drill"
     assert dividend >= divisor, "the quotient would be zero; not a drill shape"
     ddig = _digits(dividend)
     W = len(ddig)
-    col = lambda j: W + 1 - j                      # j places from the right
-    dcol = lambda i: i + 2                         # i-th dividend digit (0 = leftmost)
+    ndiv = len(str(divisor))                       # the gutter is as wide as the divisor
+    dcol = lambda i: i + 1 + ndiv                  # i-th dividend digit (0 = leftmost)
     pv = lambda i: 10 ** (W - 1 - i)               # place value of quotient digit at i
     R_Q, R_DIV = 1, 2
 
     toks, steps, decor = [], [], []
     for i, d in enumerate(ddig):
         toks.append({"k": f"n{i}", "r": R_DIV, "c": dcol(i), "t": str(d), "cls": "d"})
-    toks.append({"k": "dv", "r": R_DIV, "c": 1, "t": str(divisor), "cls": "d hot"})
-    decor.append({"kind": "bracket", "k": "brk", "r": R_DIV, "c0": 2, "c1": W + 1})
+    dv_keys = []
+    for i, ch in enumerate(str(divisor)):
+        toks.append({"k": f"dv{i}", "r": R_DIV, "c": i + 1, "t": ch, "cls": "d hot"})
+        dv_keys.append(f"dv{i}")
+    decor.append({"kind": "bracket", "k": "brk", "r": R_DIV,
+                  "c0": ndiv + 1, "c1": ndiv + W})
 
     quotient, remainder = divmod(dividend, divisor)
 
-    setup = ["dv", "brk"] + [f"n{i}" for i in range(W)]
+    setup = dv_keys + ["brk"] + [f"n{i}" for i in range(W)]
     steps.append({
         "label": "SET UP", "beat": None,
         "say": f"<b>{dividend}</b> goes inside the house, <b>{divisor}</b> stands outside. "
@@ -511,7 +525,7 @@ def long_division(dividend, divisor):
         "why": f"The real question underneath all of it: <b>how many {divisor}s fit inside "
                f"{dividend}?</b> You chip away at it a place value at a time — hundreds first, "
                f"then tens, then ones — instead of counting {divisor}s one by one.",
-        "show": setup, "flash": ["dv"], "dwell": 5.0, "modelRow": None,
+        "show": setup, "flash": dv_keys, "dwell": 5.0, "modelRow": None,
     })
 
     row = 3
@@ -568,7 +582,7 @@ def long_division(dividend, divisor):
             "why": ("<b>Too small</b> is the one people skip. A digit is too small when "
                     "what is <i>left over</i> would still hold another " + str(divisor) +
                     " — you could have fitted one more in."),
-            "show": [], "flash": ["dv"] + cur_keys,
+            "show": [], "flash": dv_keys + cur_keys,
             "bubble": chip, "modelRow": k_index, "dwell": 5.6,
         })
 
@@ -593,7 +607,7 @@ def long_division(dividend, divisor):
             trap = ("The digit goes <b>directly above the digit you just used</b>, not off to the side. "
                     "The column is what turns a 6 into a 600.") if len(q_written) == 1 else None
         d_step = {"label": "D", "beat": "D", "say": say, "why": why, "show": [f"q{i}"],
-                  "flash": [f"q{i}", "dv"] + cur_keys, "trap": trap, "bubble": dict(chip),
+                  "flash": [f"q{i}"] + dv_keys + cur_keys, "trap": trap, "bubble": dict(chip),
                   "modelRow": k_index, "dwell": 4.8 if trap else 3.6}
         if q:
             # the digit you picked in the trial is the digit that goes up top -- it
@@ -664,7 +678,8 @@ def long_division(dividend, divisor):
             cur, cur_start, cur_keys = new_cur, rem_start, rem_keys + [k]
             row += 3
         else:
-            toks.append({"k": "rlab", "r": R_Q, "c": W + 2, "t": f"R{rem}", "cls": "rlab"})
+            toks.append({"k": "rlab", "r": R_Q, "c": ndiv + W + 1, "t": f"R{rem}",
+                         "cls": "rlab"})
             steps.append({
                 "label": "REMAINDER", "beat": None,
                 "say": f"Nothing left to bring down. The <b>{rem}</b> that will not split is the "
@@ -699,5 +714,6 @@ def long_division(dividend, divisor):
                    f"groups of {divisor}, with <b>{remainder}</b> left over.",
     }
 
-    return {"cols": W + 2, "rows": row + 2, "toks": toks, "decor": decor, "steps": steps,
+    return {"cols": ndiv + W + 1, "rows": row + 2, "toks": toks, "decor": decor,
+            "steps": steps,
             "model": model, "answer": f"{quotient} R{remainder}"}

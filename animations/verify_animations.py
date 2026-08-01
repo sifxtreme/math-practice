@@ -115,12 +115,15 @@ def verify_model(a, x, y, kind):
             for ri, rs in enumerate(m["rowSums"]):
                 want = sum(c["v"] for c in m["cells"] if c["r"] == ri)
                 check(rs == want, f"[{a['id']}] rowSum {ri} = {rs}, want {want}")
-            # and the two strips must BE the two written partial products
-            p1, p2 = top * (bot % 10), top * (bot // 10) * 10
-            check(sorted(m["rowSums"]) == sorted([p1, p2]),
-                  f"[{a['id']}] rowSums {m['rowSums']} are not the partial products {[p1, p2]}")
-            check(set(r.get("maps") for r in m["rows"]) == {"p1", "p2"},
-                  f"[{a['id']}] area rows don't map to the two written rows")
+            # the strips must BE the written partial products, one per multiplier digit
+            rounds = [int(c) for c in str(bot)][::-1]
+            parts = sorted(top * mm * 10 ** k for k, mm in enumerate(rounds))
+            check(sorted(m["rowSums"]) == parts,
+                  f"[{a['id']}] rowSums {sorted(m['rowSums'])} are not the partial "
+                  f"products {parts}")
+            check(set(r.get("maps") for r in m["rows"])
+                  == {f"p{k+1}" for k in range(len(rounds))},
+                  f"[{a['id']}] area rows don't map one-to-one onto the written rows")
 
     else:
         dividend, divisor = x, y
@@ -223,7 +226,7 @@ def verify_bubbles(a, top, bot):
     got = [int("".join(c["t"] for c in cells(st) if "part" in c))
            for st in a["steps"] if st.get("split")]
     want, tdig = [], [int(c) for c in str(top)]
-    rounds = [bot] if bot < 10 else [bot % 10, bot // 10]
+    rounds = [bot] if bot < 10 else [int(c) for c in str(bot)][::-1]
     for m in rounds:
         if m == 0:
             want.append(0)      # a whole round of zeros collapses to ONE mark, not N
@@ -385,60 +388,95 @@ def verify_mult1(a, top, bot):
 
 
 def verify_mult2(a, top, bot):
+    """Any multi-digit multiplier: one written row per digit, each with one more
+    trailing zero than the row above, then the sum. Re-derived here from (top, bot),
+    never read off the board it is checking."""
     toks = a["toks"]
-    p1, p2, product = top * (bot % 10), top * (bot // 10) * 10, top * bot
-    check(a["answer"] == str(product), f"[{a['id']}] declared answer", a["answer"])
-    check(row_text(toks, 2) == str(top), f"[{a['id']}] top row {row_text(toks,2)!r} want {top}")
-    check(row_text(toks, 3) == str(bot), f"[{a['id']}] bottom row {row_text(toks,3)!r} want {bot}")
-    check(row_text(toks, 5) == str(p1), f"[{a['id']}] partial 1 {row_text(toks,5)!r} want {p1}")
-    check(row_text(toks, 6) == str(p2), f"[{a['id']}] partial 2 {row_text(toks,6)!r} want {p2}")
-    check(row_text(toks, 8) == str(product), f"[{a['id']}] answer {row_text(toks,8)!r} want {product}")
-
-    # the placeholder zero: partial 2 must physically end in a 0 in the ones column
+    rounds = [int(c) for c in str(bot)][::-1]          # ones first, the order you work in
+    N = len(rounds)
+    partials = [top * m * 10 ** k for k, m in enumerate(rounds)]
+    product = top * bot
     W = a["cols"] - 1
-    zeros = [t for t in toks if t["r"] == 6 and t["c"] == W + 1]
-    check(len(zeros) == 1 and zeros[0]["t"] == "0",
-          f"[{a['id']}] no placeholder 0 in the ones column of row 2", str(zeros))
-    for r, lbl in ((2, "top"), (3, "bottom"), (5, "partial 1"), (6, "partial 2"), (8, "answer")):
-        contiguous(a, r, label=lbl)
-    check(p1 + p2 == product, f"[{a['id']}] partials don't sum to the answer")
-    # and it must be taught, not just drawn
-    check(any("0 in the ones column" in plain(s.get("say")) for s in a["steps"]),
-          f"[{a['id']}] the placeholder zero is never explained in narration")
+    R_TOP, R_BOT = 2, 3
+    R_P = [5 + k for k in range(N)]
+    R_ANS = 6 + N
 
-    # both carry sets, re-derived
-    for tag, mult in (("cA", bot % 10), ("cB", bot // 10)):
+    check(a["answer"] == str(product), f"[{a['id']}] declared answer", a["answer"])
+    check(a["rows"] == R_ANS, f"[{a['id']}] {a['rows']} grid rows, want {R_ANS} for "
+                              f"{N} rounds")
+    check(row_text(toks, R_TOP) == str(top),
+          f"[{a['id']}] top row {row_text(toks, R_TOP)!r} want {top}")
+    check(row_text(toks, R_BOT) == str(bot),
+          f"[{a['id']}] bottom row {row_text(toks, R_BOT)!r} want {bot}")
+    check(row_text(toks, R_ANS) == str(product),
+          f"[{a['id']}] answer {row_text(toks, R_ANS)!r} want {product}")
+    check(sum(partials) == product, f"[{a['id']}] partials don't sum to the answer")
+    contiguous(a, R_TOP, label="top")
+    contiguous(a, R_BOT, label="bottom")
+    contiguous(a, R_ANS, label="answer")
+
+    for k in range(N):
+        txt = row_text(toks, R_P[k])
+        # a round whose multiplier is 0 is a row of zeros: its k placeholders plus one
+        # more for the product. That is 0 written with leading zeros, which is what a
+        # kid writes, so match the marks rather than the value.
+        want_txt = "0" * (k + 1) if rounds[k] == 0 else str(partials[k])
+        check(txt == want_txt,
+              f"[{a['id']}] row {k+1} reads {txt!r}, want {want_txt}")
+        contiguous(a, R_P[k], label=f"partial {k+1}")
+        # row k must physically end in k zeros — this is the placeholder, and it is
+        # the single most common way to get a multi-digit multiply wrong
+        if k:
+            check(txt.endswith("0" * k),
+                  f"[{a['id']}] row {k+1} is {txt!r}; it must end in {k} placeholder "
+                  f"zero(s) because it is multiplying by {rounds[k] * 10 ** k}")
+            zeros = [t for t in toks if t["r"] == R_P[k] and t["c"] > W + 1 - k]
+            check(len(zeros) == k,
+                  f"[{a['id']}] row {k+1} has {len(zeros)} marks in its last {k} column(s)")
+
+    # every round after the first must have a step that TEACHES its zeros
+    zsteps = [st for st in a["steps"] if st["label"].startswith("THE ZERO")]
+    check(len(zsteps) == N - 1,
+          f"[{a['id']}] {N-1} rounds need placeholder zeros, {len(zsteps)} steps teach them")
+
+    # carries, re-derived per round
+    tdig = [int(c) for c in str(top)]
+    for k, m in enumerate(rounds):
+        got = {t["c"]: t["t"] for t in toks if t["k"].startswith(f"c{k}_")}
+        if m == 0:
+            check(not got, f"[{a['id']}] round {k+1} multiplies by 0 but carries {got}")
+            continue
         carry, expected = 0, {}
-        tdig = [int(c) for c in str(top)]
         for j, d in enumerate(reversed(tdig)):
-            total = mult * d + carry
-            last = j == len(tdig) - 1
-            carry = 0 if last else total // 10
+            total = m * d + carry
+            carry = 0 if j == len(tdig) - 1 else total // 10
             if carry:
                 expected[W + 1 - (j + 1)] = str(carry)
-        got = {t["c"]: t["t"] for t in toks if t["k"].startswith(tag)}
-        check(got == expected, f"[{a['id']}] carry set {tag}", f"got {got}, want {expected}")
+        check(got == expected, f"[{a['id']}] round {k+1} carries", f"got {got}, want {expected}")
 
-
-# ------------------------------------------------------------ long division
 
 def verify_div(a, dividend, divisor):
     toks = a["toks"]
     quotient, remainder = divmod(dividend, divisor)
     check(a["answer"] == f"{quotient} R{remainder}", f"[{a['id']}] declared answer", a["answer"])
 
-    check(row_text(toks, 2, skip={"dv"}) == str(dividend),
-          f"[{a['id']}] dividend row {row_text(toks,2,skip={'dv'})!r} want {dividend}")
-    dv = [t for t in toks if t["k"] == "dv"]
-    check(len(dv) == 1 and dv[0]["t"] == str(divisor) and dv[0]["c"] == 1,
-          f"[{a['id']}] divisor not in the gutter column", str(dv))
+    # the gutter is as wide as the divisor, so a 2-digit divisor shifts every column
+    ndiv = len(str(divisor))
+    gut = {f"dv{i}" for i in range(ndiv)}
+    check(row_text(toks, 2, skip=gut) == str(dividend),
+          f"[{a['id']}] dividend row {row_text(toks, 2, skip=gut)!r} want {dividend}")
+    dv = sorted([t for t in toks if t["k"].startswith("dv")], key=lambda t: t["c"])
+    check("".join(t["t"] for t in dv) == str(divisor),
+          f"[{a['id']}] gutter spells {''.join(t['t'] for t in dv)!r}, want {divisor}")
+    check([t["c"] for t in dv] == list(range(1, ndiv + 1)),
+          f"[{a['id']}] divisor not laid out across the gutter columns", str(dv))
     check(row_text(toks, 1) == str(quotient),
           f"[{a['id']}] quotient row {row_text(toks,1)!r} want {quotient}")
     rlab = [t for t in toks if "rlab" in t["cls"].split()]
     check(len(rlab) == 1 and rlab[0]["t"] == f"R{remainder}",
           f"[{a['id']}] remainder label", str(rlab))
 
-    contiguous(a, 2, skip={"dv"}, label="dividend")
+    contiguous(a, 2, skip=gut, label="dividend")
     contiguous(a, 1, label="quotient")
 
     # --- re-run long division here, independently
@@ -460,7 +498,7 @@ def verify_div(a, dividend, divisor):
 
     # --- each quotient digit sits directly above the dividend digit it consumed
     qtoks = {t["c"]: t["t"] for t in toks if "quo" in t["cls"].split()}
-    want_q = {t["i"] + 2: str(t["q"]) for t in trace}
+    want_q = {t["i"] + 1 + ndiv: str(t["q"]) for t in trace}
     check(qtoks == want_q, f"[{a['id']}] quotient column alignment", f"got {qtoks}, want {want_q}")
 
     # --- each subtraction row, and each leftover row
@@ -468,8 +506,9 @@ def verify_div(a, dividend, divisor):
         sub_r, rem_r = 3 + 3 * k, 5 + 3 * k
         check(row_text(toks, sub_r) == str(t["prod"]),
               f"[{a['id']}] subtraction row {sub_r} reads {row_text(toks,sub_r)!r}, want {t['prod']}")
-        check(max(row_cols(toks, sub_r)) == t["i"] + 2,
-              f"[{a['id']}] subtraction row {sub_r} not right-aligned under col {t['i']+2}")
+        check(max(row_cols(toks, sub_r)) == t["i"] + 1 + ndiv,
+              f"[{a['id']}] subtraction row {sub_r} not right-aligned under col "
+              f"{t['i'] + 1 + ndiv}")
         check(t["rem"] < divisor,
               f"[{a['id']}] leftover {t['rem']} is not smaller than the divisor {divisor}")
 
@@ -478,8 +517,9 @@ def verify_div(a, dividend, divisor):
         rules = [d for d in a["decor"] if d["kind"] == "rule" and d["r"] == sub_r + 1]
         check(len(rules) == 1, f"[{a['id']}] no subtraction rule line under row {sub_r}")
         if rules:
-            check(rules[0]["c1"] == t["i"] + 2,
-                  f"[{a['id']}] rule under row {sub_r} ends at col {rules[0]['c1']}, want {t['i']+2}")
+            check(rules[0]["c1"] == t["i"] + 1 + ndiv,
+                  f"[{a['id']}] rule under row {sub_r} ends at col {rules[0]['c1']}, "
+                  f"want {t['i'] + 1 + ndiv}")
 
         text = row_text(toks, rem_r)
         if k + 1 < len(trace):

@@ -270,37 +270,48 @@ runs the **same verification over hundreds of problems nobody picked by hand**:
 
 ```
 $ python3 sweep-check.py --n 60
-2-digit x 1-digit    60 tried   8000 checks  ✓ all 60 pass
-3-digit x 1-digit    60 tried  10490 checks  ✓ all 60 pass
-4-digit x 1-digit    60 tried  13033 checks  ✓ all 60 pass
-2-digit x 2-digit    60 tried  15424 checks  ✓ all 60 pass
-3-digit x 2-digit    60 tried  20149 checks  ✓ all 60 pass
-3-digit x 3-digit     1 tried      0 checks  ✗ UNSUPPORTED
-2-digit / 1-digit    60 tried  11214 checks  ✓ all 60 pass
-3-digit / 1-digit    60 tried  15847 checks  ✓ all 60 pass
-4-digit / 1-digit    60 tried  20443 checks  ✓ all 60 pass
-3-digit / 2-digit     1 tried      0 checks  ✗ UNSUPPORTED
-4-digit / 2-digit     1 tried      0 checks  ✗ UNSUPPORTED
+2-digit x 1-digit    60 tried    8000 checks  ✓ all 60 pass
+3-digit x 1-digit    60 tried   10490 checks  ✓ all 60 pass
+4-digit x 1-digit    60 tried   13033 checks  ✓ all 60 pass
+2-digit x 2-digit    60 tried   15389 checks  ✓ all 60 pass
+3-digit x 2-digit    60 tried   20060 checks  ✓ all 60 pass
+3-digit x 3-digit    60 tried   28444 checks  ✓ all 60 pass
+2-digit / 1-digit    60 tried   11274 checks  ✓ all 60 pass
+3-digit / 1-digit    60 tried   15907 checks  ✓ all 60 pass
+4-digit / 1-digit    60 tried   20503 checks  ✓ all 60 pass
+3-digit / 2-digit    60 tried   13244 checks  ✓ all 60 pass
+4-digit / 2-digit    60 tried   18199 checks  ✓ all 60 pass
 
-114,600 checks over 11 shapes
+174,543 checks over 11 shapes
 ```
 
-**It found a real bug on its first run.** `47 × 80` — a multiplier whose ones digit is 0 —
-wrote row 1 as `00` instead of `0`, one zero per column. Correct-looking, wrong number, and
-completely invisible to the four shipped problems. A whole round of zeros now collapses to
-one beat and one mark.
+**Every shape on the drill ladder now works**, including the three that were "🆕 new
+method" rungs in [`DRILLS.md`](../DRILLS.md). Turning one on is one entry in
+`problems.json` — they are left off the shipped page on purpose, because the kids' current
+rung is more variants of what they already have, not a harder slug.
 
-The three ✗ rows are the honest inventory of what the generators **cannot draw yet**, and
-they are exactly the three "🆕 new method" rungs in [`DRILLS.md`](../DRILLS.md):
+### What the sweep caught that the four shipped problems never could
 
-| shape | blocked by | ladder rung |
-|---|---|---|
-| 3-digit × 3-digit | `mult_two_by_two` assumes 2 rounds | kid2 #4 |
-| N-digit ÷ 2-digit | `long_division` assumes a 1-digit divisor and a 1-column gutter | kid2 #2 and #3 |
+| problem | bug |
+|---|---|
+| `47 × 80` | multiplier ending in 0 wrote row 1 as `00` — one zero per column, not the number 0 |
+| `803 × 407` | an **interior** zero in the multiplier: that row is its placeholders *plus* a zero product |
 
-`describe.py` already handles both — it produces correct titles, rules and you-try problems
-for `473 × 268` and `147 ÷ 23` today. **Only the two simulators are the gap**, and the
-sweep is what will tell you when they are closed.
+Both were correct-looking and permanently invisible to a fixed set of examples. That is
+the whole argument for the sweep.
+
+### How the two hard shapes were unblocked
+
+- **Multi-digit divisor.** The gutter was one column wide because the divisor was one
+  digit — `dcol = i + 2` everywhere. It is now `i + 1 + ndiv`, the divisor renders one
+  token per digit, and the bracket and remainder label move with it. The `TOO SMALL` loop
+  already handled taking more than one extra digit (`147 ÷ 23` needs two), so the
+  algorithm itself did not change — only the layout did.
+- **N-round multiplication.** `mult_two_by_two` now does one round per digit of the
+  multiplier, each row starting with one more placeholder zero than the row above. The
+  area model grows to N strips. `473 × 268` gives `3784 + 28380 + 94600 = 126764` with the
+  zero staircase visible in the row it belongs to.
+
 
 ## Files
 
