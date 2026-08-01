@@ -106,6 +106,35 @@ belongs. **That is all a carry is.**"*
 This doubles the step count on the multiplication tabs (kid1 5 → 10, kid2 11 → 17).
 That is the point — the linger is under your thumb, not on a timer.
 
+### Division has the same gap, and it is worse
+
+*"did you do this for division and the other things too?"* — no, and checking rather than
+guessing showed division had **zero** chips against multiplication's eight.
+
+The hidden step in long division is not a carry, it is **the search**. When the narration
+says *"how many 7s fit in 42? Six"* — where did the six come from? A kid does not know six.
+They have to hunt for it, and that hunt is the thing they get wrong most often. It was
+stated in words and never shown.
+
+So every `D` now gets a **`TRY THEM`** beat first, with the candidates laid out and judged:
+
+```
+5 × 7 = 35    too small
+6 × 7 = 42    fits          <- highlighted
+7 × 7 = 49    too big
+```
+
+**"Too small" is the row that matters** and the one teaching usually skips. A digit is too
+small when what is *left over* would still hold another divisor — you could have fitted one
+more in. That is the `why` line, and it is the rule that stops a kid writing 5 and then
+getting a leftover of 7.
+
+Then the `D` beat **flies the chosen digit up** out of the winning row into the quotient, so
+the answer has a visible source. The row keeps reading `6 × 7 = 42` with the 6 dimmed where
+it left from — a clone flies, the original stays, or the row would read `× 7 = 42`.
+
+Steps: kid1 ÷ 10 → 12, kid2 ÷ 15 → 18.
+
 ## The model — the same sum drawn a second way
 
 Under the board, every animation shows the calculation again **without the shorthand**,
@@ -225,7 +254,14 @@ the embedded JSON back out of `index.html` and checks it three ways:
    products. For the ladder: every partial quotient a clean place value, each product
    `q × divisor`, the leftover chain intact, and the partial quotients summing to the
    real quotient. Plus: every step must have a `why`, and every model reference in range.
-4. **The product chip** — the sequence of chips must be the real running products,
+4. **The trial ladder** — every verdict re-derived from scratch (`big` if the product
+   exceeds what you are dividing, `small` if the leftover would still hold another
+   divisor, else `fits`). A wrong verdict here teaches the wrong *rule*, which is worse
+   than a wrong answer. Plus: the row marked as fitting must carry the actual quotient
+   digit, a `fits` row must not exist where the answer is 0, the chip must say it is
+   dividing the number it is really dividing, and the digit that flies up must be the
+   digit that lands.
+5. **The product chip** — the sequence of chips must be the real running products,
    re-derived here; every chip digit must be accounted for by the split; and **the digit
    that flies must be the digit that lands** (chip digit vs. the text of the token it flies
    to). A chip that says 42 while a 3 lands on the board is the exact failure this catches.

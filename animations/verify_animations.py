@@ -247,6 +247,73 @@ def verify_bubbles(a, top, bot):
           f"[{a['id']}] {n_need} carries get added in, but only {n_add} chips show it")
 
 
+def verify_trials(a, dividend, divisor):
+    """The D-step chip shows the candidates a kid weighs. A wrong verdict here is worse
+    than a wrong answer -- it teaches the wrong RULE. So re-derive every verdict from
+    scratch, and check that the digit marked as fitting is the digit that lands up top."""
+    toks = {t["k"]: t for t in a["toks"]}
+
+    # re-run the division to know what `cur` and `q` really are at each D step
+    ddig = [int(c) for c in str(dividend)]
+    cur, started, trace = 0, False, []
+    for i, d in enumerate(ddig):
+        cur = cur * 10 + d
+        if not started and cur < divisor:
+            trace.append({"kind": "skip", "cur": cur, "q": 0})
+            continue
+        started = True
+        q = cur // divisor
+        trace.append({"kind": "d", "cur": cur, "q": q, "i": i})
+        cur -= q * divisor
+
+    chips = [st for st in a["steps"] if (st.get("bubble") or {}).get("trials")]
+    # a TRY THEM chip is carried through D and M, so count distinct label groups
+    tries = [st for st in a["steps"] if st["label"] in ("TRY THEM", "TOO SMALL")
+             and (st.get("bubble") or {}).get("trials")]
+    check(len(tries) == len(trace),
+          f"[{a['id']}] {len(trace)} decisions to make, {len(tries)} trial chips")
+
+    for st, tr in zip(tries, trace):
+        b = st["bubble"]
+        check(b["cur"] == tr["cur"],
+              f"[{a['id']}] trial chip says it is dividing {b['cur']}, really {tr['cur']}")
+        check(b["divisor"] == divisor, f"[{a['id']}] trial chip divisor", str(b["divisor"]))
+        for row in b["trials"]:
+            check(row["prod"] == row["n"] * divisor,
+                  f"[{a['id']}] trial {row['n']} × {divisor} != {row['prod']}")
+            want = ("big" if row["prod"] > tr["cur"]
+                    else "small" if tr["cur"] - row["prod"] >= divisor else "fits")
+            check(row["v"] == want,
+                  f"[{a['id']}] trial {row['n']} × {divisor} = {row['prod']} against "
+                  f"{tr['cur']} is labelled {row['v']!r}, should be {want!r}")
+        winners = [r for r in b["trials"] if "part" in r]
+        if tr["q"]:
+            check(len(winners) == 1 and winners[0]["n"] == tr["q"],
+                  f"[{a['id']}] the row marked as fitting is {winners}, quotient digit is {tr['q']}")
+        else:
+            check(not winners, f"[{a['id']}] a 'fits' row exists where the answer is 0")
+
+    # the chosen digit must be the digit that lands in the quotient
+    for st in a["steps"]:
+        b = st.get("bubble") or {}
+        if st.get("split") and b.get("trials"):
+            for sp in st["split"]:
+                win = [r for r in b["trials"] if r.get("part") == sp["part"]]
+                check(len(win) == 1, f"[{a['id']}] D step flies part {sp['part']}, no such row")
+                check(sp["to"] in toks, f"[{a['id']}] D step flies to unknown {sp['to']}")
+                if win and sp["to"] in toks:
+                    check(str(win[0]["n"]) == toks[sp["to"]]["t"],
+                          f"[{a['id']}] trial picked {win[0]['n']} but {sp['to']} reads "
+                          f"{toks[sp['to']]['t']!r}")
+            check(st.get("keepChip"), f"[{a['id']}] D step splits the chip but does not keep it")
+
+    # every decision must be SHOWN, not just narrated
+    check(all(any(r["v"] == "small" for r in st["bubble"]["trials"])
+              or st["bubble"]["trials"][0]["n"] == 1
+              for st in tries),
+          f"[{a['id']}] a trial chip offers no 'too small' candidate and does not start at 1")
+
+
 # ------------------------------------------------------------ structural
 
 def structural(a):
@@ -474,6 +541,7 @@ def main():
     if "kid1-div" in by_id:
         verify_div(by_id["kid1-div"], 67, 5)
         verify_model(by_id["kid1-div"], 67, 5, "ladder")
+        verify_trials(by_id["kid1-div"], 67, 5)
         verify_try(by_id["kid1-div"], "div", [(83, 6), (59, 4), (74, 8)])
     if "kid2-mult" in by_id:
         verify_mult2(by_id["kid2-mult"], 47, 36)
@@ -483,6 +551,7 @@ def main():
     if "kid2-div" in by_id:
         verify_div(by_id["kid2-div"], 4231, 7)
         verify_model(by_id["kid2-div"], 4231, 7, "ladder")
+        verify_trials(by_id["kid2-div"], 4231, 7)
         verify_try(by_id["kid2-div"], "div", [(3025, 6), (5138, 9), (2417, 4)])
 
     page_checks(html, anims)

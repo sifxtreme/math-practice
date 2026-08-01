@@ -43,6 +43,22 @@ def _spell(n):
             6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten"}.get(n, str(n))
 
 
+def _trials(cur, divisor, q):
+    """The candidates a kid actually has to weigh at the D step, with the verdict on
+    each. "Too small" is the one that gets skipped in teaching and it is the one that
+    matters: a digit is too small when the LEFTOVER would still hold another divisor."""
+    lo, hi = (1, 1) if q == 0 else (max(1, q - 1), min(9, q + 1))
+    rows = []
+    for n in range(lo, hi + 1):
+        prod = n * divisor
+        v = "big" if prod > cur else ("small" if cur - prod >= divisor else "fits")
+        row = {"n": n, "prod": prod, "v": v}
+        if v == "fits":
+            row["part"] = 0        # the digit that flies up to the quotient
+        rows.append(row)
+    return rows
+
+
 # ------------------------------------------------- multi-digit x 1 digit
 
 def mult_by_one_digit(top, bot):
@@ -503,6 +519,8 @@ def long_division(dividend, divisor):
                        f"{dividend}. So the answer has no {PLACE[W-1-i]} digit at all — and a "
                        f"leading zero would just be writing 'none' where nothing needs writing.",
                 "show": [], "flash": [f"n{i}", f"n{i+1}"], "dwell": 5.6, "modelRow": None,
+                "bubble": {"trials": _trials(cur, divisor, 0), "cur": cur,
+                           "divisor": divisor, "reserveW": 232},
                 "trap": "A zero at the <b>front</b> of the answer is the one zero you skip. A zero in "
                         "the <b>middle</b> you must write. Those are different, and mixing them up is "
                         "how a 604 turns into a 64.",
@@ -518,6 +536,24 @@ def long_division(dividend, divisor):
         qcol = dcol(i)
         p = pv(i)
         ladder.append({"q": q * p, "prod": prod * p, "left": None})   # `left` filled below
+
+        # --- the search itself. "How many 7s fit in 42?" is a hunt, and the hunt is
+        # --- the part kids get wrong. Show the candidates and let it sit there.
+        trials = _trials(cur, divisor, q)
+        chip = {"trials": trials, "cur": cur, "divisor": divisor, "reserveW": 232}
+        if q:
+            chip["winPart"] = 0
+        steps.append({
+            "label": "TRY THEM", "beat": "D",
+            "say": (f"How many <b>{divisor}</b>s fit inside <b>{cur}</b>? Nobody just "
+                    f"<i>knows</i> this — you <b>try them</b>, and you keep the biggest one "
+                    f"that still fits."),
+            "why": ("<b>Too small</b> is the one people skip. A digit is too small when "
+                    "what is <i>left over</i> would still hold another " + str(divisor) +
+                    " — you could have fitted one more in."),
+            "show": [], "flash": ["dv"] + cur_keys,
+            "bubble": chip, "modelRow": k_index, "dwell": 5.6,
+        })
 
         # --- D: divide
         toks.append({"k": f"q{i}", "r": R_Q, "c": qcol, "t": str(q), "cls": "d quo"})
@@ -539,9 +575,15 @@ def long_division(dividend, divisor):
                    f"You just found <b>{q*p} groups of {divisor}</b> inside {dividend}.")
             trap = ("The digit goes <b>directly above the digit you just used</b>, not off to the side. "
                     "The column is what turns a 6 into a 600.") if len(q_written) == 1 else None
-        steps.append({"label": "D", "beat": "D", "say": say, "why": why, "show": [f"q{i}"],
-                      "flash": [f"q{i}", "dv"] + cur_keys, "trap": trap,
-                      "modelRow": k_index, "dwell": 4.8 if trap else 3.6})
+        d_step = {"label": "D", "beat": "D", "say": say, "why": why, "show": [f"q{i}"],
+                  "flash": [f"q{i}", "dv"] + cur_keys, "trap": trap, "bubble": dict(chip),
+                  "modelRow": k_index, "dwell": 4.8 if trap else 3.6}
+        if q:
+            # the digit you picked in the trial is the digit that goes up top -- it
+            # flies out of the winning row, so the answer has a visible source
+            d_step["split"] = [{"part": 0, "to": f"q{i}"}]
+            d_step["keepChip"] = True
+        steps.append(d_step)
 
         # --- M: multiply
         sub_txt = str(prod)
@@ -560,6 +602,7 @@ def long_division(dividend, divisor):
                    f"{q*p} groups of {divisor}, and it is the chunk of {dividend} you have now "
                    f"accounted for.",
             "show": sub_keys + [f"m{i}"], "flash": sub_keys, "dwell": 3.6, "modelRow": k_index,
+            "bubble": dict(chip),
         })
 
         # --- S: subtract

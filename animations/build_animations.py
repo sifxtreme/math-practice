@@ -234,6 +234,17 @@ header .thesis b{color:var(--ink)}
 /* a digit bound for the shelf already looks like a carry while it flies, so there
    is no colour jump at the handoff */
 .bubble .bd.to-carry{color:var(--warn)}
+/* the D-step chip is a stack of candidates, not an inline expression */
+.bubble.trial{flex-direction:column;align-items:stretch;gap:1px;padding:8px 10px}
+.bubble.trial .trow{display:flex;align-items:center;gap:2px;padding:3px 5px;
+  border-radius:7px;opacity:.48;position:relative}
+.bubble.trial .trow.fits{opacity:1;background:var(--accent-soft)}
+.bubble.trial .bd{font-size:clamp(16px,3vw,22px)}
+.bubble.trial .bop{font-size:clamp(12px,2.4vw,16px);padding:0 2px}
+.bubble.trial .tag{margin-left:7px;font-size:10px;letter-spacing:.7px;font-weight:700;
+  text-transform:uppercase;font-family:ui-monospace,monospace;white-space:nowrap}
+.bubble.trial .trow.small .tag,.bubble.trial .trow.big .tag{color:var(--warn)}
+.bubble.trial .trow.fits .tag{color:var(--accent)}
 .bubble .bop{position:relative;font-size:clamp(17px,3.4vw,25px);font-weight:600;
   color:var(--mute);padding:0 4px;line-height:1.06;display:block}
 
@@ -721,16 +732,33 @@ function inkIn(node, fromBox, myBox){
    travels down-left to the answer row, the carry travels up-left to the shelf. Both
    directions match what you tell the kid. Falls back to above the board when there
    is no room to the right, which is the case on a phone. */
-function chipKey(cells){ return cells.map(c => c.t).join(''); }
-function showBubble(cells, wrap, boardRect, reserveW){
-  const bub = $('bubble'), key = chipKey(cells);
+function chipKey(b){
+  if (!b) return '';
+  return b.trials ? 'T' + b.divisor + ':' + b.cur + ':' + b.trials.map(t => t.n).join(',')
+                  : b.cells.map(c => c.t).join('');
+}
+const VERDICT = { small: 'too small', fits: 'fits', big: 'too big' };
+function trialHTML(b){
+  return '<div class="trials">' + b.trials.map(t => {
+    const part = t.part !== undefined ? ` data-part="${t.part}"` : '';
+    const prod = String(t.prod).split('').map(ch => `<span class="bd">${ch}</span>`).join('');
+    return `<div class="trow ${t.v}"><span class="bd"${part}>${t.n}</span>` +
+           `<span class="bop">×</span><span class="bd">${b.divisor}</span>` +
+           `<span class="bop">=</span>${prod}<span class="tag">${VERDICT[t.v]}</span></div>`;
+  }).join('') + '</div>';
+}
+function showBubble(b, wrap, boardRect){
+  const bub = $('bubble'), key = chipKey(b);
   const fresh = bub.dataset.key !== key;
   if (fresh) { bub.dataset.key = key;
-    bub.innerHTML = '<span class="shell"></span>' + cells.map((c, i) => c.op
-      ? `<span class="bop" data-i="${i}">${c.t}</span>`
-      : `<span class="bd" data-i="${i}"${c.part !== undefined ? ` data-part="${c.part}"` : ''}>${c.t}</span>`
-      ).join(''); }
-  const estW = reserveW || cells.reduce((n, c) => n + (c.op ? 22 : 30), 32);
+    bub.classList.toggle('trial', !!b.trials);
+    bub.style.position = 'absolute';
+    bub.innerHTML = '<span class="shell"></span>' + (b.trials ? trialHTML(b)
+      : b.cells.map((c, i) => c.op
+        ? `<span class="bop" data-i="${i}">${c.t}</span>`
+        : `<span class="bd" data-i="${i}"${c.part !== undefined ? ` data-part="${c.part}"` : ''}>${c.t}</span>`
+        ).join('')); }
+  const estW = b.reserveW || (b.cells || []).reduce((n, c) => n + (c.op ? 22 : 30), 32);
   const wrapW = $('boardwrap').clientWidth;
   const rightX = boardRect.right - wrap.left + 20;
   const fits = rightX + estW <= wrapW - 4;
@@ -769,19 +797,32 @@ function growBubble(cells, grewFrom, boxes){
       }
     });
 }
-function splitBubble(split, partBoxes, el, box){
+function splitBubble(split, partBoxes, el, box, keep, bubBox){
   const bub = $('bubble'), shell = bub.querySelector('.shell');
-  if (shell) play(shell, [{ opacity: 1 }, { opacity: 0 }],
-                  { duration: 260, easing: T.ease.out, fill: 'forwards' });
+  // when the chip is kept (the D step keeps its trial rows on screen) the shell stays
+  if (shell && !keep) play(shell, [{ opacity: 1 }, { opacity: 0 }],
+                           { duration: 260, easing: T.ease.out, fill: 'forwards' });
   split.forEach(sp => {
     const span = bub.querySelector(`.bd[data-part="${sp.part}"]`);
     const from = partBoxes[sp.part], to = box[sp.to];
     if (!span || !from || !to) return;
     span.classList.toggle('to-carry', /carry/.test(el[sp.to].className));
+    // On a kept chip the row has to keep reading true, so fly a CLONE and leave the
+    // original behind, dimmed. Otherwise "6 x 7 = 42" becomes "x 7 = 42".
+    let mover = span;
+    if (keep && bubBox) {
+      mover = span.cloneNode(true);
+      mover.removeAttribute('data-part');
+      Object.assign(mover.style, { position: 'absolute', margin: '0',
+        left: (from.left - bubBox.left) + 'px', top: (from.top - bubBox.top) + 'px' });
+      bub.appendChild(mover);
+      span.style.opacity = '.4';
+      after(T.split + 40, () => mover.remove());
+    }
     const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
     const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
     const sc = to.height / from.height;
-    play(span, [
+    play(mover, [
       { transform: 'none', opacity: 1, offset: 0 },
       { transform: `translate(${dx * .5}px,${dy * .5 - 14}px) scale(${(1 + sc) / 2})`,
         opacity: 1, offset: .55 },
@@ -794,7 +835,8 @@ function splitBubble(split, partBoxes, el, box){
       play(el[sp.to], [{ opacity: 0 }, { opacity: 1 }], { duration: 130, easing: T.ease.ink });
     });
   });
-  after(T.split + 30, () => { $('bubble').classList.remove('up'); $('bubble').dataset.key = ''; });
+  if (!keep) after(T.split + 30, () => {
+    $('bubble').classList.remove('up'); $('bubble').dataset.key = ''; });
 }
 
 function penTarget(b, wrap){
@@ -836,7 +878,7 @@ function apply(instant){
   const wrap = $('boardwrap').getBoundingClientRect();
   const boardRect = board.getBoundingClientRect();
   const box = {};
-  const arriving = (cur.bubble && cur.bubble.cells || []).filter(c => c.arrive).map(c => c.arrive);
+  const arriving = ((cur.bubble && cur.bubble.cells) || []).filter(c => c.arrive).map(c => c.arrive);
   new Set([...newly, ...Object.values(flyFrom), ...arriving]).forEach(k => {
     if (el[k]) box[k] = el[k].getBoundingClientRect();
   });
@@ -844,12 +886,16 @@ function apply(instant){
   // measured here in the read phase. If it is NOT up (someone jumped straight to
   // this step), there is nothing to fly and the marks simply appear.
   const bub = $('bubble');
-  const bubKey = cur.bubble ? cur.bubble.cells.map(c => c.t).join('') : null;
+  const bubKey = chipKey(cur.bubble);
   const canSplit = !!(cur.split && !instant && !back && !REDUCED
                       && bub.classList.contains('up') && bub.dataset.key === bubKey);
   const partBoxes = {};
-  if (canSplit) bub.querySelectorAll('.bd[data-part]').forEach(n => {
-    partBoxes[+n.dataset.part] = n.getBoundingClientRect(); });
+  let bubBox = null;
+  if (canSplit) {
+    bubBox = bub.getBoundingClientRect();
+    bub.querySelectorAll('.bd[data-part]').forEach(n => {
+      partBoxes[+n.dataset.part] = n.getBoundingClientRect(); });
+  }
 
   /* ---------- WRITE PHASE ---------- */
   for (const k in el) {
@@ -861,7 +907,7 @@ function apply(instant){
   if (!REDUCED && !instant && !back) newly.forEach(k => holdHidden(el[k]));
 
   if (cur.bubble && !canSplit) {
-    const fresh = showBubble(cur.bubble.cells, wrap, boardRect, cur.bubble.reserveW);
+    const fresh = showBubble(cur.bubble, wrap, boardRect);
     if (fresh && cur.bubble.grewFrom != null && !instant && !back && !REDUCED)
       growBubble(cur.bubble.cells, cur.bubble.grewFrom, box);
   } else if (!cur.bubble) { bub.classList.remove('up'); bub.dataset.key = ''; }
@@ -872,7 +918,7 @@ function apply(instant){
 
   if (canSplit) {
     pen.classList.remove('up');
-    splitBubble(cur.split, partBoxes, el, box);
+    splitBubble(cur.split, partBoxes, el, box, cur.keepChip, bubBox);
     after(T.split + 90, litFlash);
   } else if (REDUCED || instant) {
     litFlash();
