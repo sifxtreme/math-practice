@@ -79,6 +79,84 @@ def ones_col(a):
     return a["cols"] - 1 if a["id"].endswith("div") else a["cols"]
 
 
+# ------------------------------------------------------------ the model
+
+def verify_model(a, x, y, kind):
+    """The model is a SECOND derivation of the same calculation, so it is worth
+    exactly as much as it can be independently falsified. Check it against x and y
+    directly, never against the board it is meant to corroborate."""
+    m = a["model"]
+
+    if m["kind"] == "area":
+        top, bot = x, y
+        check(sum(c["v"] for c in m["cols"]) == top,
+              f"[{a['id']}] area columns sum to {sum(c['v'] for c in m['cols'])}, want {top}")
+        check(sum(r["v"] for r in m["rows"]) == bot,
+              f"[{a['id']}] area rows sum to {sum(r['v'] for r in m['rows'])}, want {bot}")
+        # every column and row is a single place value: 200, 40, 7 — never 47
+        for c in m["cols"] + m["rows"]:
+            d = str(c["v"])
+            check(d == d[0] + "0" * (len(d) - 1),
+                  f"[{a['id']}] model band {c['v']} is not a single place value")
+        seen = set()
+        for cell in m["cells"]:
+            want = m["rows"][cell["r"]]["v"] * m["cols"][cell["c"]]["v"]
+            check(cell["v"] == want,
+                  f"[{a['id']}] area cell r{cell['r']}c{cell['c']} = {cell['v']}, want {want}")
+            seen.add((cell["r"], cell["c"]))
+        check(len(seen) == len(m["rows"]) * len(m["cols"]),
+              f"[{a['id']}] area grid has holes", f"{len(seen)} cells for "
+              f"{len(m['rows'])}×{len(m['cols'])}")
+        check(sum(c["v"] for c in m["cells"]) == top * bot,
+              f"[{a['id']}] area cells sum to {sum(c['v'] for c in m['cells'])}, want {top*bot}")
+        check(m["total"] == top * bot, f"[{a['id']}] model total", str(m["total"]))
+
+        if "rowSums" in m:
+            for ri, rs in enumerate(m["rowSums"]):
+                want = sum(c["v"] for c in m["cells"] if c["r"] == ri)
+                check(rs == want, f"[{a['id']}] rowSum {ri} = {rs}, want {want}")
+            # and the two strips must BE the two written partial products
+            p1, p2 = top * (bot % 10), top * (bot // 10) * 10
+            check(sorted(m["rowSums"]) == sorted([p1, p2]),
+                  f"[{a['id']}] rowSums {m['rowSums']} are not the partial products {[p1, p2]}")
+            check(set(r.get("maps") for r in m["rows"]) == {"p1", "p2"},
+                  f"[{a['id']}] area rows don't map to the two written rows")
+
+    else:
+        dividend, divisor = x, y
+        q, rem = divmod(dividend, divisor)
+        check(m["start"] == dividend, f"[{a['id']}] ladder start", str(m["start"]))
+        check(m["divisor"] == divisor, f"[{a['id']}] ladder divisor", str(m["divisor"]))
+        check(sum(r["q"] for r in m["rows"]) == q,
+              f"[{a['id']}] partial quotients sum to {sum(r['q'] for r in m['rows'])}, want {q}")
+        left = dividend
+        for i, r in enumerate(m["rows"]):
+            check(r["prod"] == r["q"] * divisor,
+                  f"[{a['id']}] ladder row {i}: {r['q']} × {divisor} != {r['prod']}")
+            # each partial quotient is a clean place value (600, 0, 4 — never 604)
+            d = str(r["q"])
+            check(r["q"] == 0 or d == d[0] + "0" * (len(d) - 1),
+                  f"[{a['id']}] partial quotient {r['q']} is not a single place value")
+            left -= r["prod"]
+            check(r["left"] == left,
+                  f"[{a['id']}] ladder row {i} leftover {r['left']}, want {left}")
+        check(m["remainder"] == rem == left, f"[{a['id']}] ladder remainder", str(m["remainder"]))
+        check(rem < divisor, f"[{a['id']}] remainder {rem} not smaller than divisor {divisor}")
+        check(m["quotient"] == q, f"[{a['id']}] ladder quotient", str(m["quotient"]))
+
+    # every step must point at a real part of the model, and explain itself
+    n_rows = len(m["rows"])
+    n_cols = len(m.get("cols", []))
+    for i, st in enumerate(a["steps"]):
+        check(bool(st.get("why")), f"[{a['id']}] step {i} ({st['label']}) has no `why`")
+        for field, limit in (("modelRow", n_rows), ("modelCell", n_cols)):
+            v = st.get(field)
+            if v is None or v == "all":
+                continue
+            check(isinstance(v, int) and 0 <= v < limit,
+                  f"[{a['id']}] step {i} {field}={v} outside 0..{limit-1}")
+
+
 # ------------------------------------------------------------ structural
 
 def structural(a):
@@ -300,15 +378,19 @@ def main():
 
     if "kid1-mult" in by_id:
         verify_mult1(by_id["kid1-mult"], 247, 6)
+        verify_model(by_id["kid1-mult"], 247, 6, "area")
         verify_try(by_id["kid1-mult"], "mul", [(138, 4), (306, 7), (429, 8)])
     if "kid1-div" in by_id:
         verify_div(by_id["kid1-div"], 67, 5)
+        verify_model(by_id["kid1-div"], 67, 5, "ladder")
         verify_try(by_id["kid1-div"], "div", [(83, 6), (59, 4), (74, 8)])
     if "kid2-mult" in by_id:
         verify_mult2(by_id["kid2-mult"], 47, 36)
+        verify_model(by_id["kid2-mult"], 47, 36, "area")
         verify_try(by_id["kid2-mult"], "mul", [(58, 24), (73, 46), (89, 37)])
     if "kid2-div" in by_id:
         verify_div(by_id["kid2-div"], 4231, 7)
+        verify_model(by_id["kid2-div"], 4231, 7, "ladder")
         verify_try(by_id["kid2-div"], "div", [(3025, 6), (5138, 9), (2417, 4)])
 
     page_checks(html, anims)

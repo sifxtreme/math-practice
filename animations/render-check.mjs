@@ -104,8 +104,15 @@ for (let i = 0; i < 4; i++) {
     });
     const sizeSpread = Object.fromEntries(
       Object.entries(sizes).map(([k, v]) => [k, [...v]]));
+    // the pen must be visible and parked ON the mark it just made — it was silently
+    // drawn on top of the digit for a whole revision because nothing checked it
+    const pen = document.getElementById('pen');
+    const pcs = getComputedStyle(pen), pb = pen.getBoundingClientRect();
+    const lastNew = (A.steps[A.steps.length - 1].show || [])[0];
+    const penState = { up: pen.classList.contains('up'), opacity: pcs.opacity,
+                       w: Math.round(pb.width), h: Math.round(pb.height) };
     return {
-      id: A.id, nSteps: A.steps.length, invisible, overlaps, board, sizeSpread,
+      id: A.id, nSteps: A.steps.length, invisible, overlaps, board, sizeSpread, penState,
       pageOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
       boardClipped: (w => w.scrollWidth > w.clientWidth + 1)(document.querySelector('.boardwrap')),
     };
@@ -113,6 +120,8 @@ for (let i = 0; i < 4; i++) {
 
   for (const [grp, vals] of Object.entries(r.sizeSpread))
     if (vals.length > 1) fails.push(`${r.id}: ${grp} marks render at mixed sizes -> ${vals}`);
+  if (r.penState.w < 10 || r.penState.h < 10)
+    fails.push(`${r.id}: pen has no size -> ${JSON.stringify(r.penState)}`);
   if (r.invisible.length) fails.push(`${r.id}: revealed but INVISIBLE -> ${JSON.stringify(r.invisible)}`);
   if (r.overlaps.length) fails.push(`${r.id}: marks overlap -> ${JSON.stringify(r.overlaps)}`);
   if (r.pageOverflow) fails.push(`${r.id}: page scrolls horizontally at 1180px`);
@@ -120,6 +129,28 @@ for (let i = 0; i < 4; i++) {
   if (r.nSteps !== nSteps) fails.push(`${r.id}: dot count ${nSteps} != step count ${r.nSteps}`);
   report.push(r);
 }
+
+// The pen must land ON the mark it just wrote, without covering it.
+await page.setViewportSize({ width: 1180, height: 1000 });
+await page.keyboard.press('3');
+await page.waitForTimeout(200);
+for (let s = 0; s < 5; s++) await page.keyboard.press(' ');
+await page.waitForTimeout(700);
+const penFit = await page.evaluate(() => {
+  const pen = document.getElementById('pen').getBoundingClientRect();
+  const zero = document.querySelector('[data-k="zero"]').getBoundingClientRect();
+  const ox = Math.min(pen.right, zero.right) - Math.max(pen.left, zero.left);
+  const oy = Math.min(pen.bottom, zero.bottom) - Math.max(pen.top, zero.top);
+  const nib = { x: pen.left + 2, y: pen.top + 2 };
+  return { visible: parseFloat(getComputedStyle(document.getElementById('pen')).opacity) > .5,
+           overlapArea: Math.max(0, ox) * Math.max(0, oy),
+           markArea: zero.width * zero.height,
+           nibDist: Math.hypot(nib.x - (zero.left + zero.width / 2), nib.y - zero.bottom) };
+});
+if (!penFit.visible) fails.push('pen not visible on a step that writes a mark');
+if (penFit.nibDist > 40) fails.push(`pen nib ${Math.round(penFit.nibDist)}px from the mark it wrote`);
+if (penFit.overlapArea > penFit.markArea * 0.3)
+  fails.push(`pen covers ${Math.round(100*penFit.overlapArea/penFit.markArea)}% of the mark`);
 
 // Back button must actually un-write marks
 await page.keyboard.press('1');
