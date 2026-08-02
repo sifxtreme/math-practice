@@ -193,36 +193,36 @@ check("L-Jul30 M3 unique match", sols,
 sols = []
 for birds in permutations(["peregrine", "saker", "kestrel"]):
     for days in permutations(["Tue", "Thu", "Sat"]):
-        b = dict(zip(["kid2", "Tariq", "Amina"], birds))
-        d = dict(zip(["kid2", "Tariq", "Amina"], days))
+        b = dict(zip(["Yusuf", "Tariq", "Amina"], birds))
+        d = dict(zip(["Yusuf", "Tariq", "Amina"], days))
         if d["Amina"] == "Sat":
             continue
         if d[[p for p in b if b[p] == "peregrine"][0]] != "Sat":
             continue
-        if d["kid2"] != "Tue" or b["kid2"] == "saker":
+        if d["Yusuf"] != "Tue" or b["Yusuf"] == "saker":
             continue
         sols.append({p: (b[p], d[p]) for p in b})
 check("L-Jul30 Y1 grid unique", len(sols), 1)
 check("L-Jul30 Y1 grid solution", sols[0],
-      {"kid2": ("kestrel", "Tue"), "Tariq": ("peregrine", "Sat"), "Amina": ("saker", "Thu")})
+      {"Yusuf": ("kestrel", "Tue"), "Tariq": ("peregrine", "Sat"), "Amina": ("saker", "Thu")})
 
 sols = []
 for cols in permutations(["red", "green", "blue"]):
     for places in permutations(["hill", "beach", "park"]):
-        c = dict(zip(["kid2", "kid1", "Hamza"], cols))
-        pl = dict(zip(["kid2", "kid1", "Hamza"], places))
-        if c["kid1"] == "red":
+        c = dict(zip(["Yusuf", "Musa", "Hamza"], cols))
+        pl = dict(zip(["Yusuf", "Musa", "Hamza"], places))
+        if c["Musa"] == "red":
             continue
         if pl[[p for p in c if c[p] == "blue"][0]] != "beach":
             continue
         if pl["Hamza"] != "hill" or c["Hamza"] == "green":
             continue
-        if pl["kid2"] == "beach":
+        if pl["Yusuf"] == "beach":
             continue
         sols.append({p: (c[p], pl[p]) for p in c})
 check("L-Aug2 Y1 grid unique", len(sols), 1)
 check("L-Aug2 Y1 grid solution", sols[0],
-      {"Hamza": ("red", "hill"), "kid1": ("blue", "beach"), "kid2": ("green", "park")})
+      {"Hamza": ("red", "hill"), "Musa": ("blue", "beach"), "Yusuf": ("green", "park")})
 
 # --- liar puzzles, brute forced over who is guilty
 def liar_solve(people, statement, want_true=None, want_lies=None):
