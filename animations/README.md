@@ -203,6 +203,26 @@ attention pulse waits until the ink has landed so the two do not compete.
 All of it respects `prefers-reduced-motion` — the pen hides and the flights are skipped.
 Window resize is rAF-throttled to one re-layout per frame.
 
+### Speed moves the motion, not just the pauses
+
+Hafsa, 2026-08-01: *slowing down the animation when you move the numbers around would be
+helpful.* She was pointing at a real flaw — the **Speed** control only stretched the gap
+*between* steps. The digits still flew at exactly the same rate, so "Slow" did not slow
+down the one thing you actually watch.
+
+Every animated duration now goes through `dur()`, which scales by the Speed setting.
+Measured, following the carry as it travels to its shelf:
+
+| Speed | carry finishes travelling |
+|---|---|
+| Quick (×0.7) | 798 ms |
+| Normal (×1) | 1140 ms |
+| Slow (×1.6) | 1811 ms |
+
+The **defaults for movement also got slower** — a split went 820 → 1250 ms, an arc
+610 → 900 ms, the pen travels at 0.48 px/ms instead of 0.62. Marks *appearing* were left
+alone; the note was about following a number as it moves, not about how fast ink lands.
+
 Controls: `space` next · `←` back · `R` restart · `P` play/pause · `1`–`4` switch tab.
 Play auto-advances with a per-step dwell; traps and `why` steps get a longer pause.
 

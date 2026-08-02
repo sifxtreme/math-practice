@@ -417,9 +417,9 @@ footer{margin-top:26px;font-size:12.5px;color:var(--mute);text-align:center}
           <button class="ctl" id="restart">↺</button>
           <span class="spd"><label for="speed">Speed</label>
             <select id="speed">
-              <option value="1.5">Slow</option>
+              <option value="1.6">Slow — easier to follow</option>
               <option value="1" selected>Normal</option>
-              <option value="0.65">Quick</option>
+              <option value="0.7">Quick</option>
             </select></span>
         </div>
         <p class="hint"><kbd>space</kbd> next · <kbd>←</kbd> back · <kbd>R</kbd> restart ·
@@ -637,8 +637,8 @@ function buildDots(a){
    the thing that made it. Marks within a step are also chained, not simultaneous —
    a hand writes one thing at a time. */
 const T = {
-  ink: 165, inkOut: 95, drop: 450, arc: 610, split: 820,
-  travelMin: 95, travelMax: 330, pxPerMs: 0.62,
+  ink: 165, inkOut: 95, drop: 640, arc: 900, split: 1250,
+  travelMin: 120, travelMax: 430, pxPerMs: 0.48,
   chain: 0.5,     // how much the next mark overlaps the previous one settling
   sweep: 50,      // stagger when a step PLACES many marks (setup) rather than writing them
   ease: {
@@ -649,6 +649,12 @@ const T = {
   },
 };
 let running = [], timers = [], pending = [], penXY = null, prevSi = 0;
+
+/* Every animated duration goes through here, so the Speed control moves the MOTION
+   and not just the gap between steps. Hafsa, 2026-08-01: slowing down the moment the
+   numbers move around would help — and "Slow" was not doing that at all. */
+const speedMul = () => parseFloat(($('speed') || {}).value || 1) || 1;
+const dur = ms => Math.round(ms * speedMul());
 
 function haltMotion(){
   timers.forEach(clearTimeout); timers = [];
@@ -686,20 +692,20 @@ function inkIn(node, fromBox, myBox){
       { transform: `translate(${dx}px,${dy}px) scale(1.45)`, opacity: 1, offset: .14 },
       { transform: `translate(${dx * .45}px,${dy * .55 - 22}px) scale(1.18)`, opacity: 1, offset: .58 },
       { transform: 'none', opacity: 1, offset: 1 },
-    ], { duration: T.arc, easing: T.ease.arc, fill: 'backwards' });
+    ], { duration: dur(T.arc), easing: T.ease.arc, fill: 'backwards' });
   }
   if (node.classList.contains('drop'))
     return play(node, [{ transform: 'translateY(-54px) scale(.72)', opacity: 0 },
                        { transform: 'none', opacity: 1 }],
-                { duration: T.drop, easing: T.ease.ink, fill: 'backwards' });
+                { duration: dur(T.drop), easing: T.ease.ink, fill: 'backwards' });
   if (node.classList.contains('zero'))
     return play(node, [{ transform: 'scale(.2)', opacity: 0, offset: 0 },
                        { transform: 'scale(1.3)', opacity: 1, offset: .62 },
                        { transform: 'none', opacity: 1, offset: 1 }],
-                { duration: T.arc * .8, easing: T.ease.ink, fill: 'backwards' });
+                { duration: dur(T.arc * .8), easing: T.ease.ink, fill: 'backwards' });
   return play(node, [{ transform: 'translateY(-8px) scale(.86)', opacity: 0 },
                      { transform: 'none', opacity: 1 }],
-              { duration: T.ink, easing: T.ease.ink, fill: 'backwards' });
+              { duration: dur(T.ink), easing: T.ease.ink, fill: 'backwards' });
 }
 
 /* Positioned to the RIGHT of the board so the split reads correctly: the ones digit
@@ -759,15 +765,15 @@ function growBubble(cells, grewFrom, boxes){
           { transform: `translate(${dx}px,${dy}px) scale(.6)`, opacity: 1, offset: .13 },
           { transform: `translate(${dx * .4}px,${dy * .4 + 16}px) scale(.82)`, opacity: 1, offset: .6 },
           { transform: 'none', opacity: 1, offset: 1 },
-        ], { duration: 680, delay: at, easing: T.ease.arc, fill: 'backwards' });
+        ], { duration: dur(680), delay: at, easing: T.ease.arc, fill: 'backwards' });
         // nothing after the carry may appear until the carry has actually landed —
         // otherwise the chip reads "12 + = 14" for a beat, which is nonsense
-        at += 620;
+        at += dur(620);
       } else {
         play(n, [{ opacity: 0, transform: 'translateX(-10px) scale(.78)' },
                  { opacity: 1, transform: 'none' }],
-             { duration: 260, delay: at, easing: T.ease.ink, fill: 'backwards' });
-        at += 110;
+             { duration: dur(260), delay: at, easing: T.ease.ink, fill: 'backwards' });
+        at += dur(110);
       }
     });
 }
@@ -775,7 +781,7 @@ function splitBubble(split, partBoxes, el, box, keep, bubBox){
   const bub = $('bubble'), shell = bub.querySelector('.shell');
   // when the chip is kept (the D step keeps its trial rows on screen) the shell stays
   if (shell && !keep) play(shell, [{ opacity: 1 }, { opacity: 0 }],
-                           { duration: 260, easing: T.ease.out, fill: 'forwards' });
+                           { duration: dur(260), easing: T.ease.out, fill: 'forwards' });
   split.forEach(sp => {
     const span = bub.querySelector(`.bd[data-part="${sp.part}"]`);
     const from = partBoxes[sp.part], to = box[sp.to];
@@ -791,7 +797,7 @@ function splitBubble(split, partBoxes, el, box, keep, bubBox){
         left: (from.left - bubBox.left) + 'px', top: (from.top - bubBox.top) + 'px' });
       bub.appendChild(mover);
       span.style.opacity = '.4';
-      after(T.split + 40, () => mover.remove());
+      after(dur(T.split) + 40, () => mover.remove());
     }
     const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
     const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
@@ -802,14 +808,14 @@ function splitBubble(split, partBoxes, el, box, keep, bubBox){
         opacity: 1, offset: .55 },
       { transform: `translate(${dx}px,${dy}px) scale(${sc})`, opacity: 1, offset: .88 },
       { transform: `translate(${dx}px,${dy}px) scale(${sc})`, opacity: 0, offset: 1 },
-    ], { duration: T.split, easing: T.ease.arc, fill: 'forwards' });
+    ], { duration: dur(T.split), easing: T.ease.arc, fill: 'forwards' });
     // the real mark takes over exactly as the flying digit lands on it
-    after(T.split * .86, () => {
+    after(dur(T.split) * .86, () => {
       release(el[sp.to]);
-      play(el[sp.to], [{ opacity: 0 }, { opacity: 1 }], { duration: 130, easing: T.ease.ink });
+      play(el[sp.to], [{ opacity: 0 }, { opacity: 1 }], { duration: dur(130), easing: T.ease.ink });
     });
   });
-  if (!keep) after(T.split + 30, () => {
+  if (!keep) after(dur(T.split) + 30, () => {
     $('bubble').classList.remove('up'); $('bubble').dataset.key = ''; });
 }
 
@@ -902,7 +908,7 @@ function apply(instant){
     // undoing is not writing — no pen, and the marks lift off quickly
     leaving.forEach(k => play(el[k], [{ opacity: 1, transform: 'none' },
                                       { opacity: 0, transform: 'scale(.88)' }],
-                              { duration: T.inkOut, easing: T.ease.out }));
+                              { duration: dur(T.inkOut), easing: T.ease.out }));
     litFlash();
     pen.classList.remove('up');
   } else if (!newly.length) {
@@ -911,9 +917,9 @@ function apply(instant){
   } else if (newly.length > 3 || si === 0) {
     // the problem being PLACED on the page, not written by hand — a quick sweep
     pen.classList.remove('up');
-    newly.forEach((k, i) => after(i * T.sweep, () =>
+    newly.forEach((k, i) => after(i * dur(T.sweep), () =>
       inkIn(el[k], box[flyFrom[k]], box[k])));
-    after(newly.length * T.sweep + T.ink + 60, litFlash);
+    after(newly.length * dur(T.sweep) + dur(T.ink) + 60, litFlash);
     penXY = null;
   } else {
     let cursor = penXY, t = 0;
@@ -927,8 +933,8 @@ function apply(instant){
       const pt = penTarget(box[k], wrap);
       const from = cursor;
       const dist = from ? Math.hypot(pt.x - from.x, pt.y - from.y) : 0;
-      const dur = from ? Math.min(T.travelMax, Math.max(T.travelMin, dist / T.pxPerMs))
-                       : T.travelMin;
+      const legDur = from ? Math.min(T.travelMax, Math.max(T.travelMin, dist / T.pxPerMs))
+                          : T.travelMin;
       const at = t;
       after(at, () => {
         pen.classList.add('up');
@@ -936,12 +942,12 @@ function apply(instant){
           { transform: `translate(${(from ? from.x : pt.x) - 2}px, ${(from ? from.y : pt.y) - 2}px)`,
             opacity: from ? 1 : 0 },
           { transform: `translate(${pt.x - 2}px, ${pt.y - 2}px)`, opacity: 1 },
-        ], { duration: dur, easing: T.ease.travel, fill: 'forwards' });
+        ], { duration: dur(legDur), easing: T.ease.travel, fill: 'forwards' });
       });
       // the mark lands only once the nib is there
-      after(at + dur, () => inkIn(el[k], box[flyFrom[k]], box[k]));
+      after(at + dur(legDur), () => inkIn(el[k], box[flyFrom[k]], box[k]));
       cursor = pt;
-      t = at + dur + T.ink * T.chain;
+      t = at + dur(legDur) + dur(T.ink) * T.chain;
     });
     penXY = cursor;
     after(t + 60, litFlash);
