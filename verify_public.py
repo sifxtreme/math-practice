@@ -109,11 +109,13 @@ def main():
 
             for t in terms:
                 if t in FIXED_FORBIDDEN or t in _private_terms():
-                    if t in doc:
+                    if t.lower() in doc.lower():
                         hits.append(f"{rel}: forbidden term {t!r}")
                 else:
                     # a child's name: flag only outside puzzle body text
-                    for m in re.finditer(re.escape(t), doc):
+                    # case-INSENSITIVE: a case-sensitive sweep reported 'animations/
+                    # index.html: 0 names' on a file containing "id": "kid1-mult".
+                    for m in re.finditer(re.escape(t), doc, re.I):
                         ctx = doc[max(0, m.start() - 120):m.start()]
                         # Body-text containers, i.e. places a STORY lives. Kept as an
                         # explicit list because each one was found by this gate failing:

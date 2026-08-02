@@ -124,6 +124,8 @@ th,td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); 
 th { color:var(--dim); font-weight:600; font-size:13px; }
 code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.9em;
   background:color-mix(in srgb, var(--line) 55%, transparent); padding:1px 5px; border-radius:4px; }
+.card.hero { border-color:var(--accent); border-width:2px; padding:18px 20px; }
+.card.hero b { font-size:18px; }
 .note { border-left:3px solid var(--accent); padding:2px 0 2px 14px; color:var(--dim); margin:18px 0; }
 footer { margin-top:56px; padding-top:18px; border-top:1px solid var(--line); color:var(--dim); font-size:13.5px; }
 .scroll { overflow-x:auto; }
@@ -181,6 +183,31 @@ def main():
                 f.write(doc)
             drills.append((f"{skill}-{seed}.html", nice, seed))
 
+    # --- animations: the step-through of the written methods. Self-contained,
+    # no external refs, so it drops in as one file.
+    anim_src = os.path.join(HERE, "animations", "index.html")
+    has_anim = os.path.exists(anim_src)
+    if has_anim:
+        os.makedirs(os.path.join(OUT, "animations"), exist_ok=True)
+        with open(anim_src) as f:
+            a = scrub(f.read(), names)
+        # the internal tab labels are kid IDs, which read as nonsense in public
+        a = re.sub(r"<title>[^<]*</title>",
+                   "<title>How long division and multiplication actually work</title>", a)
+        a = a.replace("kid1 &amp; kid2", "step by step").replace("kid1 & kid2", "step by step")
+        # Strip the kid-ID prefix from tab labels and headings. Internally the tabs are
+        # keyed per child; publicly "kid1 — Multiplying by one digit" is noise, and the
+        # subtitle underneath already names the skill.
+        # The visible tab labels are composed in JS from the per-child `kid` field,
+        # so there is nothing in the static markup to rewrite — patch the two
+        # templates instead. Internally the animations stay keyed per child; publicly
+        # "kid1 — Multiplying by one digit" is noise and the skill line says it anyway.
+        a = a.replace("`<b>${a.kid} \u2014 ${a.title}</b>${a.skill}`",
+                      "`<b>${a.title}</b>${a.skill}`")
+        a = a.replace("`${a.kid} \u00b7 ${a.title}`", "`${a.title}`")
+        with open(os.path.join(OUT, "animations", "index.html"), "w") as f:
+            f.write(a)
+
     # --- index
     def cards(items, folder):
         return "\n".join(
@@ -201,6 +228,15 @@ Every sheet is one page per kid plus a worked answer key. Print them, no signup,
 to fill a page &mdash; 20 long divisions is a sixteen-minute sheet, and most sites give you
 20 regardless. And <b>the grid forces the work to be shown</b>: every step of the written
 method has its own box, so you can see where it went wrong instead of just that it did.</div>
+
+<h2>Watch the method first</h2>
+<p class="lede">Four step-through animations of the <em>written</em> methods the drills
+ask for &mdash; long division and multiplication, one pencil mark at a time, with the
+trap called out at the exact step where it bites. Watch one, then do the paper.</p>
+<ul class="grid"><li><a class="card hero" href="animations/index.html">
+<b>How the methods actually work &rarr;</b>
+<span>Long division &amp; multiplication, one mark at a time &middot; no signup</span>
+</a></li></ul>
 
 <h2>Drills &mdash; five minutes, work shown</h2>
 <p class="lede">Each is a different randomly generated set at the same difficulty. No
