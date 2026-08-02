@@ -114,7 +114,12 @@ for pat, rep in subs:
 open(out, 'w').write(h)
 PY
 
-expected="$(grep -c 'class="sheet' "$SRC")"
+# Count OCCURRENCES, not matching lines. `grep -c` counts lines, so a worksheet that
+# emits more than one sheet on the same line reports 1 against a correct N-page PDF and
+# this script then warns that the CSS drifted — when nothing is wrong. Every worksheet
+# hand-written before 2026-08-01 happened to put one sheet per line, which is why it
+# went unnoticed until drill_gen.py wrote a document on one line.
+expected="$(grep -o 'class="sheet' "$SRC" | wc -l | tr -d ' ')"
 
 # 2) Render (single-shot, with polling — headless can hang otherwise).
 pkill -f "Google Chrome.*headless" 2>/dev/null || true; sleep 1

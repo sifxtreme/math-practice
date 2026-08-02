@@ -25,16 +25,27 @@ LEDGER_SUM_BEFORE="$(shasum print-ledger.tsv | cut -d' ' -f1)"
 
 reset_ledger() { cp print-ledger.tsv "$SEED"; }
 
-# Expected shape of the seeded history, so a bad hand-edit is caught rather than
+# Expected shape of the SEEDED history, so a bad hand-edit is caught rather than
 # quietly changing what the guards see. These are the days the Jul 28 bulk run and
 # the two duplicate mornings put on paper.
+#
+# ⚠️ Counts rows PRINTED BEFORE $SEED_ERA_END only, and that filter is the whole
+# point. Without it the check counts live prints too, so the first legitimate print
+# for any listed day fails it — which is exactly what happened on 2026-08-01, when a
+# genuine replacement took 2026-08-01 from 4 rows to 9 and the suite went red for
+# doing the right thing. A test that fails on correct behaviour teaches you to stop
+# reading it. What this check actually means is "the seeded history is intact", and
+# that is now what it measures.
+SEED_ERA_END="2026-07-31"    # everything at or after this is live, not seeded
+
 check_ledger_shape() {
   local day want got
   for pair in 2026-07-29:8 2026-07-30:8 2026-07-31:4 2026-08-01:4 2026-08-02:4; do
     day="${pair%:*}"; want="${pair#*:}"
-    got="$(awk -F'\t' -v t="$day" '$1 !~ /^#/ && $2 == t' print-ledger.tsv | wc -l | tr -d ' ')"
-    if [ "$got" = "$want" ]; then PASS=$((PASS+1)); echo "  ✓ $day has $got rows"
-    else FAIL=$((FAIL+1)); echo "  ✗ $day has $got rows, expected $want"; fi
+    got="$(LC_ALL=C awk -F'\t' -v t="$day" -v e="$SEED_ERA_END" \
+           '$1 !~ /^#/ && $2 == t && $1 < e' print-ledger.tsv | wc -l | tr -d ' ')"
+    if [ "$got" = "$want" ]; then PASS=$((PASS+1)); echo "  ✓ $day has $got seeded rows"
+    else FAIL=$((FAIL+1)); echo "  ✗ $day has $got seeded rows, expected $want"; fi
   done
 }
 
@@ -113,10 +124,18 @@ check_ledger_shape
 
 echo
 echo "No stray rows dated after today (a future row would refuse a real print)"
-STRAY="$(awk -F'\t' -v d="$(date +%F)" '$1 !~ /^#/ && $1 > d"T~"' print-ledger.tsv | wc -l | tr -d ' ')"
+# ⚠️ LC_ALL=C is load-bearing. The threshold is today + "T~", and `~` (0x7E) sorts
+# after every digit ONLY under C collation. Under the inherited en_US.UTF-8 locale,
+# punctuation is weighted below digits, so "2026-08-01T15:08:54" > "2026-08-01T~"
+# compares TRUE and every row printed TODAY is reported as future-dated. That fired
+# the first time anything was printed after this suite was written (2026-08-01: four
+# real jobs flagged as "leftover test residue"). Same string, same awk, different
+# answer per locale — pin it.
+STRAY_AWK='$1 !~ /^#/ && $1 > d"T~"'
+STRAY="$(LC_ALL=C awk -F'\t' -v d="$(date +%F)" "$STRAY_AWK" print-ledger.tsv | wc -l | tr -d ' ')"
 if [ "$STRAY" = "0" ]; then PASS=$((PASS+1)); echo "  ✓ none"
 else FAIL=$((FAIL+1)); echo "  ✗ $STRAY future-dated row(s) — leftover test residue:"
-     awk -F'\t' -v d="$(date +%F)" '$1 !~ /^#/ && $1 > d"T~"' print-ledger.tsv | sed 's/^/     /'; fi
+     LC_ALL=C awk -F'\t' -v d="$(date +%F)" "$STRAY_AWK" print-ledger.tsv | sed 's/^/     /'; fi
 
 echo
 echo "The real ledger was not touched by these tests"
