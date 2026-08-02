@@ -194,3 +194,28 @@ def write(spec, outdir="."):
     with open(path, "w") as f:
         f.write(build(spec))
     return path
+
+
+def main():
+    """Rebuild every generated sheet from its spec.
+
+    There was no entry point here until 2026-08-01, so `python3 build_sheets.py` was
+    a silent no-op — it looked like a build and did nothing. That only became load-
+    bearing when the generated sheets were gitignored: an ignored file that cannot be
+    regenerated is just a deleted file waiting to happen.
+    """
+    import specs_word, specs_logic
+    written = []
+    for mod in (specs_word, specs_logic):
+        for name in dir(mod):
+            spec = getattr(mod, name)
+            if isinstance(spec, dict) and "file" in spec and "title" in spec:
+                written.append(write(spec))
+    for p in sorted(set(written)):
+        print(f"  wrote {p}")
+    print(f"{len(set(written))} sheet(s)")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
