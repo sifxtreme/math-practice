@@ -70,7 +70,7 @@ Legend — ✅ built · 🔜 same surface as something built · ❌ needs a new 
 | 4.NBT.A.1 | A digit is 10× the place to its right | `grid` | 🔜 |
 | 4.NBT.A.2 | Read / write / compare multi-digit | `grid` | 🔜 |
 | 4.NBT.A.3 | **Rounding** to any place | `line` | ❌ |
-| 4.NBT.B.4 | Add / subtract multi-digit (**regrouping**) | `grid` | 🔜 **cheapest real win** |
+| 4.NBT.B.4 | Add / subtract multi-digit (**regrouping**) | `grid` | 🔜 cheap — but **not needed**, see below |
 | 4.NBT.B.5 | Multiply | `grid` | ✅ |
 | 4.NBT.B.6 | Divide w/ remainder | `grid` | ✅ |
 
@@ -170,3 +170,18 @@ Legend — ✅ built · 🔜 same surface as something built · ❌ needs a new 
 **22 of 45 need no new drawing surface.** That is the argument for extending `grid` and
 `parts` before building anything new — and for building `line` third, since it alone
 unlocks 8 more.
+
+## Cheap to build ≠ worth building
+
+**4.NBT.B.4 (add / subtract with regrouping) is the trap on this page.** It is the cheapest
+thing here — same `grid`, no new surface — and an outside opinion consulted 2026-08-01
+ranked it second. Do not build it.
+
+[`PRACTICE-PLAN-2026.md`](../PRACTICE-PLAN-2026.md) § "Why this plan isn't fact drills"
+measured both kids at **~16 sec/problem on 49 problems of 3-digit-minus-3-digit
+subtraction with regrouping**, against a 15–20 sec fluency benchmark. They are already
+fluent. Building it would be engineering with **no learning value for these two kids.**
+
+The same trap applies to every 🔜 row above: *reachable on an existing surface* is an
+engineering fact, not a reason. **The target board is the reason.** Check it first, every
+time — cheapness is what makes the wrong thing tempting.
