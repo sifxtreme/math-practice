@@ -22,7 +22,8 @@ Two things here are unusual and worth the thirty seconds:
   computes.
 - **The grid forces the work to be shown.** Every step of the written method gets its own
   printed box, so a child can't jump to an answer. That rule exists because one of them
-  did exactly that.
+  did exactly that. It's optional — `--layout plain` gives the same problems with blank
+  space, for when the method is solid and you want it the way a test would ask.
 
 ---
 
@@ -71,30 +72,22 @@ Add a `kid3` to your config and a matching row there. The digit shapes `(2, 1)` 
 2-digit dividend ÷ 1-digit divisor; the last field picks the time model from
 `drill_cost.py`.
 
-### What is and isn't scrubbed
+### What is and isn't in this repo
 
-Being straight about this, because a half-private repo is worse than a known-public one.
-**Only the DRILL system is split.** 43 tracked files still contain real names:
+Being straight about it, because a half-private repo is worse than a known-public one.
+This repo **is public**, and it was scrubbed deliberately before it was published:
 
 | | |
 |---|---|
-| ✅ `drill_gen.py`, `drill_cost.py`, `verify_drills.py` | keyed on ids, no names |
-| ✅ `private/`, `kids.local.json` | gitignored |
-| ✅ Generated `worksheet-*-drill.html` | gitignored — rebuilt from a seed |
-| ⚠️ **Word-problem generator** — `build_sheets.py` (`KIDS = [...]`), `specs_word.py`, `specs_logic.py`, `verify_sheets.py` | names hardcoded, **and `specs_word.py` carries per-child assessment notes** — "watch whether he still reaches for a common denominator" — which is as sensitive as anything in `private/` |
-| ⚠️ **`animations/`** — `problems.json`, and the built `index.html` | a `kid` field per animation |
-| ⚠️ **Hand-written `worksheet-*.html`** (27 sheets) | name in the `Name:` field |
-| ⚠️ **`print-ledger.tsv`, `print-drill.sh`, `test-day-guard.sh`** | names in labels, usage examples, test cases |
-| ⚠️ **Docs** — `AGENTS.md`, `DRILLS.md`, `PRACTICE-PLAN-2026.md` | names, grades, school |
-| ❌ **Git history** | names in every commit |
+| ✅ All code | keyed on `kid1`/`kid2` ids, no names |
+| ✅ `private/` and `kids.local.json` | gitignored — the practice plan, results log, and any per-child notes live there |
+| ✅ Generated sheets | gitignored; rebuilt from a seed |
+| ✅ Every `Name:` header field | blank — the child writes it |
+| ✅ Git history and commit messages | rewritten with `git-filter-repo`; no names, no school, no per-child records |
+| ℹ️ **Story characters** | The word problems and logic puzzles are cast with Muslim names — Idris, Hamza, Bilal, Amina, Zayd, Tariq and others. Those are **characters**, kept on purpose: the puzzle answers reference them by name. Nothing indicates whose repo it is. |
 
-Extending the split to the word-problem generator is the obvious next step — same
-pattern, read `kids.local.json` in `build_sheets.py` instead of the `KIDS` constant, and
-move the per-child notes in `specs_word.py` into `private/`.
-
-The gitignore protects the **future**. Scrubbing the past means rewriting history, which
-collides with the never-rebase rule here, so it is a deliberate one-time decision and has
-not been made. **Treat this repo as private.**
+If you fork this for your own kids, `kids.local.json` is the only file that ever holds a
+real name, and it is gitignored from the start.
 
 ---
 

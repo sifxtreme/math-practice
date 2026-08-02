@@ -72,8 +72,18 @@ def check(cond, msg):
     if not cond:
         fails.append(msg)
 
-for path, shape in [("worksheet-division-drill.html", "div"),
-                    ("worksheet-multiplication-drill.html", "mul")]:
+# Both layouts. `plain` drops the boxes from the kid's sheet but the KEY is identical,
+# so every arithmetic check below applies unchanged — and the blank-sheet leak check
+# still has to pass, which is the one that matters most.
+import os as _os
+TARGETS = [(p, sh) for p, sh in [
+    ("worksheet-division-drill.html", "div"),
+    ("worksheet-division-drill-plain.html", "div"),
+    ("worksheet-multiplication-drill.html", "mul"),
+    ("worksheet-multiplication-drill-plain.html", "mul"),
+] if _os.path.exists(p)]
+
+for path, shape in TARGETS:
     for title, is_key, probs in sheets(path):
         for pi, prob in enumerate(probs, 1):
             cs = cells(prob)
@@ -147,8 +157,7 @@ for path, shape in [("worksheet-division-drill.html", "div"),
                 check(total == a * b, f"{tag}: total {total} != {a}*{b}={a*b}")
 
 # duplicate-problem check per sheet
-for path, shape in [("worksheet-division-drill.html", "div"),
-                    ("worksheet-multiplication-drill.html", "mul")]:
+for path, shape in TARGETS:
     for title, is_key, probs in sheets(path):
         if not is_key:
             continue

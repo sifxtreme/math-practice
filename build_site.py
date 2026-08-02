@@ -229,18 +229,21 @@ def main():
     env = dict(os.environ, MATH_PUBLIC_BUILD="1")
     drills = []
     for skill, nice in (("div", "Long division"), ("mul", "Multiplication")):
-        for seed in DRILL_SEEDS:
-            out = os.path.join(OUT, "drills", f"{skill}-{seed}.html")
-            subprocess.run(
-                [sys.executable, os.path.join(HERE, "drill_gen.py"),
-                 "--skill", skill, "--seed", str(seed), "--out", out],
-                check=True, cwd=HERE, env=env,
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            with open(out) as f:
-                doc = scrub(f.read(), names)
-            with open(out, "w") as f:
-                f.write(with_nav(doc))
-            drills.append((f"{skill}-{seed}.html", nice, seed))
+        for layout in ("grid", "plain"):
+            for seed in DRILL_SEEDS:
+                sfx = "" if layout == "grid" else "-plain"
+                out = os.path.join(OUT, "drills", f"{skill}-{seed}{sfx}.html")
+                subprocess.run(
+                    [sys.executable, os.path.join(HERE, "drill_gen.py"),
+                     "--skill", skill, "--layout", layout,
+                     "--seed", str(seed), "--out", out],
+                    check=True, cwd=HERE, env=env,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                with open(out) as f:
+                    doc = scrub(f.read(), names)
+                with open(out, "w") as f:
+                    f.write(with_nav(doc))
+                drills.append((f"{skill}-{seed}{sfx}.html", nice, seed, layout))
 
     # --- animations: the step-through of the written methods. Self-contained,
     # no external refs, so it drops in as one file.
@@ -276,7 +279,10 @@ def main():
 
     word = [(f, l, k) for f, l, k in published if "logic" not in k]
     logic = [(f, l, k) for f, l, k in published if "logic" in k]
-    dr = [(f, f"{n} #{s}", "5-minute drill · answer key included") for f, n, s in drills]
+    dr_grid = [(f, f"{n} #{s}", "boxes for every step · answer key included")
+               for f, n, s, l in drills if l == "grid"]
+    dr_plain = [(f, f"{n} #{s}", "blank space, no boxes · answer key included")
+                for f, n, s, l in drills if l == "plain"]
 
     body = f"""
 <h1>Printable math worksheets</h1>
@@ -300,7 +306,14 @@ trap called out at the exact step where it bites. Watch one, then do the paper.<
 <h2 id="drills">Drills &mdash; five minutes, work shown</h2>
 <p class="lede">Each is a different randomly generated set at the same difficulty. No
 problem is ever &times;0, &times;1 or &divide;1 &mdash; those spend a slot teaching nothing.</p>
-<ul class="grid">{cards(dr, "drills")}</ul>
+
+<p class="lede"><b>With the grid.</b> Every step of the written method gets its own box,
+so the work can&rsquo;t be skipped. Use this when a kid is jumping straight to answers.</p>
+<ul class="grid">{cards(dr_grid, "drills")}</ul>
+
+<p class="lede" style="margin-top:26px"><b>Without the grid.</b> Same problems, blank
+space. A test won&rsquo;t hand them boxes &mdash; move here once the method is solid.</p>
+<ul class="grid">{cards(dr_plain, "drills")}</ul>
 
 <h2 id="word">Word problems</h2>
 <p class="lede">Every problem is multi-step on purpose &mdash; choosing the operation is the

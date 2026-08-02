@@ -161,7 +161,7 @@ def trace_division(dividend, divisor):
         marks.append((0, C(i), str(st["q"]), "fill"))          # quotient digit
 
         p = str(st["prod"])                                     # product, right-aligned at col i
-        marks.append((row, C(i) - len(p), "−", "given"))   # the minus sign is a prompt
+        marks.append((row, C(i) - len(p), "−", "prompt"))  # scaffolding, not the problem
         for j, ch in enumerate(p):
             marks.append((row, C(i) - len(p) + 1 + j, ch, "fill"))
         row += 1
@@ -170,7 +170,7 @@ def trace_division(dividend, divisor):
         for j, ch in enumerate(r):
             marks.append((row, C(i) - len(r) + 1 + j, ch, "fill"))
         if last:
-            marks.append((row, C(i) - 1, "R", "given"))
+            marks.append((row, C(i) - 1, "R", "prompt"))
             # the remainder is the answer -- restate it in the R slot
         else:
             marks.append((row, C(i + 1), ds[i + 1], "fill"))    # bring down
@@ -370,11 +370,16 @@ body { font-family: Georgia, 'Times New Roman', serif; margin: 0; color: #111; }
 """
 
 
-def render_problem(idx, x, y, show_answers, shape="div"):
+def render_problem(idx, x, y, show_answers, shape="div", layout="grid"):
     if shape == "div":
         rows, cols, marks, rules, boxes = trace_division(x, y)
     else:
         rows, cols, marks, rules, boxes = trace_multiplication(x, y)
+
+    # "plain" drops the boxes from the KID's sheet only — same geometry, so the
+    # work space is unchanged, but nothing tells them how many digits go where.
+    # A test will not hand them a grid; once the method is solid, take it away.
+    boxed = (layout == "grid") or show_answers
 
     grid = {}
     for (r, c, t, kind) in marks:
@@ -391,17 +396,30 @@ def render_problem(idx, x, y, show_answers, shape="div"):
             if cell:
                 t, kind = cell
                 txt = html.escape(t)
-                if kind == "given":
+                if kind in ("given", "prompt"):
+                    # On a PLAIN sheet the minus signs and the R are removed, not just
+                    # unboxed. Leaving them in tells the kid how many subtraction steps
+                    # there are — i.e. how many digits the quotient has — which is most
+                    # of what the exercise is asking them to work out.
+                    if kind == "prompt" and not boxed:
+                        txt = ""
                     classes.append("g")
                 else:
-                    classes.append("f")
-                    if kind == "carry":
-                        classes.append("cr")
-                    elif r == 0 and shape == "div":
-                        classes.append("q")
+                    if boxed:
+                        classes.append("f")
+                        if kind == "carry":
+                            classes.append("cr")
+                        elif r == 0 and shape == "div":
+                            classes.append("q")
+                    elif show_answers:
+                        classes.append("f")
+                        if kind == "carry":
+                            classes.append("cr")
+                        elif r == 0 and shape == "div":
+                            classes.append("q")
                     if not show_answers:
                         txt = ""
-            elif (r, c) in boxes:
+            elif (r, c) in boxes and boxed:
                 # an open box the kid fills, so the sheet never reveals how many
                 # digits the answer has
                 classes.append("f")
@@ -420,7 +438,7 @@ def render_problem(idx, x, y, show_answers, shape="div"):
     return "".join(out)
 
 
-def render_sheet(name, skill_label, probs, show_answers, budget_note, shape="div"):
+def render_sheet(name, skill_label, probs, show_answers, budget_note, shape="div", layout="grid"):
     cls = "sheet key" if show_answers else "sheet"
     head = "Long Division" if shape == "div" else "Multiplication"
     title = f"{head} — {skill_label}" + (" — ANSWERS" if show_answers else "")
@@ -433,11 +451,13 @@ def render_sheet(name, skill_label, probs, show_answers, budget_note, shape="div
         h.append(f'<div class="meta">Name: <span>&nbsp;{html.escape(name)}</span>'
                  f'&nbsp;&nbsp;Date: <span>&nbsp;</span></div>')
     h.append("</div>")
-    h.append('<p class="instr">Work each one down the boxes. '
-             '<b>Every box gets a digit</b> — the steps are the answer.</p>')
+    instr = ('Work each one down the boxes. <b>Every box gets a digit</b> — the steps '
+             'are the answer.' if layout == "grid" else
+             '<b>Show every step.</b> No boxes this time — line the columns up yourself.')
+    h.append(f'<p class="instr">{instr}</p>')
     h.append('<div class="grid-wrap">')
     for i, (n, d) in enumerate(probs, 1):
-        h.append(render_problem(i, n, d, show_answers, shape))
+        h.append(render_problem(i, n, d, show_answers, shape, layout))
     h.append("</div>")
     h.append(f'<div class="note">{html.escape(budget_note)}</div>')
     foot = ("Divide → Multiply → Subtract → Bring down" if shape == "div"
@@ -457,10 +477,16 @@ def main():
     ap.add_argument("--skill", choices=["div", "mul"], default="div",
                     help="which drill to build. One skill per kid per day — the "
                          "budget is five minutes TOTAL, not five minutes each.")
+    ap.add_argument("--layout", choices=["grid", "plain"], default="grid",
+                    help="grid = every step gets a printed box (forces the work); "
+                         "plain = the problem and blank space, the way a test gives it. "
+                         "Start on grid, move to plain once the method is solid.")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 
-    out = args.out or f"worksheet-{'division' if args.skill == 'div' else 'multiplication'}-drill.html"
+    suffix = "" if args.layout == "grid" else "-plain"
+    out = args.out or (f"worksheet-{'division' if args.skill == 'div' else 'multiplication'}"
+                       f"-drill{suffix}.html")
     rng = random.Random(args.seed)
 
     kids = kids_by_id()
@@ -501,11 +527,11 @@ def main():
                 f"{skill.seconds():.0f}s each (target {args.budget/60:.0f}:00)."
                 + (f" math-drills ships {md} for this skill." if md else ""))
         report.append((name, label, count, skill.seconds(), est, md))
-        sheets.append(render_sheet(name, label, probs, False, note, args.skill))
+        sheets.append(render_sheet(name, label, probs, False, note, args.skill, args.layout))
         keys.append((name, label, probs, note))
 
     key_html = "\n".join(
-        render_sheet(nm, lbl + f" — {nm}", pr, True, nt, args.skill)
+        render_sheet(nm, lbl + f" — {nm}", pr, True, nt, args.skill, args.layout)
         for nm, lbl, pr, nt in keys)
 
     # One sheet per line. This started as a workaround: print-worksheet.sh counted
@@ -525,7 +551,7 @@ def main():
     with open(out, "w") as f:
         f.write(doc)
 
-    print(f"seed {args.seed}   budget {args.budget}s   skill {args.skill}   -> {out}")
+    print(f"seed {args.seed}   budget {args.budget}s   skill {args.skill}   layout {args.layout}   -> {out}")
     print(f"{'kid':<8}{'skill':<34}{'n':>4}{'sec/ea':>8}{'est':>8}{'math-drills':>13}")
     print("-" * 75)
     for nm, lbl, n, per, est, md in report:

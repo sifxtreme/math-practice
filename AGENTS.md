@@ -148,6 +148,21 @@ Three things it does that a math-drills PDF does not:
 3. **The grid forces the work**, including a **carry row** for single-digit
    multipliers — without it that sheet has one row to fill and forces nothing.
 
+**Two layouts, and the choice is pedagogical — `--layout grid` (default) or `plain`.**
+Set by Asif 2026-08-01: *"We should have grid and no grid as options. We don't always
+want the kids to use the grid."* He is right, and the reason matters:
+
+| | Use when |
+|---|---|
+| **`grid`** | A kid is skipping steps or jumping to answers. The boxes make the method non-optional — this is the layout the show-your-work rule was built for. |
+| **`plain`** | The method is solid. A test will not hand them boxes, and reproducing the layout unaided is part of the skill. |
+
+⚠️ **`plain` removes the `−` signs and the `R` too, not just the boxes.** Leaving them
+would tell the kid how many subtraction steps there are — i.e. how many digits the
+quotient has — which is most of what the problem is asking. That was the first cut of
+this feature and it was caught by rendering it, not by any data check. The ANSWER KEY is
+identical in both layouts, so `verify_drills.py`'s arithmetic checks apply unchanged.
+
 ⚠️ **The time model rests on ONE measurement** — 49 problems of 3-digit subtraction in
 13 minutes, May 2026, from `PRACTICE-PLAN-2026.md`. The mark counts are exact; the
 seconds-per-mark is extrapolated from subtraction to division and multiplication.
