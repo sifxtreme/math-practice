@@ -32,6 +32,16 @@ const SHAPES = [
   { label: '3-digit x 1-digit', js: 'multByOneDigit', py: 'mult_by_one_digit', nx: 3, ny: 1 },
   { label: '4-digit x 1-digit', js: 'multByOneDigit', py: 'mult_by_one_digit', nx: 4, ny: 1 },
   { label: '5-digit x 1-digit', js: 'multByOneDigit', py: 'mult_by_one_digit', nx: 5, ny: 1 },
+  { label: '2-digit x 2-digit', js: 'multMulti', py: 'mult_two_by_two', nx: 2, ny: 2 },
+  { label: '3-digit x 2-digit', js: 'multMulti', py: 'mult_two_by_two', nx: 3, ny: 2 },
+  { label: '3-digit x 3-digit', js: 'multMulti', py: 'mult_two_by_two', nx: 3, ny: 3 },
+  { label: '4-digit x 4-digit', js: 'multMulti', py: 'mult_two_by_two', nx: 4, ny: 4 },
+  { label: '2-digit / 1-digit', js: 'longDivision', py: 'long_division', nx: 2, ny: 1 },
+  { label: '3-digit / 1-digit', js: 'longDivision', py: 'long_division', nx: 3, ny: 1 },
+  { label: '4-digit / 1-digit', js: 'longDivision', py: 'long_division', nx: 4, ny: 1 },
+  { label: '3-digit / 2-digit', js: 'longDivision', py: 'long_division', nx: 3, ny: 2 },
+  { label: '4-digit / 2-digit', js: 'longDivision', py: 'long_division', nx: 4, ny: 2 },
+  { label: '6-digit / 3-digit', js: 'longDivision', py: 'long_division', nx: 6, ny: 3 },
 ];
 
 /* Same deterministic spread the Python sweep uses, so a failure here is reproducible
@@ -45,6 +55,7 @@ function cases(nx, ny, n) {
   for (let k = 1; out.length < n && k < 40000; k++) {
     const x = lox + (k * 313) % (hix - lox + 1);
     const y = loy + (k * 97) % (hiy - loy + 1);
+    if (x < y) continue;
     if (!out.some(p => p[0] === x && p[1] === y)) out.push([x, y]);
   }
   return out;

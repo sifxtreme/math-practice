@@ -231,7 +231,46 @@ It also found two things that were **not** bugs, which is worth recording so nob
 One finding is deliberately left alone: the math-drills link is 35px tall. It is an inline
 link inside a sentence, not a button, and padding it to 44px would look wrong.
 
-## Adding a problem — or changing the numbers
+## Type any problem — the numbers are not baked in
+
+**The generator runs in the page.** Type `358 x 7` or `4231 / 23` into the box above the
+tabs and it is animated on the spot — narration, chip, area model, you-try problems and
+all. Nothing was baked in for it.
+
+That is the whole reason [`engine.js`](engine.js) exists. `problems.json` made the problem
+set *data*, but the data was still compiled into `index.html` at build time — to change a
+number you rebuilt. A baked set can only ever answer problems someone chose in advance,
+and **the one a kid just got wrong is never in it.**
+
+Two rules the input enforces, both from real decisions rather than taste:
+
+- **Never ÷ 1 or × 1.** Asif 2026-08-01: *"a waste of time for the kid."*
+- **No `5 ÷ 90`** — a division with no whole part is not a long-division problem.
+
+### engine.js is a port of specs.py, and that is deliberate
+
+[`equiv-check.mjs`](equiv-check.mjs) runs **both implementations over hundreds of problems
+and requires the emitted step data to be deep-equal**:
+
+```
+$ node equiv-check.mjs --n 40
+14 shapes · 560 problems compared
+engine.js and specs.py agree exactly
+```
+
+Python stops being the generator and becomes the **oracle** — a second implementation, in
+another language, that has to agree. The independence `verify_animations.py` always
+claimed is now structural instead of a discipline: **a bug has to be made twice, the same
+way, in two languages, to survive.**
+
+Four mutations confirmed it can fail, and one is the reason it exists: **Python's `round()`
+breaks ties to even**, so `round(45, -1)` is `40` where `Math.round` says `50`. Swapping in
+naive rounding is caught on `45 × 7` — *"45 is about 40"* vs *"about 50"*. A silently wrong
+sentence in narration nobody diffs.
+
+**If you change one, change the other, and let `equiv-check` tell you that you did.**
+
+## Adding a permanent tab — or changing the shipped numbers
 
 **Everything is in [`problems.json`](problems.json). One entry, then rebuild. No code.**
 
@@ -320,7 +359,9 @@ the whole argument for the sweep.
 | `index.html` | **Generated.** The page. Do not hand-edit — `build_animations.py` overwrites it. |
 | `problems.json` | **The problem set.** One entry per animation. Edit this, not code. |
 | `describe.py` | Derives title / skill / rules / you-try from the shape of (kind, x, y). |
-| `specs.py` | The algorithm simulators. Every digit comes from running the real algorithm. |
+| `engine.js` | **The simulators, in the browser.** Inlined into the page; powers typed-in problems. |
+| `equiv-check.mjs` | Requires `engine.js` and `specs.py` to agree exactly. Must exit 0. |
+| `specs.py` | The Python **oracle** — the second implementation. Every digit comes from running the real algorithm. |
 | `build_animations.py` | Problem choices + narration + the HTML/CSS/JS template. **Edit here.** |
 | `verify_animations.py` | Independent re-derivation of the arithmetic, layout and model. Must exit 0. |
 | `render-check.mjs` | Headless-Chromium assertions the data cannot make, incl. choreography. Must exit 0. |

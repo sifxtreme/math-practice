@@ -99,7 +99,18 @@ header h1{font-size:26px;margin:0 0 4px;letter-spacing:-.2px}
 header .thesis{font-size:15.5px;color:var(--mute);margin:0 0 18px;max-width:64ch}
 header .thesis b{color:var(--ink)}
 
-.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.own{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px;
+     font-size:13.5px;color:var(--mute)}
+.own label{font-weight:700;color:var(--ink)}
+.own input{font:inherit;font-size:16px;font-family:ui-monospace,monospace;
+     padding:9px 12px;min-width:15ch;border-radius:9px;border:1.5px solid var(--line);
+     background:var(--card);color:var(--ink)}
+.own input:focus{outline:none;border-color:var(--accent)}
+.own button{font-size:14px;padding:9px 14px}
+.ownmsg{font-size:13px}
+.ownmsg.bad{color:var(--warn)}
+.ownmsg.ok{color:var(--ok)}
 .tab{font:inherit;font-size:14px;cursor:pointer;background:var(--card);color:var(--mute);
      border:1.5px solid var(--line);border-radius:10px;padding:8px 14px;text-align:left;
      transition:background-color .16s ease,border-color .16s ease,color .16s ease;line-height:1.25}
@@ -362,6 +373,14 @@ footer{margin-top:26px;font-size:12.5px;color:var(--mute);text-align:center}
 
   <div class="tabs" role="tablist" id="tabs"></div>
 
+  <form class="own" id="ownForm" autocomplete="off">
+    <label for="ownInput">Try any problem</label>
+    <input id="ownInput" type="text" inputmode="text" spellcheck="false"
+           placeholder="358 x 7   or   4231 / 23" aria-label="Type a problem to animate">
+    <button class="ctl" type="submit">Animate it</button>
+    <span class="ownmsg" id="ownMsg"></span>
+  </form>
+
   <div class="stage">
     <div>
       <div class="card">
@@ -432,6 +451,7 @@ footer{margin-top:26px;font-size:12.5px;color:var(--mute);text-align:center}
     algorithm, checked by <code>verify_animations.py</code></footer>
 </div>
 
+<script>__ENGINE__</script>
 <script id="ANIM" type="application/json">__DATA__</script>
 <script>
 const A = JSON.parse(document.getElementById('ANIM').textContent);
@@ -439,15 +459,19 @@ const $ = id => document.getElementById(id);
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let ai = 0, si = 0, timer = null, playing = false;
 
-$('tabHint').innerHTML = A.length > 1
-  ? `<kbd>1</kbd>${A.length > 2 ? '–<kbd>' + A.length + '</kbd>' : ''} switch sheet` : '';
-A.forEach((a, i) => {
-  const b = document.createElement('button');
-  b.className = 'tab'; b.setAttribute('role', 'tab');
-  b.innerHTML = `<b>${a.kid} — ${a.title}</b>${a.skill}`;
-  b.onclick = () => pick(i);
-  $('tabs').appendChild(b);
-});
+function rebuildTabs(){
+  $('tabHint').innerHTML = A.length > 1
+    ? `<kbd>1</kbd>${A.length > 2 ? '–<kbd>' + A.length + '</kbd>' : ''} switch sheet` : '';
+  $('tabs').innerHTML = '';
+  A.forEach((a, i) => {
+    const b = document.createElement('button');
+    b.className = 'tab'; b.setAttribute('role', 'tab');
+    b.innerHTML = `<b>${a.kid} — ${a.title}</b>${a.skill}`;
+    b.onclick = () => pick(i);
+    $('tabs').appendChild(b);
+  });
+}
+rebuildTabs();
 
 function pick(i){
   stop(); ai = i; si = 0;
@@ -461,9 +485,11 @@ function pick(i){
   $('bSkill').textContent = `${a.skill} — worked example, one mark at a time`;
   $('whyShort').innerHTML = a.why;
   $('rules').innerHTML = a.rules.map(r => `<li>${r}</li>`).join('');
-  $('drill').innerHTML = `Matching drill sheet: <code>${a.drillSlug}</code> —
-    <a href="${a.drillUrl}" target="_blank" rel="noopener">open on math-drills.com</a>
-    (variants <code>_001</code>…<code>_010</code>)`;
+  $('drill').innerHTML = a.drillUrl
+    ? `Matching drill sheet: <code>${a.drillSlug}</code> —
+       <a href="${a.drillUrl}" target="_blank" rel="noopener">open on math-drills.com</a>
+       (variants <code>_001</code>…<code>_010</code>)`
+    : 'Your own problem — generated in the page, not baked in.';
   $('watch').innerHTML = a.traps.map(t => `<li>${t}</li>`).join('');
   $('tryNote').innerHTML = a.tryNote;
   $('mTitle').textContent = a.model.kind === 'area'
@@ -987,6 +1013,54 @@ addEventListener('keydown', e => {
   else if (/^[1-9]$/.test(e.key) && +e.key <= A.length) pick(+e.key - 1);
 });
 
+/* ---------- type any problem ----------
+   This is the reason the generator was moved out of Python and into the page. A baked
+   set can only ever answer the problems someone chose in advance; the one a kid just
+   got wrong is never in it. */
+function parseProblem(raw) {
+  const s = String(raw).trim().replace(/\s+/g, ' ');
+  const m = s.match(/^(\d{1,6})\s*([x*×\/÷:])\s*(\d{1,6})$/i);
+  if (!m) return { error: 'Write it like <b>358 x 7</b> or <b>4231 / 23</b>.' };
+  const x = parseInt(m[1], 10), y = parseInt(m[3], 10);
+  const kind = /[x*×]/i.test(m[2]) ? 'mult' : 'div';
+  if (!(x > 0 && y > 0)) return { error: 'Both numbers have to be more than 0.' };
+  if (kind === 'div') {
+    // Asif 2026-08-01: dividing by 1 is a waste of the kid's time
+    if (y === 1) return { error: 'Dividing by <b>1</b> teaches nothing — pick 2 or more.' };
+    if (x < y) return { error: `<b>${x} ÷ ${y}</b> has no whole part. Make the first number bigger.` };
+  } else if (y === 1) {
+    return { error: 'Multiplying by <b>1</b> teaches nothing — pick 2 or more.' };
+  }
+  if (String(x).length + String(y).length > 9)
+    return { error: 'That is bigger than the board can draw. Try fewer digits.' };
+  return { kind, x, y };
+}
+
+$('ownForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const msg = $('ownMsg');
+  const p = parseProblem($('ownInput').value);
+  if (p.error) { msg.className = 'ownmsg bad'; msg.innerHTML = p.error; return; }
+  let built;
+  try {
+    built = MathEngine.generate(p.kind, p.x, p.y);
+  } catch (err) {
+    msg.className = 'ownmsg bad'; msg.innerHTML = 'The board cannot draw that one.'; return;
+  }
+  const op = p.kind === 'mult' ? '×' : '÷';
+  const spec = Object.assign(built, {
+    id: `own-${p.kind}-${p.x}-${p.y}`, kid: 'Your problem',
+    theme: p.kind === 'mult' ? 'teal' : 'violet',
+    drillSlug: '—', drillUrl: '',
+  });
+  // one "your problem" tab, reused, so typing ten problems does not grow ten tabs
+  const at = A.findIndex(a => String(a.id).startsWith('own-'));
+  if (at >= 0) { A[at] = spec; rebuildTabs(); pick(at); }
+  else { A.push(spec); rebuildTabs(); pick(A.length - 1); }
+  msg.className = 'ownmsg ok';
+  msg.innerHTML = `<b>${p.x} ${op} ${p.y} = ${built.answer}</b>`;
+});
+
 pick(0);
 </script>
 """
@@ -994,7 +1068,9 @@ pick(0);
 
 def main():
     anims = build()
-    out = HTML.replace("__DATA__", json.dumps(anims, ensure_ascii=False))
+    engine = (HERE / "engine.js").read_text(encoding="utf-8")
+    out = (HTML.replace("__ENGINE__", engine)
+               .replace("__DATA__", json.dumps(anims, ensure_ascii=False)))
     path = HERE / "index.html"
     path.write_text(out, encoding="utf-8")
 

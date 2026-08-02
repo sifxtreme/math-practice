@@ -27,7 +27,18 @@ header h1{font-size:26px;margin:0 0 4px;letter-spacing:-.2px}
 header .thesis{font-size:15.5px;color:var(--mute);margin:0 0 18px;max-width:64ch}
 header .thesis b{color:var(--ink)}
 
-.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.own{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px;
+     font-size:13.5px;color:var(--mute)}
+.own label{font-weight:700;color:var(--ink)}
+.own input{font:inherit;font-size:16px;font-family:ui-monospace,monospace;
+     padding:9px 12px;min-width:15ch;border-radius:9px;border:1.5px solid var(--line);
+     background:var(--card);color:var(--ink)}
+.own input:focus{outline:none;border-color:var(--accent)}
+.own button{font-size:14px;padding:9px 14px}
+.ownmsg{font-size:13px}
+.ownmsg.bad{color:var(--warn)}
+.ownmsg.ok{color:var(--ok)}
 .tab{font:inherit;font-size:14px;cursor:pointer;background:var(--card);color:var(--mute);
      border:1.5px solid var(--line);border-radius:10px;padding:8px 14px;text-align:left;
      transition:background-color .16s ease,border-color .16s ease,color .16s ease;line-height:1.25}
@@ -290,6 +301,14 @@ footer{margin-top:26px;font-size:12.5px;color:var(--mute);text-align:center}
 
   <div class="tabs" role="tablist" id="tabs"></div>
 
+  <form class="own" id="ownForm" autocomplete="off">
+    <label for="ownInput">Try any problem</label>
+    <input id="ownInput" type="text" inputmode="text" spellcheck="false"
+           placeholder="358 x 7   or   4231 / 23" aria-label="Type a problem to animate">
+    <button class="ctl" type="submit">Animate it</button>
+    <span class="ownmsg" id="ownMsg"></span>
+  </form>
+
   <div class="stage">
     <div>
       <div class="card">
@@ -360,6 +379,907 @@ footer{margin-top:26px;font-size:12.5px;color:var(--mute);text-align:center}
     algorithm, checked by <code>verify_animations.py</code></footer>
 </div>
 
+<script>/* engine.js — the algorithm simulators, in the browser.
+ *
+ * WHY THIS EXISTS. The generators used to be Python that ran at build time, which
+ * meant every number was baked into index.html. "Data-driven" but not dynamic: to
+ * change 247 x 6 you had to rebuild. Running the generator in the page means any
+ * problem can be animated on demand — including the one a kid just got wrong.
+ *
+ * THIS IS A PORT OF specs.py, AND THAT IS DELIBERATE, NOT DEBT.
+ * `equiv-check.mjs` runs both implementations over hundreds of problems and requires
+ * the emitted step data to be deep-equal. Python stops being the generator and becomes
+ * the ORACLE — a second implementation, in another language, that has to agree. The
+ * independence the verifier always claimed is now structural instead of a discipline.
+ *
+ * If you change one, change the other, and let equiv-check tell you that you did.
+ *
+ * Traps this port has to honour (each one caught by equiv-check when I got it wrong):
+ *   - Python round() is banker's rounding: round(45, -1) is 40, not 50.
+ *   - Python // floors toward negative infinity; JS / truncates toward zero.
+ *   - Python's `or 0` / truthiness on 0 differs from JS on empty string.
+ */
+(function (root) {
+  'use strict';
+
+  const _PLACE = ['ones', 'tens', 'hundreds', 'thousands', 'ten-thousands',
+                  'hundred-thousands', 'millions', 'ten-millions', 'hundred-millions'];
+  const PLACE = i => (i < _PLACE.length ? _PLACE[i] : `10^${i}`);
+  const NUMWORD = { 1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five', 6: 'six' };
+
+  const digitsOf = n => String(n).split('').map(Number);
+  const idiv = (a, b) => Math.floor(a / b);
+
+  /* Python's round() breaks ties to EVEN, so round(45, -1) is 40 and round(35, -1)
+     is also 40. Math.round would give 50 and 40. This is the single most likely
+     place for a port to drift, because it only shows up on exact .5 cases. */
+  function roundHalfEven(value, ndigits) {
+    const f = Math.pow(10, -ndigits);
+    const scaled = value / f;
+    const fl = Math.floor(scaled);
+    const diff = scaled - fl;
+    let r;
+    if (diff > 0.5) r = fl + 1;
+    else if (diff < 0.5) r = fl;
+    else r = (fl % 2 === 0) ? fl : fl + 1;
+    return r * f;
+  }
+
+  const SPELL = { 0: 'no', 1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five',
+                  6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten' };
+  const spell = n => (n in SPELL ? SPELL[n] : String(n));
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+  // ------------------------------------------------------------- trials
+
+  function trials(cur, divisor, q) {
+    let lo, hi;
+    if (q === 0) { lo = 1; hi = 1; }
+    else { lo = Math.max(1, q - 1); hi = Math.min(9, q + 1); }
+    const rows = [];
+    for (let n = lo; n <= hi; n++) {
+      const prod = n * divisor;
+      const v = prod > cur ? 'big' : (cur - prod >= divisor ? 'small' : 'fits');
+      const row = { n, prod, v };
+      if (v === 'fits') row.part = 0;
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  // ------------------------------------------- multi-digit x 1 digit
+
+  function multByOneDigit(top, bot) {
+    if (!(bot > 0 && bot < 10)) throw new Error('this layout is for a single-digit multiplier');
+    const tdig = digitsOf(top);
+    const product = top * bot;
+    const W = String(product).length;
+    const col = j => W + 1 - j;
+    const R_CARRY = 1, R_TOP = 2, R_BOT = 3, R_RULE = 4, R_ANS = 5;
+
+    const toks = [], steps = [];
+    const rev = tdig.slice().reverse();
+    rev.forEach((d, j) => toks.push({ k: `t${j}`, r: R_TOP, c: col(j), t: String(d), cls: 'd' }));
+    toks.push({ k: 'op', r: R_BOT, c: 1, t: '×', cls: 'op' });
+    toks.push({ k: 'b0', r: R_BOT, c: col(0), t: String(bot), cls: 'd hot' });
+
+    const decor = [{ kind: 'rule', k: 'rule1', r: R_RULE, c0: 1, c1: W + 1 }];
+
+    const strips = [];
+    rev.forEach((d, j) => {
+      if (d || j === 0) strips.push({ w: d * Math.pow(10, j), area: bot * d * Math.pow(10, j), j });
+    });
+    strips.reverse();
+    const model = {
+      kind: 'area', h: bot,
+      rows: [{ v: bot, maps: null }],
+      cols: strips.map(s => ({ v: s.w })),
+      cells: strips.map((s, i) => ({ r: 0, c: i, v: s.area, j: s.j })),
+      total: product,
+      caption: `${top} × ${bot} — a rectangle ${bot} tall, sliced by place value. `
+             + `The slices are ${strips.map(s => s.area).join(' + ')} = ${product}, `
+             + `and the algorithm is just those slices folded into columns.`,
+    };
+
+    const setupKeys = tdig.map((_, j) => `t${j}`).concat(['op', 'b0', 'rule1']);
+    steps.push({
+      label: 'SET UP', beat: null,
+      say: `Stack them so the <b>ones line up</b>. The ${bot} on the bottom is going to `
+         + `visit every digit on top, one at a time, <b>starting from the right</b>.`,
+      why: `Lining up the ones column is not neatness — it is what keeps each digit `
+         + `standing for the right amount. In ${top} the ${tdig[0]} is not a ${tdig[0]}, `
+         + `it is <b>${tdig[0] * Math.pow(10, tdig.length - 1)}</b>.`,
+      show: setupKeys, flash: ['b0'], dwell: 3.6, modelCell: null,
+    });
+
+    let carry = 0;
+    const stripIndex = {};
+    strips.forEach((s, i) => { stripIndex[s.j] = i; });
+
+    rev.forEach((d, j) => {
+      const raw = bot * d;
+      const total = raw + carry;
+      const last = j === tdig.length - 1;
+      const realD = d * Math.pow(10, j);
+      const digits = String(total).split('');
+
+      const totcells = digits.map((ch, i) => ({ t: ch, part: i }));
+      let chipFirst, chipFull;
+      if (carry) {
+        chipFirst = String(raw).split('').map(ch => ({ t: ch }));
+        chipFull = String(raw).split('').map(ch => ({ t: ch }))
+          .concat([{ t: '+', op: true },
+                   { t: String(carry), arrive: `cy${j - 1}` },
+                   { t: '=', op: true }], totcells);
+      } else {
+        chipFirst = totcells; chipFull = totcells;
+      }
+      const reserve = chipFull.reduce((n, c) => n + (c.op ? 22 : 30), 0) + 32;
+
+      steps.push({
+        label: `${bot} × ${d}`, beat: null,
+        say: `<b>${bot} × ${d} = ${raw}.</b>`,
+        why: j === 0
+          ? (raw >= 10
+              ? `<b>${raw} ones.</b> But a column only holds <i>one</i> digit — `
+                + `${raw} cannot all stay here. Watch where each half goes next.`
+              : `<b>${raw} ones</b>, and that fits in a single column.`)
+          : `That ${d} is really <b>${realD}</b>, so this move is really `
+            + `<b>${bot} × ${realD} = ${raw * Math.pow(10, j)}</b>.`,
+        show: [], flash: ['b0', `t${j}`], bubble: { cells: chipFirst, reserveW: reserve },
+        modelCell: (j in stripIndex) ? stripIndex[j] : null, dwell: 3.8,
+      });
+
+      if (carry) {
+        steps.push({
+          label: '+ THE CARRY', beat: null,
+          say: `Now bring in the carry from the last column: `
+             + `<b>${raw} + ${carry} = ${total}</b>.`,
+          why: `That carry is not a ${carry} — it is <b>${carry * Math.pow(10, j)}</b>. `
+             + `It came from the column on the right, where it did not fit, and `
+             + `this is the column where it belongs.`,
+          show: [], flash: [`cy${j - 1}`],
+          bubble: { cells: chipFull, grewFrom: chipFirst.length, reserveW: reserve },
+          trap: `<b>Multiply first, then add.</b> Doing it backwards — `
+              + `${d} + ${carry} = ${d + carry}, then ${d + carry} × ${bot} = `
+              + `${(d + carry) * bot} — is the mistake almost everybody makes here.`,
+          modelCell: (j in stripIndex) ? stripIndex[j] : null, dwell: 5.0,
+        });
+      }
+
+      const show = [];
+      let split = [], say2, why2;
+      if (last) {
+        digits.slice().reverse().forEach((ch, i) => {
+          toks.push({ k: `a${j + i}`, r: R_ANS, c: col(j + i), t: ch, cls: 'd ans' });
+          show.push(`a${j + i}`);
+          split.push({ part: digits.length - 1 - i, to: `a${j + i}` });
+        });
+        if (digits.length > 1) {
+          say2 = `Nothing left to multiply, so <b>both digits go down</b> — the `
+               + `<b>${digits[0]}</b> into the ${PLACE(j + 1)} column and the `
+               + `<b>${digits[1]}</b> into the ${PLACE(j)} column.`;
+          why2 = `<b>${total * Math.pow(10, j)}</b> = ${Number(digits[0]) * Math.pow(10, j + 1)} + `
+               + `${Number(digits[1]) * Math.pow(10, j)}. Each digit sits in the column that `
+               + `gives it the right size.`;
+        } else {
+          say2 = `Write the <b>${total}</b> in the ${PLACE(j)} column.`;
+          why2 = `That ${total} is really <b>${total * Math.pow(10, j)}</b>.`;
+        }
+      } else if (total >= 10) {
+        const ones = total % 10, tens = idiv(total, 10);
+        toks.push({ k: `a${j}`, r: R_ANS, c: col(j), t: String(ones), cls: 'd ans' });
+        toks.push({ k: `cy${j}`, r: R_CARRY, c: col(j + 1), t: String(tens), cls: 'carry' });
+        show.push(`a${j}`, `cy${j}`);
+        split = [{ part: 1, to: `a${j}` }, { part: 0, to: `cy${j}` }];
+        say2 = `<b>${total}</b> is two digits and only one fits in a box. `
+             + `The <b>${ones}</b> drops <b>down</b> into the ${PLACE(j)} column. `
+             + `The <b>${tens}</b> flies <b>up</b> to the shelf above the next column.`;
+        why2 = `Split it by size: <b>${total * Math.pow(10, j)} = ${ones * Math.pow(10, j)} + `
+             + `${tens * Math.pow(10, j + 1)}</b>. The ${ones * Math.pow(10, j)} fits in the ${PLACE(j)} `
+             + `column. The ${tens * Math.pow(10, j + 1)} does not — so it moves one column left, `
+             + `to where ${tens * Math.pow(10, j + 1)} belongs. That is all a carry is.`;
+      } else {
+        toks.push({ k: `a${j}`, r: R_ANS, c: col(j), t: String(total), cls: 'd ans' });
+        show.push(`a${j}`);
+        split = [{ part: 0, to: `a${j}` }];
+        say2 = `<b>${total}</b> is one digit, so it drops straight down into the ${PLACE(j)} column.`;
+        why2 = `That ${total} is really <b>${total * Math.pow(10, j)}</b>, and nothing needs to move left.`;
+      }
+
+      steps.push({
+        label: 'WHERE IT GOES', beat: null, say: say2, why: why2,
+        show, flash: [], bubble: { cells: chipFull, reserveW: reserve }, split,
+        modelCell: (j in stripIndex) ? stripIndex[j] : null, dwell: 4.4,
+      });
+      carry = last ? 0 : idiv(total, 10);
+    });
+
+    const mx = steps.reduce((m, st) => (st.bubble ? Math.max(m, st.bubble.reserveW) : m), 0);
+    steps.forEach(st => { if (st.bubble) st.bubble.reserveW = mx; });
+
+    const rough = roundHalfEven(top, -1);
+    steps.push({
+      label: 'CHECK', beat: null,
+      say: `<b>${top} × ${bot} = ${product}.</b> Now check it's sensible: ${top} is about `
+         + `${rough}, and ${rough} × ${bot} = ${rough * bot}. ${product} is right next to it. ✓`,
+      why: `And the slices agree: ${strips.map(s => s.area).join(' + ')} = `
+         + `<b>${product}</b>. The columns and the rectangle are the same calculation.`,
+      show: [], flash: Array.from({ length: W }, (_, j) => `a${j}`), dwell: 5.4, modelCell: 'all',
+    });
+
+    return { cols: W + 1, rows: 5, toks, decor, steps, model, answer: product };
+  }
+
+  // ------------------------------------------- N digits x M digits
+
+  function multMulti(top, bot) {
+    if (!(bot >= 10)) throw new Error('use multByOneDigit for a single-digit multiplier');
+    const tdig = digitsOf(top);
+    const bdig = digitsOf(bot);
+    const N = bdig.length;
+    const rounds = bdig.slice().reverse();
+    const partials = rounds.map((m, k) => top * m * Math.pow(10, k));
+    const product = top * bot;
+    const W = String(product).length;
+    const col = j => W + 1 - j;
+    const R_CARRY = 1, R_TOP = 2, R_BOT = 3, R_RULE1 = 4;
+    const R_P = Array.from({ length: N }, (_, k) => 5 + k);
+    const R_RULE2 = 5 + N, R_ANS = 6 + N;
+
+    const toks = [], steps = [];
+    const trev = tdig.slice().reverse();
+    trev.forEach((d, j) => toks.push({ k: `t${j}`, r: R_TOP, c: col(j), t: String(d), cls: 'd' }));
+    toks.push({ k: 'op', r: R_BOT, c: 1, t: '×', cls: 'op' });
+    const botKeys = [];
+    rounds.forEach((m, k) => {
+      toks.push({ k: `b${k}`, r: R_BOT, c: col(k), t: String(m),
+                  cls: k === 0 ? 'd hot' : 'd hot2' });
+      botKeys.push(`b${k}`);
+    });
+    for (let k = 1; k < N; k++) toks.push({ k: `plus${k}`, r: R_P[k], c: 1, t: '+', cls: 'op' });
+
+    const decor = [
+      { kind: 'rule', k: 'rule1', r: R_RULE1, c0: 1, c1: W + 1 },
+      { kind: 'rule', k: 'rule2', r: R_RULE2, c0: 1, c1: W + 1 },
+    ];
+
+    const tcols = [];
+    trev.forEach((d, j) => { if (d || j === 0) tcols.push(d * Math.pow(10, j)); });
+    tcols.reverse();
+    const modelRows = [];
+    for (let k = N - 1; k >= 0; k--) {
+      modelRows.push({ v: rounds[k] * Math.pow(10, k), maps: `p${k + 1}` });
+    }
+    const cells = [];
+    modelRows.forEach((r, ri) => tcols.forEach((cv, ci) => cells.push({ r: ri, c: ci, v: r.v * cv })));
+    const model = {
+      kind: 'area', h: bot, rows: modelRows,
+      cols: tcols.map(v => ({ v })), cells,
+      rowSums: modelRows.map(r => r.v * top), total: product,
+      caption: `${top} × ${bot} as a rectangle, one strip per digit of ${bot}. `
+        + modelRows.map((r, ri) =>
+            `The ${r.v} strip is written row ${N - ri}, <b>${r.v * top}</b>.`).join(' '),
+    };
+
+    const setup = tdig.map((_, j) => `t${j}`).concat(['op'], botKeys, ['rule1']);
+    steps.push({
+      label: 'SET UP', beat: null,
+      say: `${cap(NUMWORD[N])} digits on the bottom means <b>${NUMWORD[N]} `
+         + `rounds</b>, so ${NUMWORD[N]} answer rows, and then you add them all up.`,
+      why: 'Each digit on the bottom is a different size. The '
+         + rounds.map((m, k) => (k ? `<b>${m}</b> is really <b>${m * Math.pow(10, k)}</b>` : null))
+             .filter(Boolean).join(', ')
+         + ". That is where each row's zeros come from.",
+      show: setup, flash: botKeys, dwell: 5.0, modelRow: null,
+    });
+
+    function digitBeats(mult, d, carry, j, last, slot, ansRow, ansPre, carryPre,
+                        hotKey, mrow, tensScale) {
+      const raw = mult * d;
+      const total = raw + carry;
+      const digits = String(total).split('');
+      const totcells = digits.map((ch, i) => ({ t: ch, part: i }));
+      let chipFirst, chipFull;
+      if (carry) {
+        chipFirst = String(raw).split('').map(ch => ({ t: ch }));
+        chipFull = String(raw).split('').map(ch => ({ t: ch }))
+          .concat([{ t: '+', op: true },
+                   { t: String(carry), arrive: `${carryPre}${j - 1}` },
+                   { t: '=', op: true }], totcells);
+      } else { chipFirst = totcells; chipFull = totcells; }
+      const reserve = chipFull.reduce((n, c) => n + (c.op ? 22 : 30), 0) + 32;
+
+      steps.push({
+        label: `${mult} × ${d}`, beat: null,
+        say: `<b>${mult} × ${d} = ${raw}.</b>`,
+        why: (j === 0 && tensScale === 1 && raw >= 10)
+          ? `<b>${raw}</b> — and a column holds one digit, so watch where each half of it goes.`
+          : `Really <b>${mult * tensScale} × ${d * Math.pow(10, j)} = `
+            + `${raw * Math.pow(10, j) * tensScale}</b>.`,
+        show: [], flash: [hotKey, `t${j}`],
+        bubble: { cells: chipFirst, reserveW: reserve },
+        modelRow: mrow, dwell: 3.6,
+      });
+      if (carry) {
+        steps.push({
+          label: '+ THE CARRY', beat: null,
+          say: `Now bring in the carry: <b>${raw} + ${carry} = ${total}</b>.`,
+          why: 'The carry came from the column on the right, where it did not '
+             + 'fit. This is the column it belongs in.',
+          show: [], flash: [`${carryPre}${j - 1}`],
+          bubble: { cells: chipFull, grewFrom: chipFirst.length, reserveW: reserve },
+          trap: `<b>Multiply first, then add the carry.</b> Not `
+              + `${d} + ${carry} = ${d + carry}, then × ${mult} = ${(d + carry) * mult}.`,
+          modelRow: mrow, dwell: 4.8,
+        });
+      }
+
+      const show = [];
+      let split = [], say2, why2;
+      if (last) {
+        digits.slice().reverse().forEach((ch, i) => {
+          const key = `${ansPre}${slot + i}`;
+          toks.push({ k: key, r: ansRow, c: col(slot + i), t: ch, cls: 'd p1' });
+          show.push(key);
+          split.push({ part: digits.length - 1 - i, to: key });
+        });
+        say2 = digits.length > 1
+          ? 'Nothing left on top, so <b>both digits go down</b>.'
+          : `Write the <b>${total}</b>.`;
+        why2 = digits.length > 1
+          ? `<b>${total}</b> lands across two columns because that is where its two place values belong.`
+          : 'One digit, one column.';
+      } else if (total >= 10) {
+        const ones = total % 10, tens = idiv(total, 10);
+        const kAns = `${ansPre}${slot}`, kCar = `${carryPre}${j}`;
+        toks.push({ k: kAns, r: ansRow, c: col(slot), t: String(ones), cls: 'd p1' });
+        toks.push({ k: kCar, r: R_CARRY, c: col(j + 1), t: String(tens),
+                    cls: 'carry' + (carryPre === 'c0' ? '' : ' carry2') });
+        show.push(kAns, kCar);
+        split = [{ part: 1, to: kAns }, { part: 0, to: kCar }];
+        say2 = `<b>${total}</b> is two digits and only one fits in a box. The `
+             + `<b>${ones}</b> drops <b>down</b>; the <b>${tens}</b> flies <b>up</b> `
+             + `to the shelf above the next column.`;
+        why2 = 'The part that does not fit moves one column left, which is the only '
+             + 'thing a carry ever is.';
+      } else {
+        const kAns = `${ansPre}${slot}`;
+        toks.push({ k: kAns, r: ansRow, c: col(slot), t: String(total), cls: 'd p1' });
+        show.push(kAns);
+        split = [{ part: 0, to: kAns }];
+        say2 = `<b>${total}</b> is one digit — it drops straight down.`;
+        why2 = 'Nothing needs to move left.';
+      }
+
+      steps.push({
+        label: 'WHERE IT GOES', beat: null, say: say2, why: why2,
+        show, flash: [], bubble: { cells: chipFull, reserveW: reserve },
+        split, modelRow: mrow, dwell: 4.2,
+      });
+      return last ? 0 : idiv(total, 10);
+    }
+
+    rounds.forEach((m, k) => {
+      const mrow = N - 1 - k;
+      const pre = `p${k}_`, cpre = `c${k}_`;
+
+      if (k) {
+        const zk = [];
+        for (let z = 0; z < k; z++) {
+          const key = `z${k}_${z}`;
+          toks.push({ k: key, r: R_P[k], c: col(z), t: '0', cls: 'd p2 zero' });
+          zk.push(key);
+        }
+        steps.push({
+          label: 'THE ZERO' + (k > 1 ? 'S' : ''), beat: null,
+          say: `Round ${k + 1} uses the <b>${m}</b> — but it is <b>not ${m}</b>. It `
+             + `sits ${NUMWORD[k]} place${k > 1 ? 's' : ''} to the left, so it `
+             + `is really <b>${m * Math.pow(10, k)}</b>. Before you multiply anything, put `
+             + `<b>${NUMWORD[k]} 0${k > 1 ? 's' : ''}</b> at the end of this row.`,
+          why: `This row is <b>${m * Math.pow(10, k)} × ${top} = ${partials[k]}</b>. Every `
+             + `multiple of ${m * Math.pow(10, k)} ends in ${NUMWORD[k]} `
+             + `zero${k > 1 ? 's' : ''}, so this row <i>has</i> to. You are not `
+             + `adding magic zeros — you are writing down where the number is.`,
+          show: zk.concat([`plus${k}`]), flash: [`b${k}`].concat(zk), dwell: 5.6,
+          modelRow: mrow,
+          trap: `<b>This is the most common way to get a multi-digit multiply `
+              + `wrong.</b> Miss the zeros and you add ${idiv(partials[k], Math.pow(10, k))} `
+              + `instead of ${partials[k]}.`,
+        });
+        const prev = toks.filter(t => t.k.startsWith(`c${k - 1}_`)).map(t => t.k);
+        if (prev.length) {
+          steps.push({
+            label: 'CROSS OUT', beat: null,
+            say: 'Cross out the carries from the last round. They belong to that '
+               + 'row and nothing else.',
+            why: "They were amounts borrowed inside the previous row's "
+               + 'calculation. This is a different calculation.',
+            show: [], flash: [], strike: prev, dwell: 3.8,
+            modelRow: mrow,
+            trap: 'Leaving them there adds them a second time, and the answer '
+                + 'comes out wrong with no obvious sign of why.',
+          });
+        }
+      }
+
+      if (m === 0) {
+        const key = `${pre}${k}`;
+        toks.push({ k: key, r: R_P[k], c: col(k), t: '0', cls: 'd p1' });
+        steps.push({
+          label: `× ${m}`, beat: null,
+          say: `Round ${k + 1} multiplies by <b>0</b>. Anything times 0 is 0, so the `
+             + `whole row is just <b>0</b> — no carrying, nothing to line up.`,
+          why: `<b>${top} × 0 = 0.</b> The row still matters: its zeros are holding `
+             + `the columns open for the rounds after it.`,
+          show: [key], flash: [`b${k}`],
+          bubble: { cells: [{ t: '0', part: 0 }], reserveW: 62 },
+          split: [{ part: 0, to: key }], modelRow: mrow, dwell: 4.0,
+        });
+      } else {
+        let carry = 0;
+        trev.forEach((d, j) => {
+          carry = digitBeats(m, d, carry, j, j === tdig.length - 1, j + k,
+                             R_P[k], pre, cpre, `b${k}`, mrow, Math.pow(10, k));
+        });
+      }
+
+      steps.push({
+        label: `ROW ${k + 1} DONE`, beat: null,
+        say: `Row ${k + 1} is <b>${partials[k]}</b> — that is <b>${m * Math.pow(10, k)} × ${top}</b>.`,
+        why: `On the rectangle that is the <b>${m * Math.pow(10, k)}</b> strip, area `
+           + `<b>${partials[k]}</b>.`,
+        show: [], flash: [], dwell: 3.4, modelRow: mrow,
+      });
+    });
+
+    const ansKeys = [];
+    String(product).split('').reverse().forEach((ch, i) => {
+      toks.push({ k: `a${i}`, r: R_ANS, c: col(i), t: ch, cls: 'd ans' });
+      ansKeys.push(`a${i}`);
+    });
+    steps.push({
+      label: 'ADD', beat: null,
+      say: `Last move: <b>add all ${NUMWORD[N]} rows</b>. `
+         + `${partials.join(' + ')} = <b>${product}</b>.`,
+      why: `Which is the whole rectangle: <b>${product}</b>.`,
+      show: ansKeys.concat(['rule2']), flash: ansKeys, dwell: 4.0, modelRow: 'all',
+    });
+
+    const rTop = roundHalfEven(top, -1);
+    steps.push({
+      label: 'CHECK', beat: null,
+      say: `Sense-check: ${top} is about ${rTop}, so the answer should land near `
+         + `${rTop} × ${bot} = ${rTop * bot}. We got <b>${product}</b>. ✓`,
+      why: `All the little areas add to <b>${product}</b>.`,
+      show: [], flash: ansKeys, dwell: 5.4, modelRow: 'all',
+    });
+
+    const mx = steps.reduce((m2, st) => (st.bubble ? Math.max(m2, st.bubble.reserveW) : m2), 0);
+    steps.forEach(st => { if (st.bubble) st.bubble.reserveW = mx; });
+
+    return { cols: W + 1, rows: R_ANS, toks, decor, steps, model, answer: product };
+  }
+
+  // ------------------------------------------- long division
+
+  function longDivision(dividend, divisor) {
+    // Asif 2026-08-01: never divide by 1 — the kid copies the number down and no
+    // long division happens.
+    if (!(divisor >= 2)) throw new Error('dividing by 1 is not a drill');
+    if (!(dividend >= divisor)) throw new Error('the quotient would be zero; not a drill shape');
+    const ddig = digitsOf(dividend);
+    const W = ddig.length;
+    const ndiv = String(divisor).length;
+    const dcol = i => i + 1 + ndiv;
+    const pv = i => Math.pow(10, W - 1 - i);
+    const R_Q = 1, R_DIV = 2;
+
+    const toks = [], steps = [], decor = [];
+    ddig.forEach((d, i) => toks.push({ k: `n${i}`, r: R_DIV, c: dcol(i), t: String(d), cls: 'd' }));
+    const dvKeys = [];
+    String(divisor).split('').forEach((ch, i) => {
+      toks.push({ k: `dv${i}`, r: R_DIV, c: i + 1, t: ch, cls: 'd hot' });
+      dvKeys.push(`dv${i}`);
+    });
+    decor.push({ kind: 'bracket', k: 'brk', r: R_DIV, c0: ndiv + 1, c1: ndiv + W });
+
+    const quotient = idiv(dividend, divisor), remainder = dividend % divisor;
+
+    const setup = dvKeys.concat(['brk'], ddig.map((_, i) => `n${i}`));
+    steps.push({
+      label: 'SET UP', beat: null,
+      say: `<b>${dividend}</b> goes inside the house, <b>${divisor}</b> stands outside. `
+         + `Then you repeat four moves, in this order, forever: `
+         + `<b>Divide → Multiply → Subtract → Bring down.</b>`,
+      why: `The real question underneath all of it: <b>how many ${divisor}s fit inside `
+         + `${dividend}?</b> You chip away at it a place value at a time — hundreds first, `
+         + `then tens, then ones — instead of counting ${divisor}s one by one.`,
+      show: setup, flash: dvKeys, dwell: 5.0, modelRow: null,
+    });
+
+    let row = 3;
+    let cur = 0, curStart = 2, curKeys = [];
+    let started = false;
+    const qWritten = [];
+    const ladder = [];
+    let kIndex = 0;
+
+    for (let i = 0; i < W; i++) {
+      if (i === 0) { cur = ddig[0]; curStart = dcol(0); curKeys = ['n0']; }
+
+      if (!started && cur < divisor) {
+        steps.push({
+          label: 'TOO SMALL', beat: null,
+          say: `How many <b>${divisor}</b>s fit in <b>${cur}</b>? <b>None</b> — ${divisor} is `
+             + `bigger than ${cur}. So you write <i>nothing</i> above the ${cur} and take one `
+             + `more digit: look at <b>${cur * 10 + ddig[i + 1]}</b> instead.`,
+          why: `Asked properly: are there any <b>${pv(i)}</b>-sized groups of ${divisor} in `
+             + `${dividend}? ${divisor} × ${pv(i)} = ${divisor * pv(i)}, which is more than `
+             + `${dividend}. So the answer has no ${PLACE(W - 1 - i)} digit at all — and a `
+             + `leading zero would just be writing 'none' where nothing needs writing.`,
+          show: [], flash: [`n${i}`, `n${i + 1}`], dwell: 5.6, modelRow: null,
+          bubble: { trials: trials(cur, divisor, 0), cur, divisor, reserveW: 232 },
+          trap: 'A zero at the <b>front</b> of the answer is the one zero you skip. A zero in '
+              + 'the <b>middle</b> you must write. Those are different, and mixing them up is '
+              + 'how a 604 turns into a 64.',
+        });
+        cur = cur * 10 + ddig[i + 1];
+        curKeys = curKeys.concat([`n${i + 1}`]);
+        continue;
+      }
+
+      started = true;
+      const q = idiv(cur, divisor);
+      const prod = q * divisor;
+      const rem = cur - prod;
+      const qcol = dcol(i);
+      const p = pv(i);
+      ladder.push({ q: q * p, prod: prod * p, left: null });
+
+      const tr = trials(cur, divisor, q);
+      const chip = { trials: tr, cur, divisor, reserveW: 232 };
+      if (q) chip.winPart = 0;
+      steps.push({
+        label: 'TRY THEM', beat: 'D',
+        say: `How many <b>${divisor}</b>s fit inside <b>${cur}</b>? Nobody just `
+           + `<i>knows</i> this — you <b>try them</b>, and you keep the biggest one `
+           + `that still fits.`,
+        why: '<b>Too small</b> is the one people skip. A digit is too small when '
+           + 'what is <i>left over</i> would still hold another ' + String(divisor)
+           + ' — you could have fitted one more in.',
+        show: [], flash: dvKeys.concat(curKeys),
+        bubble: chip, modelRow: kIndex, dwell: 5.6,
+      });
+
+      toks.push({ k: `q${i}`, r: R_Q, c: qcol, t: String(q), cls: 'd quo' });
+      qWritten.push(`q${i}`);
+      let say, why, trap;
+      if (q === 0) {
+        say = `<b>D — Divide.</b> How many <b>${divisor}</b>s fit in <b>${cur}</b>? `
+            + `<b>None.</b> So write a <b>0</b> up top, right above the ${ddig[i]}.`;
+        why = `It means there are <b>no ${PLACE(W - 1 - i)}</b> in the answer — no groups of `
+            + `${divisor * p}. That is a real fact about the answer and it needs a real digit, `
+            + `because the digits after it depend on sitting in the right column.`;
+        trap = `<b>Write the 0. Do not skip it.</b> Skipping it here shifts every digit after `
+             + `it and the answer comes out about ten times too small.`;
+      } else {
+        const nxt = (q + 1) * divisor;
+        say = `<b>D — Divide.</b> How many <b>${divisor}</b>s fit in <b>${cur}</b>? `
+            + `<b>${cap(spell(q))}</b> — because ${q} × ${divisor} = ${prod}, `
+            + `and ${q + 1} × ${divisor} = ${nxt}, which is too big.`;
+        why = `That ${q} sits in the ${PLACE(W - 1 - i)} column, so it is really <b>${q * p}</b>. `
+            + `You just found <b>${q * p} groups of ${divisor}</b> inside ${dividend}.`;
+        trap = qWritten.length === 1
+          ? 'The digit goes <b>directly above the digit you just used</b>, not off to the side. '
+            + 'The column is what turns a 6 into a 600.'
+          : null;
+      }
+      const dStep = {
+        label: 'D', beat: 'D', say, why, show: [`q${i}`],
+        flash: [`q${i}`].concat(dvKeys, curKeys), trap,
+        bubble: JSON.parse(JSON.stringify(chip)),
+        modelRow: kIndex, dwell: trap ? 4.8 : 3.6,
+      };
+      if (q) { dStep.split = [{ part: 0, to: `q${i}` }]; dStep.keepChip = true; }
+      steps.push(dStep);
+
+      const subTxt = String(prod);
+      const subStart = qcol - (subTxt.length - 1);
+      const subKeys = [];
+      subTxt.split('').forEach((ch, ti) => {
+        const key = `s${i}_${ti}`;
+        toks.push({ k: key, r: row, c: subStart + ti, t: ch, cls: 'd subtrahend' });
+        subKeys.push(key);
+      });
+      toks.push({ k: `m${i}`, r: row, c: subStart - 1, t: '−', cls: 'op' });
+      steps.push({
+        label: 'M', beat: 'M',
+        say: `<b>M — Multiply.</b> ${q} × ${divisor} = <b>${prod}</b>. `
+           + `Write it <b>underneath</b>, lined up under the ${cur}.`,
+        why: `On paper it looks like ${prod}, but it is really <b>${prod * p}</b> — that is `
+           + `${q * p} groups of ${divisor}, and it is the chunk of ${dividend} you have now `
+           + `accounted for.`,
+        show: subKeys.concat([`m${i}`]), flash: subKeys, dwell: 3.6, modelRow: kIndex,
+        bubble: JSON.parse(JSON.stringify(chip)),
+      });
+
+      const ruleStart = Math.min(subStart - 1, curStart);
+      decor.push({ kind: 'rule', k: `r${i}`, r: row + 1, c0: ruleStart, c1: qcol });
+      const remTxt = String(rem);
+      const remStart = qcol - (remTxt.length - 1);
+      const remKeys = [];
+      remTxt.split('').forEach((ch, ti) => {
+        const key = `e${i}_${ti}`;
+        toks.push({ k: key, r: row + 2, c: remStart + ti, t: ch, cls: 'd rem' });
+        remKeys.push(key);
+      });
+      const sTrap = qWritten.length === 1
+        ? `Check the leftover: <b>${rem} is smaller than ${divisor}</b>. It always must be. `
+          + `If your leftover is ever <i>bigger</i> than ${divisor}, your digit up top was `
+          + `too small — back up and make it bigger.`
+        : null;
+      steps.push({
+        label: 'S', beat: 'S',
+        say: `<b>S — Subtract.</b> ${cur} − ${prod} = <b>${rem}</b>.`,
+        why: `Really <b>${cur * p} − ${prod * p} = ${rem * p}</b>. That ${rem * p} is what is still `
+           + `un-divided, and it is too small to make another group of ${divisor * p}.`,
+        show: [`r${i}`].concat(remKeys), flash: remKeys, trap: sTrap,
+        dwell: sTrap ? 4.8 : 3.4, modelRow: kIndex,
+      });
+
+      if (i + 1 < W) {
+        const nxtD = ddig[i + 1];
+        const key = `bd${i}`;
+        toks.push({ k: key, r: row + 2, c: dcol(i + 1), t: String(nxtD), cls: 'd drop' });
+        const newCur = rem * 10 + nxtD;
+        steps.push({
+          label: 'B', beat: 'B',
+          say: `<b>B — Bring down.</b> Pull the <b>${nxtD}</b> straight down next to the `
+             + `${rem}. Now you are dividing <b>${newCur}</b>, and the four moves start again.`,
+          why: `You are moving down one place value: from ${PLACE(W - 1 - i)} to `
+             + `${PLACE(W - 2 - i)}. The ${rem * p} left over plus the ${nxtD * pv(i + 1)} you just `
+             + `pulled down make <b>${newCur * pv(i + 1)}</b> still to divide.`,
+          show: [key], flash: [`n${i + 1}`, key], dwell: 4.0, modelRow: kIndex,
+        });
+        cur = newCur; curStart = remStart; curKeys = remKeys.concat([key]);
+        row += 3;
+      } else {
+        toks.push({ k: 'rlab', r: R_Q, c: ndiv + W + 1, t: `R${rem}`, cls: 'rlab' });
+        steps.push({
+          label: 'REMAINDER', beat: null,
+          say: `Nothing left to bring down. The <b>${rem}</b> that will not split is the `
+             + `<b>remainder</b>. Answer: <b>${quotient} R${rem}</b>.`,
+          why: `${rem} is smaller than ${divisor}, so it cannot make even one more group. `
+             + `On a word problem this is the number that decides the answer — `
+             + `${rem} left over means you still need one more of whatever you are counting.`,
+          show: ['rlab'], flash: ['rlab'].concat(remKeys), dwell: 4.8, modelRow: kIndex,
+        });
+        steps.push({
+          label: 'CHECK', beat: null,
+          say: `Check it by going backwards: <b>${quotient} × ${divisor} = `
+             + `${quotient * divisor}</b>, plus the remainder <b>${rem}</b> `
+             + `= <b>${quotient * divisor + rem}</b>. That is the number you started with. ✓`,
+          why: `And the ladder adds up: `
+             + `${ladder.map(l => l.q).join(' + ')} = <b>${quotient}</b>. Those are `
+             + `the real sizes of the digits you wrote on top.`,
+          show: [], flash: qWritten.concat(['rlab']), dwell: 5.8, modelRow: 'all',
+        });
+      }
+      kIndex += 1;
+    }
+
+    let left = dividend;
+    ladder.forEach(l => { left -= l.prod; l.left = left; });
+    const model = {
+      kind: 'ladder', start: dividend, divisor,
+      rows: ladder, quotient, remainder,
+      caption: `The same division without the shorthand. Each written digit is really a `
+             + `whole chunk: ${ladder.map(l => l.q).join(' + ')} = <b>${quotient}</b> `
+             + `groups of ${divisor}, with <b>${remainder}</b> left over.`,
+    };
+
+    return { cols: ndiv + W + 1, rows: row + 2, toks, decor, steps, model,
+             answer: `${quotient} R${remainder}` };
+  }
+
+  // ----------------------------------- derived prose (port of describe.py)
+
+  const ORD = ['ones', 'tens', 'hundreds', 'thousands', 'ten-thousands'];
+  const ndig = n => String(Math.abs(n)).length;
+
+  function multTraits(x, y) {
+    const t = { nx: ndig(x), ny: ndig(y) };
+    const tdig = digitsOf(x);
+    let carries = 0;
+    const ms = y < 10 ? [y] : digitsOf(y).slice().reverse();
+    for (const m of ms) {
+      let carry = 0;
+      tdig.slice().reverse().forEach((d, j) => {
+        const tot = m * d + carry;
+        if (j < tdig.length - 1 && tot >= 10) carries += 1;
+        carry = (j === tdig.length - 1) ? 0 : idiv(tot, 10);
+      });
+    }
+    t.carries = carries;
+    t.zero_in_top = String(x).includes('0');
+    return t;
+  }
+
+  function divTraits(x, y) {
+    const q = idiv(x, y), r = x % y;
+    const qs = String(q);
+    return {
+      nx: ndig(x), ny: ndig(y), nq: qs.length,
+      remainder: r !== 0,
+      inner_zero: qs.length > 2 ? qs.slice(1, -1).includes('0') : false,
+      skips_first: Number(String(x)[0]) < y,
+    };
+  }
+
+  function okMult(a, b, want) {
+    if (b < 2 || a < 10) return false;
+    const t = multTraits(a, b);
+    if (t.nx !== want.nx || t.ny !== want.ny) return false;
+    if (want.carries && !t.carries) return false;
+    if (want.zero_in_top && !t.zero_in_top) return false;
+    return ndig(a * b) === want.nprod;
+  }
+
+  function okDiv(a, b, want) {
+    if (b < 2 || a < b) return false;              // never divide by 1
+    const t = divTraits(a, b);
+    if (t.nx !== want.nx || t.ny !== want.ny || t.nq !== want.nq) return false;
+    if (want.remainder && !t.remainder) return false;
+    if (want.inner_zero && !t.inner_zero) return false;
+    return true;
+  }
+
+  function pickTry(kind, x, y, n) {
+    n = n || 3;
+    const lox = Math.pow(10, ndig(x) - 1), hix = Math.pow(10, ndig(x)) - 1;
+    let loy = Math.pow(10, ndig(y) - 1);
+    const hiy = Math.pow(10, ndig(y)) - 1;
+    if (ndig(y) === 1) loy = 2;
+    const spanA = hix - lox + 1, spanB = hiy - loy + 1;
+    let want, ok;
+    if (kind === 'mult') { want = multTraits(x, y); want.nprod = ndig(x * y); ok = okMult; }
+    else { want = divTraits(x, y); ok = okDiv; }
+    const out = [];
+    for (let k = 1; k < spanA * 4 + 400; k++) {
+      const a = lox + (k * 37 + x) % spanA;
+      const b = loy + (k * 13 + y) % spanB;
+      if ((a === x && b === y) || out.some(p => p[0] === a && p[1] === b)) continue;
+      if (ok(a, b, want)) { out.push([a, b]); if (out.length === n) return out; }
+    }
+    return out;
+  }
+
+  function describe(kind, x, y) {
+    return kind === 'mult' ? describeMult(x, y) : describeDiv(x, y);
+  }
+
+  function describeMult(x, y) {
+    const nx = ndig(x), ny = ndig(y);
+    const t = multTraits(x, y);
+    if (ny === 1) {
+      return {
+        title: 'Multiplying by one digit',
+        skill: `${nx}-digit × 1-digit, with carrying`,
+        why: 'The bottom number visits every digit on top, one at a time, right to '
+           + 'left. Anything too big for its box gets parked on the shelf above the '
+           + 'next column.',
+        rules: [
+          'Line up the <b>ones</b> column. Always.',
+          'Work <b>right to left</b> — ' + ORD.slice(0, nx).join(', then ') + '.',
+          '<b>Multiply first, then add the carry.</b> Never the other way round.',
+          'A carry gets <b>written above</b>, not remembered.',
+        ],
+        tryNote: 'Every one of these has a carry in it — that is the thing being '
+               + 'practised, not the times tables.'
+               + (t.zero_in_top
+                   ? ' One has a <b>0</b> in the middle on purpose: × 0 is still 0, '
+                     + 'but a carry coming in still has to be added.' : ''),
+      };
+    }
+    const rounds = NUMWORD[ny] || String(ny);
+    return {
+      title: `${ny === 2 ? 'Two' : cap(NUMWORD[ny] || String(ny))} digits times `
+           + `${NUMWORD[nx] || nx} digits`,
+      skill: `${nx}-digit × ${ny}-digit, ${rounds} partial products`,
+      why: `${cap(rounds)} digits on the bottom means <b>${rounds} rounds</b>, so `
+         + `${rounds} answer rows, then you add them. Each round after the first is `
+         + `multiplying by a bigger place, which is why each row starts with one more `
+         + `<b>0</b> than the row above it.`,
+      rules: [
+        'One round per digit on the bottom, <b>right to left</b>.',
+        ny > 2
+          ? '<b>Row 2 starts with one 0. Row 3 starts with two.</b> Write the zeros '
+            + 'before you multiply anything.'
+          : '<b>Row 2 starts with a 0 in the ones column.</b> Write the 0 before you '
+            + 'multiply anything.',
+        '<b>Cross out the carries</b> before starting the next round.',
+        'Add all the rows at the end — that is the answer, not the last row on its own.',
+      ],
+      tryNote: "Before you add the rows, point at each row's zeros and count them. "
+             + 'Every time.',
+    };
+  }
+
+  function describeDiv(x, y) {
+    const nx = ndig(x), ny = ndig(y);
+    const t = divTraits(x, y);
+    const big = nx >= 4 || t.inner_zero;
+    const rules = [
+      '<b>D</b>ivide → <b>M</b>ultiply → <b>S</b>ubtract → <b>B</b>ring down. Repeat.',
+      'The answer digit goes <b>directly above</b> the digit you just used.',
+      'After subtracting, the leftover must be <b>smaller than the divisor</b>. '
+      + "If it isn't, your digit was too small.",
+    ];
+    if (t.skips_first) {
+      rules.push("Doesn't fit in the first digit? Take <b>one more</b>, and write "
+               + 'nothing above the first.');
+    }
+    if (t.inner_zero) {
+      rules.push("Doesn't fit after a bring-down? <b>Write a 0 up top</b> and keep "
+               + 'going. A zero at the <b>front</b> you skip; a zero in the '
+               + '<b>middle</b> you must write.');
+    }
+    if (t.remainder) {
+      rules.push('Nothing left to bring down? Whatever is left is the <b>remainder</b>.');
+    }
+    let why = 'Four moves, in the same order, over and over until you run out of digits: '
+            + '<b>Divide, Multiply, Subtract, Bring down.</b> Never skip one, never reorder them.';
+    if (big) {
+      why = 'Same four moves as always — but with more digits you hit the traps that eat '
+          + 'long division: the divisor not fitting in the first digit, and a '
+          + '<b>0 landing in the middle of the answer</b>.';
+    }
+    if (ny > 1) {
+      why += ` And with a <b>${ny}-digit divisor</b> you can no longer recall the answer `
+           + `— every digit is an <b>estimate you then check</b>.`;
+    }
+    let note = 'Say the four moves out loud on every single one. Out loud is the point.';
+    if (t.inner_zero) {
+      note = 'All three of these have a <b>0 in the answer</b>. That is not a '
+           + 'coincidence — it is the thing being practised.';
+    }
+    return {
+      title: ny > 1 ? `Long division, ${ny}-digit divisor`
+           : big ? 'Long division, big numbers' : 'Long division with a remainder',
+      skill: `${nx}-digit ÷ ${ny}-digit`
+           + (t.remainder ? ', remainder' : ', no remainder')
+           + (t.inner_zero ? ' — and a zero in the answer' : ''),
+      why, rules, tryNote: note,
+    };
+  }
+
+  // one entry point: shape in, whole animation out
+  function generate(kind, x, y) {
+    const core = kind === 'div' ? longDivision(x, y)
+               : (String(y).length === 1 ? multByOneDigit(x, y) : multMulti(x, y));
+    const d = describe(kind, x, y);
+    const op = kind === 'mult' ? '×' : '÷';
+    return Object.assign({
+      kind, x, y,
+      title: d.title, skill: d.skill, why: d.why, rules: d.rules,
+      traps: core.steps.filter(st => st.trap).map(st => st.trap),
+      youTry: pickTry(kind, x, y).map(([a, b]) => ({
+        q: `${a} ${op} ${b}`,
+        a: kind === 'mult' ? String(a * b) : `${idiv(a, b)} R${a % b}`,
+      })),
+      tryNote: d.tryNote,
+    }, {
+      cols: core.cols, rows: core.rows, toks: core.toks, decor: core.decor,
+      steps: core.steps, model: core.model, answer: String(core.answer),
+    });
+  }
+
+  const API = { multByOneDigit, multMulti, longDivision, describe, pickTry, generate, trials, PLACE, NUMWORD, roundHalfEven, spell, cap, idiv, digitsOf };
+  if (typeof module !== 'undefined' && module.exports) module.exports = API;
+  else root.MathEngine = API;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
 <script id="ANIM" type="application/json">[{"id": "kid1-mult", "kid": "kid1", "theme": "teal", "kind": "mult", "x": 247, "y": 6, "standard": "4.NBT.B.5", "title": "Multiplying by one digit", "skill": "3-digit × 1-digit, with carrying", "why": "The bottom number visits every digit on top, one at a time, right to left. Anything too big for its box gets parked on the shelf above the next column.", "rules": ["Line up the <b>ones</b> column. Always.", "Work <b>right to left</b> — ones, then tens, then hundreds.", "<b>Multiply first, then add the carry.</b> Never the other way round.", "A carry gets <b>written above</b>, not remembered."], "drillSlug": "multiplication_0301", "drillUrl": "https://math-drills.com/multiplication2/multiplication_0301_001.php", "traps": ["<b>Multiply first, then add.</b> Doing it backwards — 4 + 4 = 8, then 8 × 6 = 48 — is the mistake almost everybody makes here.", "<b>Multiply first, then add.</b> Doing it backwards — 2 + 2 = 4, then 4 × 6 = 24 — is the mistake almost everybody makes here."], "youTry": [{"q": "384 × 5", "a": "1920"}, {"q": "458 × 7", "a": "3206"}, {"q": "495 × 4", "a": "1980"}], "tryNote": "Every one of these has a carry in it — that is the thing being practised, not the times tables.", "cols": 5, "rows": 5, "toks": [{"k": "t0", "r": 2, "c": 5, "t": "7", "cls": "d"}, {"k": "t1", "r": 2, "c": 4, "t": "4", "cls": "d"}, {"k": "t2", "r": 2, "c": 3, "t": "2", "cls": "d"}, {"k": "op", "r": 3, "c": 1, "t": "×", "cls": "op"}, {"k": "b0", "r": 3, "c": 5, "t": "6", "cls": "d hot"}, {"k": "a0", "r": 5, "c": 5, "t": "2", "cls": "d ans"}, {"k": "cy0", "r": 1, "c": 4, "t": "4", "cls": "carry"}, {"k": "a1", "r": 5, "c": 4, "t": "8", "cls": "d ans"}, {"k": "cy1", "r": 1, "c": 3, "t": "2", "cls": "carry"}, {"k": "a2", "r": 5, "c": 3, "t": "4", "cls": "d ans"}, {"k": "a3", "r": 5, "c": 2, "t": "1", "cls": "d ans"}], "decor": [{"kind": "rule", "k": "rule1", "r": 4, "c0": 1, "c1": 5}], "steps": [{"label": "SET UP", "beat": null, "say": "Stack them so the <b>ones line up</b>. The 6 on the bottom is going to visit every digit on top, one at a time, <b>starting from the right</b>.", "why": "Lining up the ones column is not neatness — it is what keeps each digit standing for the right amount. In 247 the 2 is not a 2, it is <b>200</b>.", "show": ["t0", "t1", "t2", "op", "b0", "rule1"], "flash": ["b0"], "dwell": 3.6, "modelCell": null}, {"label": "6 × 7", "beat": null, "say": "<b>6 × 7 = 42.</b>", "why": "<b>42 ones.</b> But a column only holds <i>one</i> digit — 42 cannot all stay here. Watch where each half goes next.", "show": [], "flash": ["b0", "t0"], "bubble": {"cells": [{"t": "4", "part": 0}, {"t": "2", "part": 1}], "reserveW": 226}, "modelCell": 2, "dwell": 3.8}, {"label": "WHERE IT GOES", "beat": null, "say": "<b>42</b> is two digits and only one fits in a box. The <b>2</b> drops <b>down</b> into the ones column. The <b>4</b> flies <b>up</b> to the shelf above the next column.", "why": "Split it by size: <b>42 = 2 + 40</b>. The 2 fits in the ones column. The 40 does not — so it moves one column left, to where 40 belongs. That is all a carry is.", "show": ["a0", "cy0"], "flash": [], "bubble": {"cells": [{"t": "4", "part": 0}, {"t": "2", "part": 1}], "reserveW": 226}, "split": [{"part": 1, "to": "a0"}, {"part": 0, "to": "cy0"}], "modelCell": 2, "dwell": 4.4}, {"label": "6 × 4", "beat": null, "say": "<b>6 × 4 = 24.</b>", "why": "That 4 is really <b>40</b>, so this move is really <b>6 × 40 = 240</b>.", "show": [], "flash": ["b0", "t1"], "bubble": {"cells": [{"t": "2"}, {"t": "4"}], "reserveW": 226}, "modelCell": 1, "dwell": 3.8}, {"label": "+ THE CARRY", "beat": null, "say": "Now bring in the carry from the last column: <b>24 + 4 = 28</b>.", "why": "That carry is not a 4 — it is <b>40</b>. It came from the column on the right, where it did not fit, and this is the column where it belongs.", "show": [], "flash": ["cy0"], "bubble": {"cells": [{"t": "2"}, {"t": "4"}, {"t": "+", "op": true}, {"t": "4", "arrive": "cy0"}, {"t": "=", "op": true}, {"t": "2", "part": 0}, {"t": "8", "part": 1}], "grewFrom": 2, "reserveW": 226}, "trap": "<b>Multiply first, then add.</b> Doing it backwards — 4 + 4 = 8, then 8 × 6 = 48 — is the mistake almost everybody makes here.", "modelCell": 1, "dwell": 5.0}, {"label": "WHERE IT GOES", "beat": null, "say": "<b>28</b> is two digits and only one fits in a box. The <b>8</b> drops <b>down</b> into the tens column. The <b>2</b> flies <b>up</b> to the shelf above the next column.", "why": "Split it by size: <b>280 = 80 + 200</b>. The 80 fits in the tens column. The 200 does not — so it moves one column left, to where 200 belongs. That is all a carry is.", "show": ["a1", "cy1"], "flash": [], "bubble": {"cells": [{"t": "2"}, {"t": "4"}, {"t": "+", "op": true}, {"t": "4", "arrive": "cy0"}, {"t": "=", "op": true}, {"t": "2", "part": 0}, {"t": "8", "part": 1}], "reserveW": 226}, "split": [{"part": 1, "to": "a1"}, {"part": 0, "to": "cy1"}], "modelCell": 1, "dwell": 4.4}, {"label": "6 × 2", "beat": null, "say": "<b>6 × 2 = 12.</b>", "why": "That 2 is really <b>200</b>, so this move is really <b>6 × 200 = 1200</b>.", "show": [], "flash": ["b0", "t2"], "bubble": {"cells": [{"t": "1"}, {"t": "2"}], "reserveW": 226}, "modelCell": 0, "dwell": 3.8}, {"label": "+ THE CARRY", "beat": null, "say": "Now bring in the carry from the last column: <b>12 + 2 = 14</b>.", "why": "That carry is not a 2 — it is <b>200</b>. It came from the column on the right, where it did not fit, and this is the column where it belongs.", "show": [], "flash": ["cy1"], "bubble": {"cells": [{"t": "1"}, {"t": "2"}, {"t": "+", "op": true}, {"t": "2", "arrive": "cy1"}, {"t": "=", "op": true}, {"t": "1", "part": 0}, {"t": "4", "part": 1}], "grewFrom": 2, "reserveW": 226}, "trap": "<b>Multiply first, then add.</b> Doing it backwards — 2 + 2 = 4, then 4 × 6 = 24 — is the mistake almost everybody makes here.", "modelCell": 0, "dwell": 5.0}, {"label": "WHERE IT GOES", "beat": null, "say": "Nothing left to multiply, so <b>both digits go down</b> — the <b>1</b> into the thousands column and the <b>4</b> into the hundreds column.", "why": "<b>1400</b> = 1000 + 400. Each digit sits in the column that gives it the right size.", "show": ["a2", "a3"], "flash": [], "bubble": {"cells": [{"t": "1"}, {"t": "2"}, {"t": "+", "op": true}, {"t": "2", "arrive": "cy1"}, {"t": "=", "op": true}, {"t": "1", "part": 0}, {"t": "4", "part": 1}], "reserveW": 226}, "split": [{"part": 1, "to": "a2"}, {"part": 0, "to": "a3"}], "modelCell": 0, "dwell": 4.4}, {"label": "CHECK", "beat": null, "say": "<b>247 × 6 = 1482.</b> Now check it's sensible: 247 is about 250, and 250 × 6 = 1500. 1482 is right next to it. ✓", "why": "And the slices agree: 1200 + 240 + 42 = <b>1482</b>. The columns and the rectangle are the same calculation.", "show": [], "flash": ["a0", "a1", "a2", "a3"], "dwell": 5.4, "modelCell": "all"}], "model": {"kind": "area", "h": 6, "rows": [{"v": 6, "maps": null}], "cols": [{"v": 200}, {"v": 40}, {"v": 7}], "cells": [{"r": 0, "c": 0, "v": 1200, "j": 2}, {"r": 0, "c": 1, "v": 240, "j": 1}, {"r": 0, "c": 2, "v": 42, "j": 0}], "total": 1482, "caption": "247 × 6 — a rectangle 6 tall, sliced by place value. The slices are 1200 + 240 + 42 = 1482, and the algorithm is just those slices folded into columns."}, "answer": "1482"}, {"id": "kid1-div", "kid": "kid1", "theme": "teal", "kind": "div", "x": 67, "y": 5, "standard": "4.NBT.B.6", "title": "Long division with a remainder", "skill": "2-digit ÷ 1-digit, remainder", "why": "Four moves, in the same order, over and over until you run out of digits: <b>Divide, Multiply, Subtract, Bring down.</b> Never skip one, never reorder them.", "rules": ["<b>D</b>ivide → <b>M</b>ultiply → <b>S</b>ubtract → <b>B</b>ring down. Repeat.", "The answer digit goes <b>directly above</b> the digit you just used.", "After subtracting, the leftover must be <b>smaller than the divisor</b>. If it isn't, your digit was too small.", "Nothing left to bring down? Whatever is left is the <b>remainder</b>."], "drillSlug": "division_long_1dd2dd_r", "drillUrl": "https://math-drills.com/division/division_long_1dd2dd_r_001.php", "traps": ["The digit goes <b>directly above the digit you just used</b>, not off to the side. The column is what turns a 6 into a 600.", "Check the leftover: <b>1 is smaller than 5</b>. It always must be. If your leftover is ever <i>bigger</i> than 5, your digit up top was too small — back up and make it bigger."], "youTry": [{"q": "98 ÷ 6", "a": "16 R2"}, {"q": "82 ÷ 8", "a": "10 R2"}, {"q": "50 ÷ 4", "a": "12 R2"}], "tryNote": "Say the four moves out loud on every single one. Out loud is the point.", "cols": 4, "rows": 8, "toks": [{"k": "n0", "r": 2, "c": 2, "t": "6", "cls": "d"}, {"k": "n1", "r": 2, "c": 3, "t": "7", "cls": "d"}, {"k": "dv0", "r": 2, "c": 1, "t": "5", "cls": "d hot"}, {"k": "q0", "r": 1, "c": 2, "t": "1", "cls": "d quo"}, {"k": "s0_0", "r": 3, "c": 2, "t": "5", "cls": "d subtrahend"}, {"k": "m0", "r": 3, "c": 1, "t": "−", "cls": "op"}, {"k": "e0_0", "r": 5, "c": 2, "t": "1", "cls": "d rem"}, {"k": "bd0", "r": 5, "c": 3, "t": "7", "cls": "d drop"}, {"k": "q1", "r": 1, "c": 3, "t": "3", "cls": "d quo"}, {"k": "s1_0", "r": 6, "c": 2, "t": "1", "cls": "d subtrahend"}, {"k": "s1_1", "r": 6, "c": 3, "t": "5", "cls": "d subtrahend"}, {"k": "m1", "r": 6, "c": 1, "t": "−", "cls": "op"}, {"k": "e1_0", "r": 8, "c": 3, "t": "2", "cls": "d rem"}, {"k": "rlab", "r": 1, "c": 4, "t": "R2", "cls": "rlab"}], "decor": [{"kind": "bracket", "k": "brk", "r": 2, "c0": 2, "c1": 3}, {"kind": "rule", "k": "r0", "r": 4, "c0": 1, "c1": 2}, {"kind": "rule", "k": "r1", "r": 7, "c0": 1, "c1": 3}], "steps": [{"label": "SET UP", "beat": null, "say": "<b>67</b> goes inside the house, <b>5</b> stands outside. Then you repeat four moves, in this order, forever: <b>Divide → Multiply → Subtract → Bring down.</b>", "why": "The real question underneath all of it: <b>how many 5s fit inside 67?</b> You chip away at it a place value at a time — hundreds first, then tens, then ones — instead of counting 5s one by one.", "show": ["dv0", "brk", "n0", "n1"], "flash": ["dv0"], "dwell": 5.0, "modelRow": null}, {"label": "TRY THEM", "beat": "D", "say": "How many <b>5</b>s fit inside <b>6</b>? Nobody just <i>knows</i> this — you <b>try them</b>, and you keep the biggest one that still fits.", "why": "<b>Too small</b> is the one people skip. A digit is too small when what is <i>left over</i> would still hold another 5 — you could have fitted one more in.", "show": [], "flash": ["dv0", "n0"], "bubble": {"trials": [{"n": 1, "prod": 5, "v": "fits", "part": 0}, {"n": 2, "prod": 10, "v": "big"}], "cur": 6, "divisor": 5, "reserveW": 232, "winPart": 0}, "modelRow": 0, "dwell": 5.6}, {"label": "D", "beat": "D", "say": "<b>D — Divide.</b> How many <b>5</b>s fit in <b>6</b>? <b>One</b> — because 1 × 5 = 5, and 2 × 5 = 10, which is too big.", "why": "That 1 sits in the tens column, so it is really <b>10</b>. You just found <b>10 groups of 5</b> inside 67.", "show": ["q0"], "flash": ["q0", "dv0", "n0"], "trap": "The digit goes <b>directly above the digit you just used</b>, not off to the side. The column is what turns a 6 into a 600.", "bubble": {"trials": [{"n": 1, "prod": 5, "v": "fits", "part": 0}, {"n": 2, "prod": 10, "v": "big"}], "cur": 6, "divisor": 5, "reserveW": 232, "winPart": 0}, "modelRow": 0, "dwell": 4.8, "split": [{"part": 0, "to": "q0"}], "keepChip": true}, {"label": "M", "beat": "M", "say": "<b>M — Multiply.</b> 1 × 5 = <b>5</b>. Write it <b>underneath</b>, lined up under the 6.", "why": "On paper it looks like 5, but it is really <b>50</b> — that is 10 groups of 5, and it is the chunk of 67 you have now accounted for.", "show": ["s0_0", "m0"], "flash": ["s0_0"], "dwell": 3.6, "modelRow": 0, "bubble": {"trials": [{"n": 1, "prod": 5, "v": "fits", "part": 0}, {"n": 2, "prod": 10, "v": "big"}], "cur": 6, "divisor": 5, "reserveW": 232, "winPart": 0}}, {"label": "S", "beat": "S", "say": "<b>S — Subtract.</b> 6 − 5 = <b>1</b>.", "why": "Really <b>60 − 50 = 10</b>. That 10 is what is still un-divided, and it is too small to make another group of 50.", "show": ["r0", "e0_0"], "flash": ["e0_0"], "trap": "Check the leftover: <b>1 is smaller than 5</b>. It always must be. If your leftover is ever <i>bigger</i> than 5, your digit up top was too small — back up and make it bigger.", "dwell": 4.8, "modelRow": 0}, {"label": "B", "beat": "B", "say": "<b>B — Bring down.</b> Pull the <b>7</b> straight down next to the 1. Now you are dividing <b>17</b>, and the four moves start again.", "why": "You are moving down one place value: from tens to ones. The 10 left over plus the 7 you just pulled down make <b>17</b> still to divide.", "show": ["bd0"], "flash": ["n1", "bd0"], "dwell": 4.0, "modelRow": 0}, {"label": "TRY THEM", "beat": "D", "say": "How many <b>5</b>s fit inside <b>17</b>? Nobody just <i>knows</i> this — you <b>try them</b>, and you keep the biggest one that still fits.", "why": "<b>Too small</b> is the one people skip. A digit is too small when what is <i>left over</i> would still hold another 5 — you could have fitted one more in.", "show": [], "flash": ["dv0", "e0_0", "bd0"], "bubble": {"trials": [{"n": 2, "prod": 10, "v": "small"}, {"n": 3, "prod": 15, "v": "fits", "part": 0}, {"n": 4, "prod": 20, "v": "big"}], "cur": 17, "divisor": 5, "reserveW": 232, "winPart": 0}, "modelRow": 1, "dwell": 5.6}, {"label": "D", "beat": "D", "say": "<b>D — Divide.</b> How many <b>5</b>s fit in <b>17</b>? <b>Three</b> — because 3 × 5 = 15, and 4 × 5 = 20, which is too big.", "why": "That 3 sits in the ones column, so it is really <b>3</b>. You just found <b>3 groups of 5</b> inside 67.", "show": ["q1"], "flash": ["q1", "dv0", "e0_0", "bd0"], "trap": null, "bubble": {"trials": [{"n": 2, "prod": 10, "v": "small"}, {"n": 3, "prod": 15, "v": "fits", "part": 0}, {"n": 4, "prod": 20, "v": "big"}], "cur": 17, "divisor": 5, "reserveW": 232, "winPart": 0}, "modelRow": 1, "dwell": 3.6, "split": [{"part": 0, "to": "q1"}], "keepChip": true}, {"label": "M", "beat": "M", "say": "<b>M — Multiply.</b> 3 × 5 = <b>15</b>. Write it <b>underneath</b>, lined up under the 17.", "why": "On paper it looks like 15, but it is really <b>15</b> — that is 3 groups of 5, and it is the chunk of 67 you have now accounted for.", "show": ["s1_0", "s1_1", "m1"], "flash": ["s1_0", "s1_1"], "dwell": 3.6, "modelRow": 1, "bubble": {"trials": [{"n": 2, "prod": 10, "v": "small"}, {"n": 3, "prod": 15, "v": "fits", "part": 0}, {"n": 4, "prod": 20, "v": "big"}], "cur": 17, "divisor": 5, "reserveW": 232, "winPart": 0}}, {"label": "S", "beat": "S", "say": "<b>S — Subtract.</b> 17 − 15 = <b>2</b>.", "why": "Really <b>17 − 15 = 2</b>. That 2 is what is still un-divided, and it is too small to make another group of 5.", "show": ["r1", "e1_0"], "flash": ["e1_0"], "trap": null, "dwell": 3.4, "modelRow": 1}, {"label": "REMAINDER", "beat": null, "say": "Nothing left to bring down. The <b>2</b> that will not split is the <b>remainder</b>. Answer: <b>13 R2</b>.", "why": "2 is smaller than 5, so it cannot make even one more group. On a word problem this is the number that decides the answer — 2 left over means you still need one more of whatever you are counting.", "show": ["rlab"], "flash": ["rlab", "e1_0"], "dwell": 4.8, "modelRow": 1}, {"label": "CHECK", "beat": null, "say": "Check it by going backwards: <b>13 × 5 = 65</b>, plus the remainder <b>2</b> = <b>67</b>. That is the number you started with. ✓", "why": "And the ladder adds up: 10 + 3 = <b>13</b>. Those are the real sizes of the digits you wrote on top.", "show": [], "flash": ["q0", "q1", "rlab"], "dwell": 5.8, "modelRow": "all"}], "model": {"kind": "ladder", "start": 67, "divisor": 5, "rows": [{"q": 10, "prod": 50, "left": 17}, {"q": 3, "prod": 15, "left": 2}], "quotient": 13, "remainder": 2, "caption": "The same division without the shorthand. Each written digit is really a whole chunk: 10 + 3 = <b>13</b> groups of 5, with <b>2</b> left over."}, "answer": "13 R2"}, {"id": "kid2-mult", "kid": "kid2", "theme": "violet", "kind": "mult", "x": 47, "y": 36, "standard": "4.NBT.B.5", "title": "Two digits times two digits", "skill": "2-digit × 2-digit, two partial products", "why": "Two digits on the bottom means <b>two rounds</b>, so two answer rows, then you add them. Each round after the first is multiplying by a bigger place, which is why each row starts with one more <b>0</b> than the row above it.", "rules": ["One round per digit on the bottom, <b>right to left</b>.", "<b>Row 2 starts with a 0 in the ones column.</b> Write the 0 before you multiply anything.", "<b>Cross out the carries</b> before starting the next round.", "Add all the rows at the end — that is the answer, not the last row on its own."], "drillSlug": "multiplication_0202", "drillUrl": "https://math-drills.com/multiplication2/multiplication_0202_001.php", "traps": ["<b>Multiply first, then add the carry.</b> Not 4 + 4 = 8, then × 6 = 48.", "<b>This is the most common way to get a multi-digit multiply wrong.</b> Miss the zeros and you add 141 instead of 1410.", "Leaving them there adds them a second time, and the answer comes out wrong with no obvious sign of why.", "<b>Multiply first, then add the carry.</b> Not 4 + 2 = 6, then × 3 = 18."], "youTry": [{"q": "94 × 59", "a": "5546"}, {"q": "78 × 85", "a": "6630"}, {"q": "25 × 98", "a": "2450"}], "tryNote": "Before you add the rows, point at each row's zeros and count them. Every time.", "cols": 5, "rows": 8, "toks": [{"k": "t0", "r": 2, "c": 5, "t": "7", "cls": "d"}, {"k": "t1", "r": 2, "c": 4, "t": "4", "cls": "d"}, {"k": "op", "r": 3, "c": 1, "t": "×", "cls": "op"}, {"k": "b0", "r": 3, "c": 5, "t": "6", "cls": "d hot"}, {"k": "b1", "r": 3, "c": 4, "t": "3", "cls": "d hot2"}, {"k": "plus1", "r": 6, "c": 1, "t": "+", "cls": "op"}, {"k": "p0_0", "r": 5, "c": 5, "t": "2", "cls": "d p1"}, {"k": "c0_0", "r": 1, "c": 4, "t": "4", "cls": "carry carry2"}, {"k": "p0_1", "r": 5, "c": 4, "t": "8", "cls": "d p1"}, {"k": "p0_2", "r": 5, "c": 3, "t": "2", "cls": "d p1"}, {"k": "z1_0", "r": 6, "c": 5, "t": "0", "cls": "d p2 zero"}, {"k": "p1_1", "r": 6, "c": 4, "t": "1", "cls": "d p1"}, {"k": "c1_0", "r": 1, "c": 4, "t": "2", "cls": "carry carry2"}, {"k": "p1_2", "r": 6, "c": 3, "t": "4", "cls": "d p1"}, {"k": "p1_3", "r": 6, "c": 2, "t": "1", "cls": "d p1"}, {"k": "a0", "r": 8, "c": 5, "t": "2", "cls": "d ans"}, {"k": "a1", "r": 8, "c": 4, "t": "9", "cls": "d ans"}, {"k": "a2", "r": 8, "c": 3, "t": "6", "cls": "d ans"}, {"k": "a3", "r": 8, "c": 2, "t": "1", "cls": "d ans"}], "decor": [{"kind": "rule", "k": "rule1", "r": 4, "c0": 1, "c1": 5}, {"kind": "rule", "k": "rule2", "r": 7, "c0": 1, "c1": 5}], "steps": [{"label": "SET UP", "beat": null, "say": "Two digits on the bottom means <b>two rounds</b>, so two answer rows, and then you add them all up.", "why": "Each digit on the bottom is a different size. The <b>3</b> is really <b>30</b>. That is where each row's zeros come from.", "show": ["t0", "t1", "op", "b0", "b1", "rule1"], "flash": ["b0", "b1"], "dwell": 5.0, "modelRow": null}, {"label": "6 × 7", "beat": null, "say": "<b>6 × 7 = 42.</b>", "why": "<b>42</b> — and a column holds one digit, so watch where each half of it goes.", "show": [], "flash": ["b0", "t0"], "bubble": {"cells": [{"t": "4", "part": 0}, {"t": "2", "part": 1}], "reserveW": 226}, "modelRow": 1, "dwell": 3.6}, {"label": "WHERE IT GOES", "beat": null, "say": "<b>42</b> is two digits and only one fits in a box. The <b>2</b> drops <b>down</b>; the <b>4</b> flies <b>up</b> to the shelf above the next column.", "why": "The part that does not fit moves one column left, which is the only thing a carry ever is.", "show": ["p0_0", "c0_0"], "flash": [], "bubble": {"cells": [{"t": "4", "part": 0}, {"t": "2", "part": 1}], "reserveW": 226}, "split": [{"part": 1, "to": "p0_0"}, {"part": 0, "to": "c0_0"}], "modelRow": 1, "dwell": 4.2}, {"label": "6 × 4", "beat": null, "say": "<b>6 × 4 = 24.</b>", "why": "Really <b>6 × 40 = 240</b>.", "show": [], "flash": ["b0", "t1"], "bubble": {"cells": [{"t": "2"}, {"t": "4"}], "reserveW": 226}, "modelRow": 1, "dwell": 3.6}, {"label": "+ THE CARRY", "beat": null, "say": "Now bring in the carry: <b>24 + 4 = 28</b>.", "why": "The carry came from the column on the right, where it did not fit. This is the column it belongs in.", "show": [], "flash": ["c0_0"], "bubble": {"cells": [{"t": "2"}, {"t": "4"}, {"t": "+", "op": true}, {"t": "4", "arrive": "c0_0"}, {"t": "=", "op": true}, {"t": "2", "part": 0}, {"t": "8", "part": 1}], "grewFrom": 2, "reserveW": 226}, "trap": "<b>Multiply first, then add the carry.</b> Not 4 + 4 = 8, then × 6 = 48.", "modelRow": 1, "dwell": 4.8}, {"label": "WHERE IT GOES", "beat": null, "say": "Nothing left on top, so <b>both digits go down</b>.", "why": "<b>28</b> lands across two columns because that is where its two place values belong.", "show": ["p0_1", "p0_2"], "flash": [], "bubble": {"cells": [{"t": "2"}, {"t": "4"}, {"t": "+", "op": true}, {"t": "4", "arrive": "c0_0"}, {"t": "=", "op": true}, {"t": "2", "part": 0}, {"t": "8", "part": 1}], "reserveW": 226}, "split": [{"part": 1, "to": "p0_1"}, {"part": 0, "to": "p0_2"}], "modelRow": 1, "dwell": 4.2}, {"label": "ROW 1 DONE", "beat": null, "say": "Row 1 is <b>282</b> — that is <b>6 × 47</b>.", "why": "On the rectangle that is the <b>6</b> strip, area <b>282</b>.", "show": [], "flash": [], "dwell": 3.4, "modelRow": 1}, {"label": "THE ZERO", "beat": null, "say": "Round 2 uses the <b>3</b> — but it is <b>not 3</b>. It sits one place to the left, so it is really <b>30</b>. Before you multiply anything, put <b>one 0</b> at the end of this row.", "why": "This row is <b>30 × 47 = 1410</b>. Every multiple of 30 ends in one zero, so this row <i>has</i> to. You are not adding magic zeros — you are writing down where the number is.", "show": ["z1_0", "plus1"], "flash": ["b1", "z1_0"], "dwell": 5.6, "modelRow": 0, "trap": "<b>This is the most common way to get a multi-digit multiply wrong.</b> Miss the zeros and you add 141 instead of 1410."}, {"label": "CROSS OUT", "beat": null, "say": "Cross out the carries from the last round. They belong to that row and nothing else.", "why": "They were amounts borrowed inside the previous row's calculation. This is a different calculation.", "show": [], "flash": [], "strike": ["c0_0"], "dwell": 3.8, "modelRow": 0, "trap": "Leaving them there adds them a second time, and the answer comes out wrong with no obvious sign of why."}, {"label": "3 × 7", "beat": null, "say": "<b>3 × 7 = 21.</b>", "why": "Really <b>30 × 7 = 210</b>.", "show": [], "flash": ["b1", "t0"], "bubble": {"cells": [{"t": "2", "part": 0}, {"t": "1", "part": 1}], "reserveW": 226}, "modelRow": 0, "dwell": 3.6}, {"label": "WHERE IT GOES", "beat": null, "say": "<b>21</b> is two digits and only one fits in a box. The <b>1</b> drops <b>down</b>; the <b>2</b> flies <b>up</b> to the shelf above the next column.", "why": "The part that does not fit moves one column left, which is the only thing a carry ever is.", "show": ["p1_1", "c1_0"], "flash": [], "bubble": {"cells": [{"t": "2", "part": 0}, {"t": "1", "part": 1}], "reserveW": 226}, "split": [{"part": 1, "to": "p1_1"}, {"part": 0, "to": "c1_0"}], "modelRow": 0, "dwell": 4.2}, {"label": "3 × 4", "beat": null, "say": "<b>3 × 4 = 12.</b>", "why": "Really <b>30 × 40 = 1200</b>.", "show": [], "flash": ["b1", "t1"], "bubble": {"cells": [{"t": "1"}, {"t": "2"}], "reserveW": 226}, "modelRow": 0, "dwell": 3.6}, {"label": "+ THE CARRY", "beat": null, "say": "Now bring in the carry: <b>12 + 2 = 14</b>.", "why": "The carry came from the column on the right, where it did not fit. This is the column it belongs in.", "show": [], "flash": ["c1_0"], "bubble": {"cells": [{"t": "1"}, {"t": "2"}, {"t": "+", "op": true}, {"t": "2", "arrive": "c1_0"}, {"t": "=", "op": true}, {"t": "1", "part": 0}, {"t": "4", "part": 1}], "grewFrom": 2, "reserveW": 226}, "trap": "<b>Multiply first, then add the carry.</b> Not 4 + 2 = 6, then × 3 = 18.", "modelRow": 0, "dwell": 4.8}, {"label": "WHERE IT GOES", "beat": null, "say": "Nothing left on top, so <b>both digits go down</b>.", "why": "<b>14</b> lands across two columns because that is where its two place values belong.", "show": ["p1_2", "p1_3"], "flash": [], "bubble": {"cells": [{"t": "1"}, {"t": "2"}, {"t": "+", "op": true}, {"t": "2", "arrive": "c1_0"}, {"t": "=", "op": true}, {"t": "1", "part": 0}, {"t": "4", "part": 1}], "reserveW": 226}, "split": [{"part": 1, "to": "p1_2"}, {"part": 0, "to": "p1_3"}], "modelRow": 0, "dwell": 4.2}, {"label": "ROW 2 DONE", "beat": null, "say": "Row 2 is <b>1410</b> — that is <b>30 × 47</b>.", "why": "On the rectangle that is the <b>30</b> strip, area <b>1410</b>.", "show": [], "flash": [], "dwell": 3.4, "modelRow": 0}, {"label": "ADD", "beat": null, "say": "Last move: <b>add all two rows</b>. 282 + 1410 = <b>1692</b>.", "why": "Which is the whole rectangle: <b>1692</b>.", "show": ["a0", "a1", "a2", "a3", "rule2"], "flash": ["a0", "a1", "a2", "a3"], "dwell": 4.0, "modelRow": "all"}, {"label": "CHECK", "beat": null, "say": "Sense-check: 47 is about 50, so the answer should land near 50 × 36 = 1800. We got <b>1692</b>. ✓", "why": "All the little areas add to <b>1692</b>.", "show": [], "flash": ["a0", "a1", "a2", "a3"], "dwell": 5.4, "modelRow": "all"}], "model": {"kind": "area", "h": 36, "rows": [{"v": 30, "maps": "p2"}, {"v": 6, "maps": "p1"}], "cols": [{"v": 40}, {"v": 7}], "cells": [{"r": 0, "c": 0, "v": 1200}, {"r": 0, "c": 1, "v": 210}, {"r": 1, "c": 0, "v": 240}, {"r": 1, "c": 1, "v": 42}], "rowSums": [1410, 282], "total": 1692, "caption": "47 × 36 as a rectangle, one strip per digit of 36. The 30 strip is written row 2, <b>1410</b>. The 6 strip is written row 1, <b>282</b>."}, "answer": "1692"}, {"id": "kid2-div", "kid": "kid2", "theme": "violet", "kind": "div", "x": 4231, "y": 7, "standard": "4.NBT.B.6", "title": "Long division, big numbers", "skill": "4-digit ÷ 1-digit, remainder — and a zero in the answer", "why": "Same four moves as always — but with more digits you hit the traps that eat long division: the divisor not fitting in the first digit, and a <b>0 landing in the middle of the answer</b>.", "rules": ["<b>D</b>ivide → <b>M</b>ultiply → <b>S</b>ubtract → <b>B</b>ring down. Repeat.", "The answer digit goes <b>directly above</b> the digit you just used.", "After subtracting, the leftover must be <b>smaller than the divisor</b>. If it isn't, your digit was too small.", "Doesn't fit in the first digit? Take <b>one more</b>, and write nothing above the first.", "Doesn't fit after a bring-down? <b>Write a 0 up top</b> and keep going. A zero at the <b>front</b> you skip; a zero in the <b>middle</b> you must write.", "Nothing left to bring down? Whatever is left is the <b>remainder</b>."], "drillSlug": "division_long_1dd4dd_r", "drillUrl": "https://math-drills.com/division/division_long_1dd4dd_r_001.php", "traps": ["A zero at the <b>front</b> of the answer is the one zero you skip. A zero in the <b>middle</b> you must write. Those are different, and mixing them up is how a 604 turns into a 64.", "The digit goes <b>directly above the digit you just used</b>, not off to the side. The column is what turns a 6 into a 600.", "Check the leftover: <b>0 is smaller than 7</b>. It always must be. If your leftover is ever <i>bigger</i> than 7, your digit up top was too small — back up and make it bigger.", "<b>Write the 0. Do not skip it.</b> Skipping it here shifts every digit after it and the answer comes out about ten times too small."], "youTry": [{"q": "5638 ÷ 8", "a": "704 R6"}, {"q": "6341 ÷ 7", "a": "905 R6"}, {"q": "1226 ÷ 4", "a": "306 R2"}], "tryNote": "All three of these have a <b>0 in the answer</b>. That is not a coincidence — it is the thing being practised.", "cols": 6, "rows": 11, "toks": [{"k": "n0", "r": 2, "c": 2, "t": "4", "cls": "d"}, {"k": "n1", "r": 2, "c": 3, "t": "2", "cls": "d"}, {"k": "n2", "r": 2, "c": 4, "t": "3", "cls": "d"}, {"k": "n3", "r": 2, "c": 5, "t": "1", "cls": "d"}, {"k": "dv0", "r": 2, "c": 1, "t": "7", "cls": "d hot"}, {"k": "q1", "r": 1, "c": 3, "t": "6", "cls": "d quo"}, {"k": "s1_0", "r": 3, "c": 2, "t": "4", "cls": "d subtrahend"}, {"k": "s1_1", "r": 3, "c": 3, "t": "2", "cls": "d subtrahend"}, {"k": "m1", "r": 3, "c": 1, "t": "−", "cls": "op"}, {"k": "e1_0", "r": 5, "c": 3, "t": "0", "cls": "d rem"}, {"k": "bd1", "r": 5, "c": 4, "t": "3", "cls": "d drop"}, {"k": "q2", "r": 1, "c": 4, "t": "0", "cls": "d quo"}, {"k": "s2_0", "r": 6, "c": 4, "t": "0", "cls": "d subtrahend"}, {"k": "m2", "r": 6, "c": 3, "t": "−", "cls": "op"}, {"k": "e2_0", "r": 8, "c": 4, "t": "3", "cls": "d rem"}, {"k": "bd2", "r": 8, "c": 5, "t": "1", "cls": "d drop"}, {"k": "q3", "r": 1, "c": 5, "t": "4", "cls": "d quo"}, {"k": "s3_0", "r": 9, "c": 4, "t": "2", "cls": "d subtrahend"}, {"k": "s3_1", "r": 9, "c": 5, "t": "8", "cls": "d subtrahend"}, {"k": "m3", "r": 9, "c": 3, "t": "−", "cls": "op"}, {"k": "e3_0", "r": 11, "c": 5, "t": "3", "cls": "d rem"}, {"k": "rlab", "r": 1, "c": 6, "t": "R3", "cls": "rlab"}], "decor": [{"kind": "bracket", "k": "brk", "r": 2, "c0": 2, "c1": 5}, {"kind": "rule", "k": "r1", "r": 4, "c0": 1, "c1": 3}, {"kind": "rule", "k": "r2", "r": 7, "c0": 3, "c1": 4}, {"kind": "rule", "k": "r3", "r": 10, "c0": 3, "c1": 5}], "steps": [{"label": "SET UP", "beat": null, "say": "<b>4231</b> goes inside the house, <b>7</b> stands outside. Then you repeat four moves, in this order, forever: <b>Divide → Multiply → Subtract → Bring down.</b>", "why": "The real question underneath all of it: <b>how many 7s fit inside 4231?</b> You chip away at it a place value at a time — hundreds first, then tens, then ones — instead of counting 7s one by one.", "show": ["dv0", "brk", "n0", "n1", "n2", "n3"], "flash": ["dv0"], "dwell": 5.0, "modelRow": null}, {"label": "TOO SMALL", "beat": null, "say": "How many <b>7</b>s fit in <b>4</b>? <b>None</b> — 7 is bigger than 4. So you write <i>nothing</i> above the 4 and take one more digit: look at <b>42</b> instead.", "why": "Asked properly: are there any <b>1000</b>-sized groups of 7 in 4231? 7 × 1000 = 7000, which is more than 4231. So the answer has no thousands digit at all — and a leading zero would just be writing 'none' where nothing needs writing.", "show": [], "flash": ["n0", "n1"], "dwell": 5.6, "modelRow": null, "bubble": {"trials": [{"n": 1, "prod": 7, "v": "big"}], "cur": 4, "divisor": 7, "reserveW": 232}, "trap": "A zero at the <b>front</b> of the answer is the one zero you skip. A zero in the <b>middle</b> you must write. Those are different, and mixing them up is how a 604 turns into a 64."}, {"label": "TRY THEM", "beat": "D", "say": "How many <b>7</b>s fit inside <b>42</b>? Nobody just <i>knows</i> this — you <b>try them</b>, and you keep the biggest one that still fits.", "why": "<b>Too small</b> is the one people skip. A digit is too small when what is <i>left over</i> would still hold another 7 — you could have fitted one more in.", "show": [], "flash": ["dv0", "n0", "n1"], "bubble": {"trials": [{"n": 5, "prod": 35, "v": "small"}, {"n": 6, "prod": 42, "v": "fits", "part": 0}, {"n": 7, "prod": 49, "v": "big"}], "cur": 42, "divisor": 7, "reserveW": 232, "winPart": 0}, "modelRow": 0, "dwell": 5.6}, {"label": "D", "beat": "D", "say": "<b>D — Divide.</b> How many <b>7</b>s fit in <b>42</b>? <b>Six</b> — because 6 × 7 = 42, and 7 × 7 = 49, which is too big.", "why": "That 6 sits in the hundreds column, so it is really <b>600</b>. You just found <b>600 groups of 7</b> inside 4231.", "show": ["q1"], "flash": ["q1", "dv0", "n0", "n1"], "trap": "The digit goes <b>directly above the digit you just used</b>, not off to the side. The column is what turns a 6 into a 600.", "bubble": {"trials": [{"n": 5, "prod": 35, "v": "small"}, {"n": 6, "prod": 42, "v": "fits", "part": 0}, {"n": 7, "prod": 49, "v": "big"}], "cur": 42, "divisor": 7, "reserveW": 232, "winPart": 0}, "modelRow": 0, "dwell": 4.8, "split": [{"part": 0, "to": "q1"}], "keepChip": true}, {"label": "M", "beat": "M", "say": "<b>M — Multiply.</b> 6 × 7 = <b>42</b>. Write it <b>underneath</b>, lined up under the 42.", "why": "On paper it looks like 42, but it is really <b>4200</b> — that is 600 groups of 7, and it is the chunk of 4231 you have now accounted for.", "show": ["s1_0", "s1_1", "m1"], "flash": ["s1_0", "s1_1"], "dwell": 3.6, "modelRow": 0, "bubble": {"trials": [{"n": 5, "prod": 35, "v": "small"}, {"n": 6, "prod": 42, "v": "fits", "part": 0}, {"n": 7, "prod": 49, "v": "big"}], "cur": 42, "divisor": 7, "reserveW": 232, "winPart": 0}}, {"label": "S", "beat": "S", "say": "<b>S — Subtract.</b> 42 − 42 = <b>0</b>.", "why": "Really <b>4200 − 4200 = 0</b>. That 0 is what is still un-divided, and it is too small to make another group of 700.", "show": ["r1", "e1_0"], "flash": ["e1_0"], "trap": "Check the leftover: <b>0 is smaller than 7</b>. It always must be. If your leftover is ever <i>bigger</i> than 7, your digit up top was too small — back up and make it bigger.", "dwell": 4.8, "modelRow": 0}, {"label": "B", "beat": "B", "say": "<b>B — Bring down.</b> Pull the <b>3</b> straight down next to the 0. Now you are dividing <b>3</b>, and the four moves start again.", "why": "You are moving down one place value: from hundreds to tens. The 0 left over plus the 30 you just pulled down make <b>30</b> still to divide.", "show": ["bd1"], "flash": ["n2", "bd1"], "dwell": 4.0, "modelRow": 0}, {"label": "TRY THEM", "beat": "D", "say": "How many <b>7</b>s fit inside <b>3</b>? Nobody just <i>knows</i> this — you <b>try them</b>, and you keep the biggest one that still fits.", "why": "<b>Too small</b> is the one people skip. A digit is too small when what is <i>left over</i> would still hold another 7 — you could have fitted one more in.", "show": [], "flash": ["dv0", "e1_0", "bd1"], "bubble": {"trials": [{"n": 1, "prod": 7, "v": "big"}], "cur": 3, "divisor": 7, "reserveW": 232}, "modelRow": 1, "dwell": 5.6}, {"label": "D", "beat": "D", "say": "<b>D — Divide.</b> How many <b>7</b>s fit in <b>3</b>? <b>None.</b> So write a <b>0</b> up top, right above the 3.", "why": "It means there are <b>no tens</b> in the answer — no groups of 70. That is a real fact about the answer and it needs a real digit, because the digits after it depend on sitting in the right column.", "show": ["q2"], "flash": ["q2", "dv0", "e1_0", "bd1"], "trap": "<b>Write the 0. Do not skip it.</b> Skipping it here shifts every digit after it and the answer comes out about ten times too small.", "bubble": {"trials": [{"n": 1, "prod": 7, "v": "big"}], "cur": 3, "divisor": 7, "reserveW": 232}, "modelRow": 1, "dwell": 4.8}, {"label": "M", "beat": "M", "say": "<b>M — Multiply.</b> 0 × 7 = <b>0</b>. Write it <b>underneath</b>, lined up under the 3.", "why": "On paper it looks like 0, but it is really <b>0</b> — that is 0 groups of 7, and it is the chunk of 4231 you have now accounted for.", "show": ["s2_0", "m2"], "flash": ["s2_0"], "dwell": 3.6, "modelRow": 1, "bubble": {"trials": [{"n": 1, "prod": 7, "v": "big"}], "cur": 3, "divisor": 7, "reserveW": 232}}, {"label": "S", "beat": "S", "say": "<b>S — Subtract.</b> 3 − 0 = <b>3</b>.", "why": "Really <b>30 − 0 = 30</b>. That 30 is what is still un-divided, and it is too small to make another group of 70.", "show": ["r2", "e2_0"], "flash": ["e2_0"], "trap": null, "dwell": 3.4, "modelRow": 1}, {"label": "B", "beat": "B", "say": "<b>B — Bring down.</b> Pull the <b>1</b> straight down next to the 3. Now you are dividing <b>31</b>, and the four moves start again.", "why": "You are moving down one place value: from tens to ones. The 30 left over plus the 1 you just pulled down make <b>31</b> still to divide.", "show": ["bd2"], "flash": ["n3", "bd2"], "dwell": 4.0, "modelRow": 1}, {"label": "TRY THEM", "beat": "D", "say": "How many <b>7</b>s fit inside <b>31</b>? Nobody just <i>knows</i> this — you <b>try them</b>, and you keep the biggest one that still fits.", "why": "<b>Too small</b> is the one people skip. A digit is too small when what is <i>left over</i> would still hold another 7 — you could have fitted one more in.", "show": [], "flash": ["dv0", "e2_0", "bd2"], "bubble": {"trials": [{"n": 3, "prod": 21, "v": "small"}, {"n": 4, "prod": 28, "v": "fits", "part": 0}, {"n": 5, "prod": 35, "v": "big"}], "cur": 31, "divisor": 7, "reserveW": 232, "winPart": 0}, "modelRow": 2, "dwell": 5.6}, {"label": "D", "beat": "D", "say": "<b>D — Divide.</b> How many <b>7</b>s fit in <b>31</b>? <b>Four</b> — because 4 × 7 = 28, and 5 × 7 = 35, which is too big.", "why": "That 4 sits in the ones column, so it is really <b>4</b>. You just found <b>4 groups of 7</b> inside 4231.", "show": ["q3"], "flash": ["q3", "dv0", "e2_0", "bd2"], "trap": null, "bubble": {"trials": [{"n": 3, "prod": 21, "v": "small"}, {"n": 4, "prod": 28, "v": "fits", "part": 0}, {"n": 5, "prod": 35, "v": "big"}], "cur": 31, "divisor": 7, "reserveW": 232, "winPart": 0}, "modelRow": 2, "dwell": 3.6, "split": [{"part": 0, "to": "q3"}], "keepChip": true}, {"label": "M", "beat": "M", "say": "<b>M — Multiply.</b> 4 × 7 = <b>28</b>. Write it <b>underneath</b>, lined up under the 31.", "why": "On paper it looks like 28, but it is really <b>28</b> — that is 4 groups of 7, and it is the chunk of 4231 you have now accounted for.", "show": ["s3_0", "s3_1", "m3"], "flash": ["s3_0", "s3_1"], "dwell": 3.6, "modelRow": 2, "bubble": {"trials": [{"n": 3, "prod": 21, "v": "small"}, {"n": 4, "prod": 28, "v": "fits", "part": 0}, {"n": 5, "prod": 35, "v": "big"}], "cur": 31, "divisor": 7, "reserveW": 232, "winPart": 0}}, {"label": "S", "beat": "S", "say": "<b>S — Subtract.</b> 31 − 28 = <b>3</b>.", "why": "Really <b>31 − 28 = 3</b>. That 3 is what is still un-divided, and it is too small to make another group of 7.", "show": ["r3", "e3_0"], "flash": ["e3_0"], "trap": null, "dwell": 3.4, "modelRow": 2}, {"label": "REMAINDER", "beat": null, "say": "Nothing left to bring down. The <b>3</b> that will not split is the <b>remainder</b>. Answer: <b>604 R3</b>.", "why": "3 is smaller than 7, so it cannot make even one more group. On a word problem this is the number that decides the answer — 3 left over means you still need one more of whatever you are counting.", "show": ["rlab"], "flash": ["rlab", "e3_0"], "dwell": 4.8, "modelRow": 2}, {"label": "CHECK", "beat": null, "say": "Check it by going backwards: <b>604 × 7 = 4228</b>, plus the remainder <b>3</b> = <b>4231</b>. That is the number you started with. ✓", "why": "And the ladder adds up: 600 + 0 + 4 = <b>604</b>. Those are the real sizes of the digits you wrote on top.", "show": [], "flash": ["q1", "q2", "q3", "rlab"], "dwell": 5.8, "modelRow": "all"}], "model": {"kind": "ladder", "start": 4231, "divisor": 7, "rows": [{"q": 600, "prod": 4200, "left": 31}, {"q": 0, "prod": 0, "left": 31}, {"q": 4, "prod": 28, "left": 3}], "quotient": 604, "remainder": 3, "caption": "The same division without the shorthand. Each written digit is really a whole chunk: 600 + 0 + 4 = <b>604</b> groups of 7, with <b>3</b> left over."}, "answer": "604 R3"}]</script>
 <script>
 const A = JSON.parse(document.getElementById('ANIM').textContent);
@@ -367,15 +1287,19 @@ const $ = id => document.getElementById(id);
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let ai = 0, si = 0, timer = null, playing = false;
 
-$('tabHint').innerHTML = A.length > 1
-  ? `<kbd>1</kbd>${A.length > 2 ? '–<kbd>' + A.length + '</kbd>' : ''} switch sheet` : '';
-A.forEach((a, i) => {
-  const b = document.createElement('button');
-  b.className = 'tab'; b.setAttribute('role', 'tab');
-  b.innerHTML = `<b>${a.kid} — ${a.title}</b>${a.skill}`;
-  b.onclick = () => pick(i);
-  $('tabs').appendChild(b);
-});
+function rebuildTabs(){
+  $('tabHint').innerHTML = A.length > 1
+    ? `<kbd>1</kbd>${A.length > 2 ? '–<kbd>' + A.length + '</kbd>' : ''} switch sheet` : '';
+  $('tabs').innerHTML = '';
+  A.forEach((a, i) => {
+    const b = document.createElement('button');
+    b.className = 'tab'; b.setAttribute('role', 'tab');
+    b.innerHTML = `<b>${a.kid} — ${a.title}</b>${a.skill}`;
+    b.onclick = () => pick(i);
+    $('tabs').appendChild(b);
+  });
+}
+rebuildTabs();
 
 function pick(i){
   stop(); ai = i; si = 0;
@@ -389,9 +1313,11 @@ function pick(i){
   $('bSkill').textContent = `${a.skill} — worked example, one mark at a time`;
   $('whyShort').innerHTML = a.why;
   $('rules').innerHTML = a.rules.map(r => `<li>${r}</li>`).join('');
-  $('drill').innerHTML = `Matching drill sheet: <code>${a.drillSlug}</code> —
-    <a href="${a.drillUrl}" target="_blank" rel="noopener">open on math-drills.com</a>
-    (variants <code>_001</code>…<code>_010</code>)`;
+  $('drill').innerHTML = a.drillUrl
+    ? `Matching drill sheet: <code>${a.drillSlug}</code> —
+       <a href="${a.drillUrl}" target="_blank" rel="noopener">open on math-drills.com</a>
+       (variants <code>_001</code>…<code>_010</code>)`
+    : 'Your own problem — generated in the page, not baked in.';
   $('watch').innerHTML = a.traps.map(t => `<li>${t}</li>`).join('');
   $('tryNote').innerHTML = a.tryNote;
   $('mTitle').textContent = a.model.kind === 'area'
@@ -913,6 +1839,54 @@ addEventListener('keydown', e => {
   else if (e.key.toLowerCase() === 'r') { stop(); si = 0; apply(); }
   else if (e.key.toLowerCase() === 'p') { playing ? stop() : start(); }
   else if (/^[1-9]$/.test(e.key) && +e.key <= A.length) pick(+e.key - 1);
+});
+
+/* ---------- type any problem ----------
+   This is the reason the generator was moved out of Python and into the page. A baked
+   set can only ever answer the problems someone chose in advance; the one a kid just
+   got wrong is never in it. */
+function parseProblem(raw) {
+  const s = String(raw).trim().replace(/\s+/g, ' ');
+  const m = s.match(/^(\d{1,6})\s*([x*×\/÷:])\s*(\d{1,6})$/i);
+  if (!m) return { error: 'Write it like <b>358 x 7</b> or <b>4231 / 23</b>.' };
+  const x = parseInt(m[1], 10), y = parseInt(m[3], 10);
+  const kind = /[x*×]/i.test(m[2]) ? 'mult' : 'div';
+  if (!(x > 0 && y > 0)) return { error: 'Both numbers have to be more than 0.' };
+  if (kind === 'div') {
+    // Asif 2026-08-01: dividing by 1 is a waste of the kid's time
+    if (y === 1) return { error: 'Dividing by <b>1</b> teaches nothing — pick 2 or more.' };
+    if (x < y) return { error: `<b>${x} ÷ ${y}</b> has no whole part. Make the first number bigger.` };
+  } else if (y === 1) {
+    return { error: 'Multiplying by <b>1</b> teaches nothing — pick 2 or more.' };
+  }
+  if (String(x).length + String(y).length > 9)
+    return { error: 'That is bigger than the board can draw. Try fewer digits.' };
+  return { kind, x, y };
+}
+
+$('ownForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const msg = $('ownMsg');
+  const p = parseProblem($('ownInput').value);
+  if (p.error) { msg.className = 'ownmsg bad'; msg.innerHTML = p.error; return; }
+  let built;
+  try {
+    built = MathEngine.generate(p.kind, p.x, p.y);
+  } catch (err) {
+    msg.className = 'ownmsg bad'; msg.innerHTML = 'The board cannot draw that one.'; return;
+  }
+  const op = p.kind === 'mult' ? '×' : '÷';
+  const spec = Object.assign(built, {
+    id: `own-${p.kind}-${p.x}-${p.y}`, kid: 'Your problem',
+    theme: p.kind === 'mult' ? 'teal' : 'violet',
+    drillSlug: '—', drillUrl: '',
+  });
+  // one "your problem" tab, reused, so typing ten problems does not grow ten tabs
+  const at = A.findIndex(a => String(a.id).startsWith('own-'));
+  if (at >= 0) { A[at] = spec; rebuildTabs(); pick(at); }
+  else { A.push(spec); rebuildTabs(); pick(A.length - 1); }
+  msg.className = 'ownmsg ok';
+  msg.innerHTML = `<b>${p.x} ${op} ${p.y} = ${built.answer}</b>`;
 });
 
 pick(0);
