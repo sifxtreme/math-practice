@@ -36,13 +36,28 @@ SITE = os.path.join(HERE, "site")
 # — useful pedagogy, not private. The per-child boxes are `<div class="watch">`,
 # which build_site.py removes structurally. Match on structure, not on a phrase that
 # also occurs innocently.
-FIXED_FORBIDDEN = [
-    "school", "school", "sevensevensix", "RESULTS.md", "kids.local",
-]
+# Structural markers only — safe to commit. The terms that are themselves sensitive
+# (a school name, an employer) live in private/forbidden-terms.txt, which is
+# gitignored, ONE PER LINE.
+#
+# This is not fussiness. When the history rewrite replaced the school name repo-wide,
+# it rewrote this list too, and the gate began banning the word "school" — which
+# appears innocently in a dozen worksheets. A scrubber that hardcodes the strings it
+# hunts is a scrubber that leaks them and breaks when they change.
+FIXED_FORBIDDEN = ["RESULTS.md", "kids.local"]
+
+
+def _private_terms():
+    p = os.path.join(HERE, "private", "forbidden-terms.txt")
+    if not os.path.exists(p):
+        return []
+    with open(p) as f:
+        return [ln.strip() for ln in f
+                if ln.strip() and not ln.startswith("#")]
 
 
 def forbidden_terms():
-    terms = list(FIXED_FORBIDDEN)
+    terms = list(FIXED_FORBIDDEN) + _private_terms()
     local = os.path.join(HERE, "kids.local.json")
     if os.path.exists(local):
         with open(local) as f:
@@ -93,7 +108,7 @@ def main():
                     hits.append(f"{rel}: NON-BLANK Name: field -> {inner[:40]!r}")
 
             for t in terms:
-                if t in FIXED_FORBIDDEN:
+                if t in FIXED_FORBIDDEN or t in _private_terms():
                     if t in doc:
                         hits.append(f"{rel}: forbidden term {t!r}")
                 else:
