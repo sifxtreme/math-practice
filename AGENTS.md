@@ -90,7 +90,7 @@ exercise different things:
 | Type | File suffix | What it is | Format |
 |---|---|---|---|
 | **Math** | `worksheet-<theme>.html` | Compound word problems — the operation choice is the test | 5 per kid (4 on a TEACH sheet) |
-| **Drill** | *not generated —* [`DRILLS.md`](DRILLS.md) | **Short, bare problems.** Speed and fluency, not comprehension. Timed | a math-drills.com PDF per kid |
+| **Drill** | `worksheet-<op>-drill.html` — [`drill_gen.py`](drill_gen.py) | **Short, bare problems.** Speed and fluency, not comprehension. Timed | **built to a 5-minute budget**, count derived per skill |
 | **Logic** | `worksheet-<theme>-logic.html` | Puzzles / reasoning — no arithmetic fluency required to start | 4–5 per kid |
 
 Keep them as **three separate files, each still 3 pages** (kid1 · kid2 · key).
@@ -114,20 +114,94 @@ against `.sheet` blocks and expects 3.
 > point of it. Don't apply requirement 1 to a drill sheet.
 
 **Status:** logic sheets exist (`-egypt-logic`, `-worldcup-logic`,
-`-astronomy-logic`, `-bridges-logic`). **Drills are NOT generated and never were** — don't write a
-`-drill.html`. They come off math-drills.com, one verified PDF per kid per skill,
-listed in [`DRILLS.md`](DRILLS.md); each PDF is 2 pages, questions then answer key.
-(This line used to read "no drill sheet exists yet, that type still needs
-building." It was wrong: a forge monitor had been posting math-drills PDFs to
-Slack daily since well before that was written. The two files just never learned
-about each other. That monitor was deleted 2026-07-27 — it drilled below the
-difficulty pin — and `DRILLS.md` replaced it with per-kid sheets at the pin.)
+`-astronomy-logic`, `-bridges-logic`). **Drills ARE generated, as of 2026-08-01** —
+see [Generated drills](#generated-drills-drill_genpy) below. math-drills.com is now the
+*fallback*, not the default, and [`DRILLS.md`](DRILLS.md) keeps its verified slugs for
+skills the generator doesn't cover yet.
+
+> This paragraph has been wrong twice, in opposite directions, and both times the fix
+> was measurement. It first read "no drill sheet exists yet" while a forge monitor had
+> been posting math-drills PDFs to Slack daily. It was then corrected to "drills are NOT
+> generated and never were — don't write a `-drill.html`", which held until Asif asked
+> for a generator on 2026-08-01. **If you are about to trust a "never" in this file,
+> check the date on it.**
+
+### Generated drills — [`drill_gen.py`](drill_gen.py)
+
+```bash
+python3 drill_gen.py --skill div --seed 20260801     # or --skill mul
+python3 verify_drills.py                             # MUST exit 0 before printing
+./print-worksheet.sh worksheet-division-drill.html --dry-run
+```
+
+Three things it does that a math-drills PDF does not:
+
+1. **Sized to the clock, not the page.** [`drill_cost.py`](drill_cost.py) prices a
+   problem by the number of written marks its method requires, and the count is
+   whatever fits 5 minutes. math-drills ships 20 problems of 3-digit ÷ 1-digit; that
+   is a **~16 minute sheet**, and kid2 was handed one on 2026-08-01. `--budget 600`
+   for a ten-minute sheet; the counts re-derive themselves.
+2. **No degenerate problems, by construction.** Divisors are 2–9. Multiplier digits
+   are 2–9 — a 0 or 1 there spends a whole partial-product row on nothing. The
+   *multiplicand* keeps its 0s and 1s, where they test place value. (These are two
+   different rules; see `make_multiplication`'s docstring for why.)
+3. **The grid forces the work**, including a **carry row** for single-digit
+   multipliers — without it that sheet has one row to fill and forces nothing.
+
+⚠️ **The time model rests on ONE measurement** — 49 problems of 3-digit subtraction in
+13 minutes, May 2026, from `PRACTICE-PLAN-2026.md`. The mark counts are exact; the
+seconds-per-mark is extrapolated from subtraction to division and multiplication.
+**Time one real sheet and call `drill_cost.calibrate()`** — do not hand-adjust the
+counts, or the model stops meaning anything. Until then, every count is a prediction.
 
 > Worth knowing: `PRACTICE-PLAN-2026.md` § "Why this plan isn't fact drills" concluded from a May 2026 timing
 > analysis that fact-fluency drills are *not* the bottleneck. Drills were added
 > anyway on 2026-07-26 at Asif's direction — they buy speed, which is a separate
 > goal from understanding. Not a contradiction, just don't expect them to move
 > comprehension.
+
+## Showing the work IS the assignment
+
+**Set by Asif 2026-08-01, after kid2's division sheet came back with answers and no
+written work at all.** His words: *"kid2 didn't show any of the work. This is something
+we need to be more aware of."*
+
+**The written work is the deliverable. The answer is a by-product.**
+
+The reason is not neatness and not "so we can check it." It's that **a sheet with no
+work is not a measurement.** With the steps missing:
+
+- a right answer and a lucky guess are indistinguishable;
+- a wrong answer doesn't say whether the *method* broke or a single subtraction slipped
+  — which are opposite problems with opposite fixes;
+- the sheet cannot feed the [pin rule](#when-to-move-the-pin-again), because "zero
+  errors" is a claim the paper no longer supports.
+
+An answer with no work is a **self-report**. The work is the state you read back.
+Grade the method; a correct answer with nothing shown is not a pass on these sheets.
+
+### What this changes when you pick or build a sheet
+
+1. **Prefer a format that makes the work non-optional** for any method-critical skill —
+   long division, multi-digit multiplication, anything with carries or bring-downs.
+   Blank space is opt-*in*; a printed grid is opt-*out*. math-drills' **`..._grid_..._prompts_...`**
+   family gives every multiply → subtract → bring-down step its own box and prints the
+   `R` box at the bottom, so the process can't be skipped on the way to an answer. That
+   is what kid2's 2026-08-01 redo used. See [`DRILLS.md`](DRILLS.md) § "Sheets that force the work".
+2. **On a generated worksheet, the `.work` box is the same idea** and already exists —
+   but a box can be left empty. If a skill keeps coming back unshown, move it to a
+   grid sheet rather than asking again.
+3. **A scaffolded format is not a step down.** The arithmetic is unchanged; only the
+   written support differs. Don't treat it as a pin regression or "going easier" —
+   it's the same skill, made legible.
+
+> ⚠️ **This is a different failure from getting it wrong, and it is invisible in a
+> score.** kid2's sheet could have been 20/20 and it would still have been a bad sheet.
+> Check for *presence of work* before checking correctness — if the work isn't there,
+> stop, because nothing downstream of that is trustworthy.
+
+The [`animations/`](animations/README.md) **kid2 ÷** tab exists for exactly this gap:
+it steps through the written method one mark at a time. Watch it, then do the paper.
 
 ## Drill-method animations — [`animations/`](animations/README.md)
 
@@ -224,7 +298,18 @@ Straight to 5 compound word problems, no example box. This is the original forma
 
 ### When to move the pin again
 
-Step up when a kid finishes a sheet **under time with zero errors twice in a row**. Step back down a notch if either kid gets 2+ wrong on the same skill across two sheets — that's the skill, not carelessness.
+Step up when a kid finishes a sheet **under time with zero errors twice in a row —
+with the work shown**. Step back down a notch if either kid gets 2+ wrong on the same
+skill across two sheets — that's the skill, not carelessness.
+
+⚠️ **The "with the work shown" clause is load-bearing, added 2026-08-01.** Without it
+this rule promotes a kid who never demonstrated the method — see
+[Showing the work IS the assignment](#showing-the-work-is-the-assignment). A sheet with
+no work is not a passing sheet and not a failing one; it is **no reading at all**, and
+it cannot satisfy a criterion about errors. The next rung for kid2 is a **2-digit
+divisor**, which [`DRILLS.md`](DRILLS.md) flags as a genuinely new act that 1-digit
+fluency does not prepare him for. Promoting him there on unshown work is how that
+lands badly.
 
 ### Baseline (the easier spread — only if the pin is too hot)
 
@@ -294,6 +379,10 @@ answer independently and must exit 0 before any of them is printed.
 > `.html`. Re-run `python3 verify_sheets.py` after any change — it also asserts the
 > CSS literals `print-worksheet.sh` rewrites are still present in every file, which
 > is the failure a hand-edit causes and a page-count check catches only sometimes.
+- `drill_gen.py` — generate division/multiplication drill sheets sized to a time budget.
+- `drill_cost.py` — the time model: marks per problem → seconds → problems per sheet.
+- `verify_drills.py` — audits the generated HTML independently of the generator. Mutation-tested.
+- `RESULTS.md` — what came back marked, tagged SKILL / CARE / UNSHOWN. Feeds the pin rule.
 - `print-worksheet.sh` — render a worksheet to a clean 3-page PDF and print it to the Brother.
 - `print-drill.sh` — print a math-drills.com PDF through the same day guard.
 - `day-guard.sh` — sourced by both print scripts. The one-day-at-a-time enforcement (guards A, B, C).
