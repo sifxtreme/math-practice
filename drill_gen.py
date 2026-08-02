@@ -39,49 +39,7 @@ import random
 import sys
 
 import drill_cost
-
-# --------------------------------------------------------------------------
-# who the sheets are for
-# --------------------------------------------------------------------------
-
-HERE = os.path.dirname(os.path.abspath(__file__))
-LOCAL_KIDS = os.path.join(HERE, "kids.local.json")
-EXAMPLE_KIDS = os.path.join(HERE, "kids.example.json")
-
-
-def load_kids():
-    """Real names from the gitignored kids.local.json, else the committed example.
-
-    Nothing in this file hardcodes a child's name. Committed code keys on `id`
-    (kid1, kid2); the name is looked up here and reaches paper only in the Name:
-    field. See README.md "Setting it up for your kids".
-
-    The fallback is deliberately LOUD. A silent fallback would print a stack of
-    sheets addressed to "Kid One" and you would not find out until they were on
-    the table.
-    """
-    path = LOCAL_KIDS if os.path.exists(LOCAL_KIDS) else EXAMPLE_KIDS
-    with open(path) as f:
-        data = json.load(f)
-    kids = {k["id"]: k for k in data["kids"]}
-    if path == EXAMPLE_KIDS:
-        print("=" * 72, file=sys.stderr)
-        print("NOTICE: kids.local.json not found — using placeholder names from",
-              file=sys.stderr)
-        print("        kids.example.json. Sheets will say 'Kid One' / 'Kid Two'.",
-              file=sys.stderr)
-        print("        Fix:  cp kids.example.json kids.local.json", file=sys.stderr)
-        print("=" * 72, file=sys.stderr)
-    return kids
-
-
-def kid_name(kids, kid_id):
-    if kid_id not in kids:
-        raise SystemExit(
-            f"ERROR: no kid with id '{kid_id}' in your kids file.\n"
-            f"       Known ids: {', '.join(sorted(kids)) or '(none)'}\n"
-            f"       The drill plans in this file are keyed on those ids.")
-    return kids[kid_id]["name"]
+from kids_config import kids_by_id, kid_name
 
 # --------------------------------------------------------------------------
 # problem generation
@@ -505,7 +463,7 @@ def main():
     out = args.out or f"worksheet-{'division' if args.skill == 'div' else 'multiplication'}-drill.html"
     rng = random.Random(args.seed)
 
-    kids = load_kids()
+    kids = kids_by_id()
 
     # Keyed on kid ID, never on a name — see load_kids(). Digit shapes come straight
     # from AGENTS.md "Difficulty pin".

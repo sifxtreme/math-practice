@@ -119,7 +119,12 @@ CSS = """  @page { margin: 0.55in; }
   }
   .key .watch b { color: #92400e; }"""
 
-KIDS = [("kid1", "3rd Grade"), ("kid2", "4th Grade")]
+# (id, display name, grade label). The id is the spec dict key; the NAME comes from
+# the gitignored kids.local.json and reaches paper only in the Name: field.
+# See README.md "Setting it up for your kids".
+from kids_config import load_kids, grade_label
+
+KIDS = [(k["id"], k["name"], grade_label(k)) for k in load_kids()]
 
 
 def _problem(i, p):
@@ -147,8 +152,8 @@ def build(spec):
          "<title>%s</title>" % spec["title_plain"], "<style>", CSS, "</style>", "</head>",
          "<body>", ""]
 
-    for kid, grade in KIDS:
-        probs = spec[kid.lower()]
+    for kid_id, kid, grade in KIDS:
+        probs = spec[kid_id]
         h += ["<!-- ==== %s ==== -->" % kid.upper(),
               '<div class="sheet">',
               '  <div class="header">', "    <div>",
@@ -170,12 +175,12 @@ def build(spec):
           '  <div class="header">', "    <div>", "      <h1>🔑 Answer Key</h1>",
           '      <div class="sub">For the grown-ups — worked steps included</div>',
           "    </div>", '    <div class="grade">Coach</div>', "  </div>", ""]
-    for kid, grade in KIDS:
+    for kid_id, kid, grade in KIDS:
         h.append('  <div class="section-title">%s — %s</div>' % (grade, kid))
-        for i, p in enumerate(spec[kid.lower()], 1):
+        for i, p in enumerate(spec[kid_id], 1):
             h += ['  <div class="ans"><b>%d. %s</b>' % (i, p["a"]),
                   '    <div class="steps">%s</div>' % p["steps"], "  </div>"]
-        w = spec.get(kid.lower() + "_watch")
+        w = spec.get(kid_id + "_watch")
         if w:
             h.append('  <div class="watch"><b>Watch for:</b> %s</div>' % w)
         h.append("")

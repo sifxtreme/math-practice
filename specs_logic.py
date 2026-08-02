@@ -65,8 +65,8 @@ JUL29L = {
          "a": "Every %d seconds; %d times in the first minute." % (l1_together, l1_times),
          "steps": "Together on shared multiples of 4 and 6: 12, 24, 36, 48, 60. So every <b>%d seconds</b>, and within 60 seconds that is <b>%d</b> times (not counting the 12:00:00 start)." % (l1_together, l1_times)},
     ],
-    "musa_watch": "#2 is the one to watch. The usual answer is 12 &minus; 7 &minus; 6 = &minus;1, or 12 &minus; 13. If he gets a negative or a nonsense number, that is the signal to draw two overlapping circles rather than to explain again.",
-    "yusuf_watch": "#1 rewards testing all three cases rather than arguing about who seems honest. If he picks an answer without checking the other two, the answer is worth nothing even when it's right &mdash; ask him to prove the other two fail.",
+    "kid1_watch": "#2 is the one to watch. The usual answer is 12 &minus; 7 &minus; 6 = &minus;1, or 12 &minus; 13. If he gets a negative or a nonsense number, that is the signal to draw two overlapping circles rather than to explain again.",
+    "kid2_watch": "#1 rewards testing all three cases rather than arguing about who seems honest. If he picks an answer without checking the other two, the answer is worth nothing even when it's right &mdash; ask him to prove the other two fail.",
 }
 
 # ---------------------------------------------------------------- Jul 30
@@ -119,8 +119,8 @@ JUL30L = {
          "a": "%d greetings." % l2_greet,
          "steps": "Each of the 7 greets the other 6 = 42, but that counts every greeting from both sides, so 42 &divide; 2 = <b>%d</b>. Or add 6 + 5 + 4 + 3 + 2 + 1." % l2_greet},
     ],
-    "musa_watch": "#2's answer of \"9, 8\" often arrives as \"9, 12\" — he spots the +3 and misses that the rules alternate. Ask him to say the rule out loud before writing; \"add three take one\" said aloud usually fixes it on its own.",
-    "yusuf_watch": "#2 is the rate method that comes back on every multi-step rate problem in the word-problem sheets. If he jumps straight to 240 &times; 30 or 240 &divide; 30, the missing idea is \"find one second first\" — that's worth five minutes now, it pays off all week.",
+    "kid1_watch": "#2's answer of \"9, 8\" often arrives as \"9, 12\" — he spots the +3 and misses that the rules alternate. Ask him to say the rule out loud before writing; \"add three take one\" said aloud usually fixes it on its own.",
+    "kid2_watch": "#2 is the rate method that comes back on every multi-step rate problem in the word-problem sheets. If he jumps straight to 240 &times; 30 or 240 &divide; 30, the missing idea is \"find one second first\" — that's worth five minutes now, it pays off all week.",
 }
 
 # ---------------------------------------------------------------- Jul 31
@@ -173,8 +173,8 @@ JUL31L = {
          "a": "%d weighings." % l3_weigh,
          "steps": "Split into three groups of 3. <b>Weigh 1:</b> group A against group B. If one side sinks the heavy sack is there; if they balance it is in group C. Either way you now have 3 sacks. <b>Weigh 2:</b> one against another &mdash; if one sinks that's it, if they balance it's the third. Two weighings, always. Weighing them one at a time takes up to 8."},
     ],
-    "musa_watch": "#4 is the classic river crossing and the block is always the same: he will not consider bringing something <i>back</i>. Don't hand him that move — ask \"is he allowed to carry something back across?\" and wait. The moment he realises it's legal, he solves it himself.",
-    "yusuf_watch": "#1 has no arithmetic in it at all and is the hardest thing on the sheet. A good attempt that doesn't land is fine here. If he's stuck, ask him what happens if he asks the liar about the honest guide, and let him run just that one case.",
+    "kid1_watch": "#4 is the classic river crossing and the block is always the same: he will not consider bringing something <i>back</i>. Don't hand him that move — ask \"is he allowed to carry something back across?\" and wait. The moment he realises it's legal, he solves it himself.",
+    "kid2_watch": "#1 has no arithmetic in it at all and is the hardest thing on the sheet. A good attempt that doesn't land is fine here. If he's stuck, ask him what happens if he asks the liar about the honest guide, and let him run just that one case.",
 }
 
 # ---------------------------------------------------------------- Aug 1
@@ -227,8 +227,8 @@ AUG1L = {
          "a": "%d degrees." % int(l4_angle),
          "steps": "Minute hand: 20 min &times; 6&deg; = 120&deg;. Hour hand: 4 &times; 30&deg; = 120&deg;, plus 20 min &times; 0.5&deg; = 10&deg;, so 130&deg;. Difference = <b>%d&deg;</b>. Answering 20&deg; means forgetting the hour hand drifts." % int(l4_angle)},
     ],
-    "musa_watch": "#3 is the fencepost trap: 120 &divide; 15 = 8 <i>gaps</i> but <b>9</b> chimes. Expect 8. It's the same idea as the leftover-needs-a-box remainder work he's been doing all week — worth naming that out loud, because he'll see they're the same shape.",
-    "yusuf_watch": "#1 is genuinely hard and #4 catches almost everyone at 20&deg;. Neither is a fluency problem, so don't let a miss here read as a bad day &mdash; note them as puzzles attempted, not skills failed. If he lands the hourglass unaided, that's the strongest reasoning result of the week.",
+    "kid1_watch": "#3 is the fencepost trap: 120 &divide; 15 = 8 <i>gaps</i> but <b>9</b> chimes. Expect 8. It's the same idea as the leftover-needs-a-box remainder work he's been doing all week — worth naming that out loud, because he'll see they're the same shape.",
+    "kid2_watch": "#1 is genuinely hard and #4 catches almost everyone at 20&deg;. Neither is a fluency problem, so don't let a miss here read as a bad day &mdash; note them as puzzles attempted, not skills failed. If he lands the hourglass unaided, that's the strongest reasoning result of the week.",
 }
 
 # ---------------------------------------------------------------- Aug 2 (cumulative)
@@ -280,8 +280,8 @@ AUG2L = {
          "a": "%d weighings." % l5_weigh,
          "steps": "Split 3 / 3 / 2. <b>Weigh 1:</b> the two 3s. If one side sinks you have 3 left; if they balance you have the 2 left. <b>Weigh 2:</b> from 3, weigh one against another (sinks = that one, balances = the third); from 2, just weigh them. <b>%d</b> either way." % l5_weigh},
     ],
-    "musa_watch": "Cumulative sheet — the point is that nothing says which puzzle is which. #1 is working backwards, #2 is the overlap circles, #3 is a growing-gap pattern, #4 is swapping one thing for another. Watch whether he <i>recognises</i> the type unprompted; that recognition is the whole difference between Solid and Locked.",
-    "yusuf_watch": "#3 flips the rule from Tuesday's puzzle: exactly one <b>lies</b>, not exactly one tells the truth. If he answers Bilal, he pattern-matched Tuesday instead of reading the line — which is exactly what a cumulative sheet is built to catch. Worth more as a lesson than as a mark.",
+    "kid1_watch": "Cumulative sheet — the point is that nothing says which puzzle is which. #1 is working backwards, #2 is the overlap circles, #3 is a growing-gap pattern, #4 is swapping one thing for another. Watch whether he <i>recognises</i> the type unprompted; that recognition is the whole difference between Solid and Locked.",
+    "kid2_watch": "#3 flips the rule from Tuesday's puzzle: exactly one <b>lies</b>, not exactly one tells the truth. If he answers Bilal, he pattern-matched Tuesday instead of reading the line — which is exactly what a cumulative sheet is built to catch. Worth more as a lesson than as a mark.",
 }
 
 ALL = [JUL29L, JUL30L, JUL31L, AUG1L, AUG2L]

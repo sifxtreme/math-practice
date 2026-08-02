@@ -96,8 +96,8 @@ JUL29 = {
          "a": "%d metres." % y1_e,
          "steps": "45 &times; 18 = 810 m climbed. Then 810 &minus; 210 = <b>%d m</b>." % y1_e},
     ],
-    "musa_watch": "#1 and #2 are the same trap twice: the division is easy, the <i>interpretation</i> is the test. Expect \"6 boxes\" and \"9 vans\" — both drop the leftovers on the floor. Ask \"where do the last 5 gauges go?\" and let him fix it himself. On #5, expect the other side right and the perimeter forgotten.",
-    "yusuf_watch": "Expect 1/2 + 1/3 = 2/5 on #1 — adding tops and bottoms straight across. That is THE error of this whole unit. Don't just correct it; ask whether 2/5 can be right when one day alone was already 1/2. #3 asks for a mixed number, so 17/12 is only half-marks.",
+    "kid1_watch": "#1 and #2 are the same trap twice: the division is easy, the <i>interpretation</i> is the test. Expect \"6 boxes\" and \"9 vans\" — both drop the leftovers on the floor. Ask \"where do the last 5 gauges go?\" and let him fix it himself. On #5, expect the other side right and the perimeter forgotten.",
+    "kid2_watch": "Expect 1/2 + 1/3 = 2/5 on #1 — adding tops and bottoms straight across. That is THE error of this whole unit. Don't just correct it; ask whether 2/5 can be right when one day alone was already 1/2. #3 asks for a mixed number, so 17/12 is only half-marks.",
 }
 
 # ---------------------------------------------------------------- Jul 30
@@ -162,8 +162,8 @@ JUL30 = {
          "a": "%s metres." % money(y2_e),
          "steps": "3.5 &times; 24 = 84 m. Then 84 &minus; 12.5 = <b>%s m</b>." % money(y2_e)},
     ],
-    "musa_watch": "#1 is the remainder trap again — third day running. If he now answers 10 trays without being asked twice, that skill is moving from Shaky to Solid; write it in the log. #3 is the operation-order test: deleting before sharing gives 13, sharing before deleting gives 15 &minus; 8.",
-    "yusuf_watch": "#3 is where decimals bite: 4.75 &minus; 1.8 invites 4.57 or 3.05 if he doesn't pad the 1.8 to 1.80. Make him write the zero. #2's remainder is a real remainder, not a decimal — resist the urge to say 249.2.",
+    "kid1_watch": "#1 is the remainder trap again — third day running. If he now answers 10 trays without being asked twice, that skill is moving from Shaky to Solid; write it in the log. #3 is the operation-order test: deleting before sharing gives 13, sharing before deleting gives 15 &minus; 8.",
+    "kid2_watch": "#3 is where decimals bite: 4.75 &minus; 1.8 invites 4.57 or 3.05 if he doesn't pad the 1.8 to 1.80. Make him write the zero. #2's remainder is a real remainder, not a decimal — resist the urge to say 249.2.",
 }
 
 # ---------------------------------------------------------------- Jul 31
@@ -228,8 +228,8 @@ JUL31 = {
          "a": "%s kg." % money(y3_e),
          "steps": "15 &times; 12 = 180 kg, then 180 &minus; 45.5 = <b>%s kg</b>." % money(y3_e)},
     ],
-    "musa_watch": "Fourth day on remainders. If #1 comes back as 16 crates first time, with no prompting, that is <b>two clean runs in a row</b> — check the log, because the step-up rule may now be satisfied for this skill.",
-    "yusuf_watch": "#1 and the Jul 30 sheet's #1 are the same skill in opposite directions (add vs subtract). Getting the add right and the subtract wrong usually means he is finding the common denominator fine but slipping on the borrow.",
+    "kid1_watch": "Fourth day on remainders. If #1 comes back as 16 crates first time, with no prompting, that is <b>two clean runs in a row</b> — check the log, because the step-up rule may now be satisfied for this skill.",
+    "kid2_watch": "#1 and the Jul 30 sheet's #1 are the same skill in opposite directions (add vs subtract). Getting the add right and the subtract wrong usually means he is finding the common denominator fine but slipping on the borrow.",
 }
 
 # ---------------------------------------------------------------- Aug 1 (timed)
@@ -294,8 +294,8 @@ AUG1 = {
          "a": "%s nautical miles." % money(y4_e),
          "steps": "8.5 &times; 14 = 119, then 119 &minus; 23.5 = <b>%s</b>." % money(y4_e)},
     ],
-    "musa_watch": "This sheet is <b>timed</b> — note the minutes in the log even if you note nothing else, because the step-up rule needs \"under time AND zero errors,\" and time is the half that never gets recorded. Don't hurry him mid-problem; just write down what it took.",
-    "yusuf_watch": "Timed sheet. Speed usually costs the decimal problems first (#3) — a rushed 12.6 &minus; 4.85 becomes 8.25 or 7.85. If accuracy holds under time here, decimals are close to Solid.",
+    "kid1_watch": "This sheet is <b>timed</b> — note the minutes in the log even if you note nothing else, because the step-up rule needs \"under time AND zero errors,\" and time is the half that never gets recorded. Don't hurry him mid-problem; just write down what it took.",
+    "kid2_watch": "Timed sheet. Speed usually costs the decimal problems first (#3) — a rushed 12.6 &minus; 4.85 becomes 8.25 or 7.85. If accuracy holds under time here, decimals are close to Solid.",
 }
 
 # ---------------------------------------------------------------- Aug 2 (cumulative)
@@ -360,8 +360,8 @@ AUG2 = {
          "a": "%s metres." % "{:,}".format(y5_e),
          "steps": "320 &times; 7 = 2,240 m, then 2,240 &minus; 465 = <b>%s m</b>." % "{:,}".format(y5_e)},
     ],
-    "musa_watch": "This is the <b>Locked</b> test. All five of his pinned skills are here, shuffled, with nothing naming the method — #2 is the remainder problem sitting between a perimeter question and a fraction comparison. Getting #2 right <i>here</i> is worth more than four right on a sheet where every problem was division. Mark Locked only if he chose the method himself.",
-    "yusuf_watch": "Same test for kid2 — #2 is unlike denominators with no heading announcing it. Watch whether he still reaches for a common denominator when the problem doesn't look like a fractions worksheet. If he adds across the top and bottom here after four clean days, the skill is Shaky, not Solid, and the plan says re-teach rather than push on.",
+    "kid1_watch": "This is the <b>Locked</b> test. All five of his pinned skills are here, shuffled, with nothing naming the method — #2 is the remainder problem sitting between a perimeter question and a fraction comparison. Getting #2 right <i>here</i> is worth more than four right on a sheet where every problem was division. Mark Locked only if he chose the method himself.",
+    "kid2_watch": "Same test for the 4th grader — #2 is unlike denominators with no heading announcing it. Watch whether he still reaches for a common denominator when the problem doesn't look like a fractions worksheet. If he adds across the top and bottom here after four clean days, the skill is Shaky, not Solid, and the plan says re-teach rather than push on.",
 }
 
 ALL = [JUL29, JUL30, JUL31, AUG1, AUG2]
