@@ -1,8 +1,18 @@
-# Kids' Math Worksheets
+# Printable math worksheets, sized to a five-minute drill
 
-Printable math practice for two kids: **word problems**, **logic puzzles**, and
-**arithmetic drills**. Everything is self-contained HTML — open in a browser and print,
-or use `./print-worksheet.sh`.
+**Free printable math practice for roughly 3rd–5th grade** — word problems, logic
+puzzles, and arithmetic drills, each one page per kid plus a worked answer key.
+
+### → **[math.sifxtreme.com](https://math.sifxtreme.com)** — print them, no signup, no ads
+
+<p align="center">
+  <img src="docs/multiplication.gif" alt="47 × 36 worked one written mark at a time" width="420">
+</p>
+
+The site also has step-through animations of the written methods — long division and
+multiplication, one pencil mark at a time, with the trap called out at the step where it
+actually bites. This repo is the generator behind it all: self-contained HTML, no
+dependencies, `python3` and a browser.
 
 Two things here are unusual and worth the thirty seconds:
 

@@ -137,6 +137,7 @@ NAV_HTML = """
   <a href="/#logic">Logic</a>
   <a href="/animations/">Animations</a>
   <span class="msnav-sp"></span>
+  <a class="msnav-out" href="https://github.com/sifxtreme/math-practice">GitHub</a>
   <a class="msnav-out" href="https://sifxtreme.com">&larr; sifxtreme.com</a>
 </nav>
 """
@@ -197,8 +198,9 @@ def shell(title, body, depth=0):
 <title>{_html.escape(title)}</title>
 <style>{PAGE_CSS}</style></head>
 <body>{NAV_CSS}{NAV_HTML}<div class="wrap">{body}
-<footer>Free to print and use. Built by <a href="https://sifxtreme.com">Asif Ahmed</a>.
-<a href="{up}index.html">All sheets</a></footer>
+<footer>Free to print and use &middot; built by <a href="https://sifxtreme.com">Asif Ahmed</a>
+&middot; <a href="https://github.com/sifxtreme/math-practice">source on GitHub</a>
+&middot; <a href="/">all sheets</a></footer>
 </div></body></html>
 """
 
