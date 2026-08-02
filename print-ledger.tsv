@@ -54,3 +54,21 @@
 2026-07-30T16:13:16	2026-07-30	DUPLICATE reprint of stack paper (job 157)
 2026-07-30T16:22:23	2026-07-30	DUPLICATE reprint of stack paper (job 158)
 2026-07-30T16:22:44	2026-07-30	DUPLICATE reprint of stack paper (job 159)
+2026-08-01T15:08:54	2026-08-01	OVERRIDE worksheet-sailing-ships
+2026-08-01T15:09:05	2026-08-01	OVERRIDE worksheet-clocks-logic
+2026-08-01T15:09:05	2026-08-01	OVERRIDE drill kid1 division_long_1dd2dd_r_003
+2026-08-01T15:09:05	2026-08-01	OVERRIDE drill kid2 division_long_1dd3dd_r_002
+# 2026-08-01: the four OVERRIDE rows above are a REPLACEMENT, not a duplicate morning.
+# The Aug 1 set printed in the Jul 28 bulk run was thrown out before the kids did it,
+# so the paper the ledger claimed existed no longer did. Same day, same four items,
+# same drill variants (kid1 C, kid2 B) — reprinted via --override-day-guard, which is
+# exactly the case the escape hatch is for. Aug 1 is therefore spent; the next print
+# is Aug 2 (mountains-cumulative + kites-logic-cumulative + drills), already on paper
+# from the same bulk run — so Aug 2 morning is FIND THE STACK, not print.
+2026-08-01T16:15:44	2026-08-01	MANUAL PRINT (bypassed print-drill.sh; CUPS job 166) kid2 REDO division_long_grid_1dd3dd_prompts_all_remainders_001 (A)
+# 2026-08-01 (2): the MANUAL PRINT row above was sent from Preview/Chrome, not through
+# print-drill.sh, so no guard saw it and nothing would have recorded it. Added by hand
+# from CUPS (job 166, completed 16:15:44) — the ledger's job is to say what paper
+# EXISTS, and a row missing here reads as "no paper" to tomorrow's Guard C.
+# It is kid2's REDO of the Aug 1 division drill: he produced answers with no written
+# work, so the redo moved to a grid/prompts sheet where each step has its own box.
