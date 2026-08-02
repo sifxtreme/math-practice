@@ -130,6 +130,31 @@ themselves. `--seed` makes a sheet reproducible — same seed, same problems.
 have already decayed once and been reinstated — why drills are one day at a time, why the
 work has to be shown, and why a doc that says "never" needs its date checked.
 
+## The public site — [math.sifxtreme.com](https://math.sifxtreme.com)
+
+A scrubbed subset of this repo is published as a free printable-worksheet site. It is a
+**separate Cloudflare Pages project** (`sifxtreme-math`) from the blog, on purpose: a bad
+math deploy can then never touch sifxtreme.com.
+
+```bash
+python3 build_site.py          # renders site/ from the SHEETS allow-list
+python3 verify_public.py       # MUST exit 0 — refuses to publish if anything private survived
+export CLOUDFLARE_API_TOKEN=$(grep ^CLOUDFLARE_API_TOKEN= ~/code/experiments/cloudflare-cli/.env | cut -d= -f2-)
+npx wrangler pages deploy site --project-name sifxtreme-math --branch master
+```
+
+⚠️ **Verify by grepping the live page, never by status code** — Pages serves its fallback
+with a `200`, so an unpublished URL still looks fine:
+
+```bash
+curl -sL https://math.sifxtreme.com/ | grep -o '<title>[^<]*</title>'
+```
+
+**What makes a sheet publishable:** the `SHEETS` allow-list in `build_site.py`. A new
+worksheet is private until someone adds it — the safe default. `verify_public.py` is the
+last line, not the only one, and it reads the terms it hunts from the gitignored
+`private/forbidden-terms.txt` rather than hardcoding them.
+
 ## Calibrating the time model
 
 Every problem count is currently a **prediction**. The model is anchored on one real
