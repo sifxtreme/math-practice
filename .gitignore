@@ -20,6 +20,8 @@ private/
 # byte-identically, so tracking them buys nothing and leaks something.
 worksheet-division-drill.html
 worksheet-multiplication-drill.html
+worksheet-division-drill-plain.html
+worksheet-multiplication-drill-plain.html
 
 # Build output of build_site.py. Regenerable; not tracked.
 site/
