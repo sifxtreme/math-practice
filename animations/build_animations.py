@@ -100,15 +100,19 @@ header .thesis{font-size:15.5px;color:var(--mute);margin:0 0 18px;max-width:64ch
 header .thesis b{color:var(--ink)}
 
 .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
-.own{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px;
-     font-size:13.5px;color:var(--mute)}
-.own label{font-weight:700;color:var(--ink)}
-.own input{font:inherit;font-size:16px;font-family:ui-monospace,monospace;
-     padding:9px 12px;min-width:15ch;border-radius:9px;border:1.5px solid var(--line);
-     background:var(--card);color:var(--ink)}
-.own input:focus{outline:none;border-color:var(--accent)}
-.own button{font-size:14px;padding:9px 14px}
-.ownmsg{font-size:13px}
+.own{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px;
+     font-size:15px;color:var(--mute);background:var(--card);border:1.5px solid var(--line);
+     border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
+.own label{font-weight:700;color:var(--ink);font-size:15.5px}
+.own input{font:inherit;font-size:22px;font-family:ui-monospace,monospace;font-weight:600;
+     padding:12px 16px;flex:1 1 22ch;min-width:22ch;border-radius:10px;
+     border:2px solid var(--line);background:var(--bg);color:var(--ink);letter-spacing:.5px}
+.own input::placeholder{color:var(--mute);opacity:.65;font-weight:400;font-size:19px}
+.own input:focus{outline:none;border-color:var(--accent);background:var(--card)}
+.own button.ctl{font-size:16px;padding:12px 22px;font-weight:700;min-height:61px;
+     background:var(--accent);border-color:var(--accent);color:#fff}
+.own button.ctl:hover{opacity:.88;color:#fff;border-color:var(--accent)}
+.ownmsg{font-size:15px;flex-basis:100%}
 .ownmsg.bad{color:var(--warn)}
 .ownmsg.ok{color:var(--ok)}
 .tab{font:inherit;font-size:14px;cursor:pointer;background:var(--card);color:var(--mute);
@@ -336,6 +340,9 @@ footer{margin-top:26px;font-size:12.5px;color:var(--mute);text-align:center}
   .hint{display:none}
   .say{font-size:16.5px;min-height:0}
   .tryrow button{min-height:40px;padding:8px 14px}
+  .own{padding:12px;gap:8px}
+  .own label{flex-basis:100%}
+  .own input{font-size:19px;min-width:0;flex:1 1 0}
   .beat{padding:5px 0;flex:1;text-align:center;font-size:12px}
   .beat .word{display:none}
   .beats{gap:5px}
@@ -376,7 +383,7 @@ footer{margin-top:26px;font-size:12.5px;color:var(--mute);text-align:center}
   <form class="own" id="ownForm" autocomplete="off">
     <label for="ownInput">Try any problem</label>
     <input id="ownInput" type="text" inputmode="text" spellcheck="false"
-           placeholder="358 x 7   or   4231 / 23" aria-label="Type a problem to animate">
+           placeholder="358 x 7    or    4231 / 23" aria-label="Type a problem to animate">
     <button class="ctl" type="submit">Animate it</button>
     <span class="ownmsg" id="ownMsg"></span>
   </form>
