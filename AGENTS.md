@@ -104,7 +104,7 @@ against `.sheet` blocks and expects 3.
 > bug.** The count drops for exactly one reason: **a break Asif designates** (right
 > now, Aug 3–9 — nothing else). Every other day until school starts is a full three-
 > sheet day. **Do not invent light days.** The plan invented two — a 15-minute
-> school Prep week and an end-of-summer taper — and both were removed on 2026-07-28
+> test-prep week and an end-of-summer taper — and both were removed on 2026-07-28
 > because Asif never asked for them.
 >
 > Before printing, count: did each kid get word problems, logic, AND a drill?

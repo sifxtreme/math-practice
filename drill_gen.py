@@ -514,7 +514,14 @@ def main():
     # is FIXED at the source now (it counts occurrences), so this is no longer load-
     # bearing — kept because a sheet per line diffs and greps far better than a 50KB
     # single line.
-    doc = f"<style>{CSS}</style>\n" + "\n".join(sheets) + "\n" + key_html + "\n"
+    title = ("Long Division" if args.skill == "div" else "Multiplication")
+    # A real <head>: the sheets are served on the web as well as printed, and a
+    # page with no <title> shows as a bare URL in a tab and in search results.
+    doc = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+           '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
+           f'<title>{title} drill — 5 minutes</title>\n'
+           f"<style>{CSS}</style>\n</head>\n<body>\n"
+           + "\n".join(sheets) + "\n" + key_html + "\n</body>\n</html>\n")
     with open(out, "w") as f:
         f.write(doc)
 

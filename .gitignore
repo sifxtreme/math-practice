@@ -23,3 +23,19 @@ worksheet-multiplication-drill.html
 
 # Build output of build_site.py. Regenerable; not tracked.
 site/
+
+# build_sheets.py output — regenerated locally WITH real names from kids.local.json.
+# Tracking them would re-add a name to git on every rebuild.
+worksheet-weather.html
+worksheet-lighthouse-logic.html
+worksheet-mars-rovers.html
+worksheet-falconry-logic.html
+worksheet-honeybees.html
+worksheet-caravan-logic.html
+worksheet-sailing-ships.html
+worksheet-clocks-logic.html
+worksheet-mountains-cumulative.html
+worksheet-kites-logic-cumulative.html
+
+# wrangler deploy cache
+.wrangler/
