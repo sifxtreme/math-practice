@@ -203,33 +203,81 @@ Grade the method; a correct answer with nothing shown is not a pass on these she
 The [`animations/`](animations/README.md) **kid2 ÷** tab exists for exactly this gap:
 it steps through the written method one mark at a time. Watch it, then do the paper.
 
-## Drill-method animations — [`animations/`](animations/README.md)
+## Method animations — [`animations/`](animations/README.md)
 
-Added 2026-08-01 at Asif's request. Four step-through animations of the **written
-methods** the drill sheets require — kid1 × and ÷, kid2 × and ÷ — each revealing a
-worked example one written mark at a time, with the trap for that method called out
-where it happens. Self-contained `index.html`, no dependencies.
+Built 2026-08-01 at Asif's request. **Multiplication and division are DONE** — the written
+methods, revealed one mark at a time, with the trap for each called out where it happens.
+Ready for the August block.
 
 ```bash
 open -a "Google Chrome" ~/code/experiments/personal/math-worksheets/animations/index.html
 ```
 
-⚠️ **This is a deliberate, narrow exception to "Paper only. No screen." in the Hard
-requirements above.** Asif asked for it knowing the rule. It is a teaching aid for the
-5-minute go-over-it slot in the daily session — *watch one, then do the paper drill*.
-It replaces nothing. **Do not generalize it** into moving worksheets, logic sheets, or
-anything else on-screen; that rule still stands everywhere else.
+**Type any problem into the box.** `358 x 7`, `4231 / 23` — it is generated in the page,
+not baked in, so the problem a kid just got wrong can be animated on the spot. Four
+worked tabs ship by default; every whole-number shape through 5th grade works
+(N-digit × M-digit, multi-digit divisors). Decimals do **not** — `150 ÷ 4` gives `37 R2`,
+not `37.5`, and that is a genuinely new method, not a bigger number.
 
-Same discipline as the sheets: content is generated (`build_animations.py` + `specs.py`),
-`index.html` is overwritten on every build, and `verify_animations.py` re-derives every
-digit independently and must exit 0. **It is mutation-tested** — 9 deliberate corruptions
-were each confirmed to fail it.
+⚠️ **A deliberate, narrow exception to "Paper only. No screen." above.** Asif asked for it
+knowing the rule. It is a teaching aid for the 5-minute go-over-it slot — *watch one, then
+do the paper drill.* It replaces nothing. **Do not generalize it** to worksheets or logic
+sheets; that rule stands everywhere else.
 
-> **Data checks are not enough here — render it.** Two real bugs passed all 527 data
-> checks and were caught only in headless Chromium: a stray `opacity:.001` that made a
-> carry digit invisible, and a CSS class collision (`.sub` as both a board token class and
-> a page subtitle class) that shrank every long-division subtraction row to 13px. If you
-> touch the CSS, re-render and look at it.
+### Before you claim a change works
+
+Five commands, all must exit 0. Skipping any one of them has already let a real bug ship.
+
+```bash
+cd animations
+python3 build_animations.py && python3 verify_animations.py \
+  && python3 sweep-check.py && node equiv-check.mjs \
+  && node render-check.mjs && node perf-check.mjs && node user-check.mjs
+```
+
+| check | what only it can catch |
+|---|---|
+| `verify_animations.py` | the maths, re-derived independently — never imports the generators |
+| `sweep-check.py` | ~660 problems nobody picked. Caught `47 × 80` writing `00`, and `803 × 407` |
+| `equiv-check.mjs` | `engine.js` (browser) vs `specs.py` (oracle) must agree **exactly** |
+| `render-check.mjs` | it drew correctly. Caught an invisible carry and a 13px row |
+| `user-check.mjs` | it is **usable**. Caught the phone layout putting Next 1128px below the board |
+
+**`engine.js` and `specs.py` are the same algorithms in two languages, on purpose.**
+Python is no longer the generator — it is the oracle. Change one, change the other, and
+let `equiv-check` prove you did. It catches things nobody would ever diff: Python's
+`round()` breaks ties to even, so `round(45,-1)` is 40 where `Math.round` says 50, which
+silently changes a sentence in the narration.
+
+> **Data checks are not enough — render it and look.** Three real bugs passed every data
+> check and died only in headless Chromium: a stray `opacity:.001` hiding a carry, a CSS
+> class collision shrinking every subtraction row to 13px, and the pen drawn *on top of*
+> the digit it pointed at. If you touch the CSS, re-render.
+
+### What to build next — and the trap
+
+[`animations/CURRICULUM.md`](animations/CURRICULUM.md) maps all 45 fourth- and fifth-grade
+standards onto the six drawing surfaces they need. Two exist; **22 of 45 need no new one**.
+
+**Read the target board in [`PRACTICE-PLAN-2026.md`](PRACTICE-PLAN-2026.md) before
+picking.** *Reachable on an existing surface* is an engineering fact, not a reason.
+Add/subtract with regrouping is the cheapest thing on the list **and worthless here** —
+both kids already run it at ~16 sec/problem, inside the fluency benchmark. Cheapness is
+exactly what makes the wrong thing tempting.
+
+### The rule the whole thing was built by
+
+Asif found the same defect three times in one session, in three costumes: the `2` and `4`
+appearing without the **42** they came from; a `14` with no visible **12 + 2**; a quotient
+digit with no visible **hunt** that found it.
+
+> **Before adding a method: list every number a solver holds mentally between one written
+> mark and the next. Each one has to exist on screen, and linger under a keypress you
+> control — not on a timer.**
+
+That is the difference between an animation that demonstrates an algorithm and one that
+teaches it. Every remaining topic has its own hidden object; the 2-digit divisor's is the
+estimate, and it is the biggest one left.
 
 ## Two sheet types (applies to the MATH sheet)
 
