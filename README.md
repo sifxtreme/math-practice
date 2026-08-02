@@ -63,20 +63,28 @@ Add a `kid3` to your config and a matching row there. The digit shapes `(2, 1)` 
 
 ### What is and isn't scrubbed
 
-Being straight about this, because a half-private repo is worse than a known-public one:
+Being straight about this, because a half-private repo is worse than a known-public one.
+**Only the DRILL system is split.** 43 tracked files still contain real names:
 
 | | |
 |---|---|
-| ✅ Generator, time model, verifier | no names, keyed on ids |
-| ✅ `private/` and `kids.local.json` | gitignored |
-| ✅ Generated drill sheets | gitignored — regenerable from a seed |
-| ⚠️ **Hand-written `worksheet-*.html`** | names baked into the `Name:` field |
-| ⚠️ **Docs** (`AGENTS.md`, `PRACTICE-PLAN-2026.md`) | names, grades, school throughout |
-| ❌ **Git history** | names in every commit before 2026-08-01 |
+| ✅ `drill_gen.py`, `drill_cost.py`, `verify_drills.py` | keyed on ids, no names |
+| ✅ `private/`, `kids.local.json` | gitignored |
+| ✅ Generated `worksheet-*-drill.html` | gitignored — rebuilt from a seed |
+| ⚠️ **Word-problem generator** — `build_sheets.py` (`KIDS = [...]`), `specs_word.py`, `specs_logic.py`, `verify_sheets.py` | names hardcoded, **and `specs_word.py` carries per-child assessment notes** — "watch whether he still reaches for a common denominator" — which is as sensitive as anything in `private/` |
+| ⚠️ **`animations/`** — `problems.json`, and the built `index.html` | a `kid` field per animation |
+| ⚠️ **Hand-written `worksheet-*.html`** (27 sheets) | name in the `Name:` field |
+| ⚠️ **`print-ledger.tsv`, `print-drill.sh`, `test-day-guard.sh`** | names in labels, usage examples, test cases |
+| ⚠️ **Docs** — `AGENTS.md`, `DRILLS.md`, `PRACTICE-PLAN-2026.md` | names, grades, school |
+| ❌ **Git history** | names in every commit |
+
+Extending the split to the word-problem generator is the obvious next step — same
+pattern, read `kids.local.json` in `build_sheets.py` instead of the `KIDS` constant, and
+move the per-child notes in `specs_word.py` into `private/`.
 
 The gitignore protects the **future**. Scrubbing the past means rewriting history, which
-is a deliberate one-time decision, not something to do by accident. **Treat this repo as
-private unless you've done that.**
+collides with the never-rebase rule here, so it is a deliberate one-time decision and has
+not been made. **Treat this repo as private.**
 
 ---
 
