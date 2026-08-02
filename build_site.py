@@ -100,6 +100,63 @@ def scrub(doc, names=()):
     return doc
 
 
+
+# --------------------------------------------------------------------------
+# persistent nav
+# --------------------------------------------------------------------------
+# Injected into EVERY page. Two constraints drive the design:
+#
+#   1. **It must not print.** These pages exist to be printed; a nav bar across the
+#      top of a worksheet ruins the sheet. Hence @media print { display: none }.
+#   2. **It must not collide.** Every worksheet ships its own CSS with generic
+#      selectors, so every class here is msnav-prefixed and every property it needs
+#      is stated rather than inherited.
+#
+# Links are root-absolute because pages sit at three different depths.
+
+NAV_CSS = """
+<style>
+.msnav{position:sticky;top:0;z-index:9999;display:flex;flex-wrap:wrap;align-items:center;
+ gap:2px 4px;padding:8px 14px;background:#12131a;border-bottom:1px solid #2a2d38;
+ font:14px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Inter,system-ui,sans-serif;}
+.msnav a{color:#c9cde0;text-decoration:none;padding:5px 9px;border-radius:6px;
+ white-space:nowrap;font-weight:500;}
+.msnav a:hover{background:#232634;color:#fff;}
+.msnav .msnav-home{font-weight:700;color:#fff;margin-right:6px;}
+.msnav .msnav-sp{flex:1 1 auto;}
+.msnav .msnav-out{color:#8fb8ff;}
+@media print{.msnav{display:none !important;}}
+</style>
+"""
+
+NAV_HTML = """
+<nav class="msnav">
+  <a class="msnav-home" href="/">Math worksheets</a>
+  <a href="/#drills">Drills</a>
+  <a href="/#word">Word problems</a>
+  <a href="/#logic">Logic</a>
+  <a href="/animations/">Animations</a>
+  <span class="msnav-sp"></span>
+  <a class="msnav-out" href="https://sifxtreme.com">&larr; sifxtreme.com</a>
+</nav>
+"""
+
+
+def with_nav(doc):
+    """Put the nav at the top of any of the three document shapes we emit.
+
+    Worksheets are full documents with <body>; the animations page has no <body>
+    tag at all (head + content, browser implies it). Handle both, and fall back to
+    prepending rather than silently returning the page un-navigated.
+    """
+    block = NAV_CSS + NAV_HTML
+    m = re.search(r'<body[^>]*>', doc)
+    if m:
+        return doc[:m.end()] + block + doc[m.end():]
+    if "</head>" in doc:
+        return doc.replace("</head>", "</head>" + block, 1)
+    return block + doc
+
 PAGE_CSS = """
 :root { --ink:#12131a; --dim:#5a6070; --line:#e3e6ee; --bg:#fbfbfd; --accent:#8a1538; }
 @media (prefers-color-scheme: dark) {
@@ -139,7 +196,7 @@ def shell(title, body, depth=0):
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{_html.escape(title)}</title>
 <style>{PAGE_CSS}</style></head>
-<body><div class="wrap">{body}
+<body>{NAV_CSS}{NAV_HTML}<div class="wrap">{body}
 <footer>Free to print and use. Built by <a href="https://sifxtreme.com">Asif Ahmed</a>.
 <a href="{up}index.html">All sheets</a></footer>
 </div></body></html>
@@ -163,7 +220,7 @@ def main():
         with open(src) as f:
             doc = scrub(f.read(), names)
         with open(os.path.join(OUT, "sheets", fname), "w") as f:
-            f.write(doc)
+            f.write(with_nav(doc))
         published.append((fname, label, kind))
 
     # --- drills, generated fresh at several seeds with NO kids config in play
@@ -180,7 +237,7 @@ def main():
             with open(out) as f:
                 doc = scrub(f.read(), names)
             with open(out, "w") as f:
-                f.write(doc)
+                f.write(with_nav(doc))
             drills.append((f"{skill}-{seed}.html", nice, seed))
 
     # --- animations: the step-through of the written methods. Self-contained,
@@ -206,7 +263,7 @@ def main():
                       "`<b>${a.title}</b>${a.skill}`")
         a = a.replace("`${a.kid} \u00b7 ${a.title}`", "`${a.title}`")
         with open(os.path.join(OUT, "animations", "index.html"), "w") as f:
-            f.write(a)
+            f.write(with_nav(a))
 
     # --- index
     def cards(items, folder):
@@ -238,17 +295,17 @@ trap called out at the exact step where it bites. Watch one, then do the paper.<
 <span>Long division &amp; multiplication, one mark at a time &middot; no signup</span>
 </a></li></ul>
 
-<h2>Drills &mdash; five minutes, work shown</h2>
+<h2 id="drills">Drills &mdash; five minutes, work shown</h2>
 <p class="lede">Each is a different randomly generated set at the same difficulty. No
 problem is ever &times;0, &times;1 or &divide;1 &mdash; those spend a slot teaching nothing.</p>
 <ul class="grid">{cards(dr, "drills")}</ul>
 
-<h2>Word problems</h2>
+<h2 id="word">Word problems</h2>
 <p class="lede">Every problem is multi-step on purpose &mdash; choosing the operation is the
 test, not the arithmetic. Each ends with a &ldquo;Did you know?&rdquo; tied to its story.</p>
 <ul class="grid">{cards(word, "sheets")}</ul>
 
-<h2>Logic puzzles</h2>
+<h2 id="logic">Logic puzzles</h2>
 <p class="lede">Reasoning rather than fluency. No arithmetic needed to start.</p>
 <ul class="grid">{cards(logic, "sheets")}</ul>
 
