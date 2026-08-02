@@ -382,7 +382,10 @@ answer independently and must exit 0 before any of them is printed.
 - `drill_gen.py` — generate division/multiplication drill sheets sized to a time budget.
 - `drill_cost.py` — the time model: marks per problem → seconds → problems per sheet.
 - `verify_drills.py` — audits the generated HTML independently of the generator. Mutation-tested.
-- `RESULTS.md` — what came back marked, tagged SKILL / CARE / UNSHOWN. Feeds the pin rule.
+- `private/RESULTS.md` — what came back marked, tagged SKILL / CARE / UNSHOWN. Feeds the
+  pin rule. **Gitignored** — it is a per-child record of mistakes, the most sensitive
+  thing here. See [`README.md`](README.md) § "Setting it up for your kids".
+- `kids.example.json` — the names template. Copy to `kids.local.json` (gitignored).
 - `print-worksheet.sh` — render a worksheet to a clean 3-page PDF and print it to the Brother.
 - `print-drill.sh` — print a math-drills.com PDF through the same day guard.
 - `day-guard.sh` — sourced by both print scripts. The one-day-at-a-time enforcement (guards A, B, C).

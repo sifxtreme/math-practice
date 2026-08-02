@@ -19,18 +19,69 @@ The layout is derived by SIMULATING the algorithm, which is the only way to know
 many working rows a given problem needs -- 347/4 needs fewer rows than 913/7, and a
 fixed-size grid would be wrong for one of them.
 
-Output is a 3-sheet HTML file (kid1 / kid2 / answer key), matching what
+Output is one sheet per kid plus an answer key each, matching what
 `print-worksheet.sh` already expects, so the existing print path works unchanged.
 
-    python3 drill_gen.py --seed 20260801 --out worksheet-division-drill.html
+Names come from `kids.local.json` (gitignored) at render time — this file keys on
+`kid1` / `kid2` and never hardcodes a name. See README.md "Setting it up for your
+kids".
+
+    python3 drill_gen.py --skill div --seed 20260801
+    python3 verify_drills.py
     ./print-worksheet.sh worksheet-division-drill.html --dry-run
 """
 
 import argparse
 import html
+import json
+import os
 import random
+import sys
 
 import drill_cost
+
+# --------------------------------------------------------------------------
+# who the sheets are for
+# --------------------------------------------------------------------------
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+LOCAL_KIDS = os.path.join(HERE, "kids.local.json")
+EXAMPLE_KIDS = os.path.join(HERE, "kids.example.json")
+
+
+def load_kids():
+    """Real names from the gitignored kids.local.json, else the committed example.
+
+    Nothing in this file hardcodes a child's name. Committed code keys on `id`
+    (kid1, kid2); the name is looked up here and reaches paper only in the Name:
+    field. See README.md "Setting it up for your kids".
+
+    The fallback is deliberately LOUD. A silent fallback would print a stack of
+    sheets addressed to "Kid One" and you would not find out until they were on
+    the table.
+    """
+    path = LOCAL_KIDS if os.path.exists(LOCAL_KIDS) else EXAMPLE_KIDS
+    with open(path) as f:
+        data = json.load(f)
+    kids = {k["id"]: k for k in data["kids"]}
+    if path == EXAMPLE_KIDS:
+        print("=" * 72, file=sys.stderr)
+        print("NOTICE: kids.local.json not found — using placeholder names from",
+              file=sys.stderr)
+        print("        kids.example.json. Sheets will say 'Kid One' / 'Kid Two'.",
+              file=sys.stderr)
+        print("        Fix:  cp kids.example.json kids.local.json", file=sys.stderr)
+        print("=" * 72, file=sys.stderr)
+    return kids
+
+
+def kid_name(kids, kid_id):
+    if kid_id not in kids:
+        raise SystemExit(
+            f"ERROR: no kid with id '{kid_id}' in your kids file.\n"
+            f"       Known ids: {', '.join(sorted(kids)) or '(none)'}\n"
+            f"       The drill plans in this file are keyed on those ids.")
+    return kids[kid_id]["name"]
 
 # --------------------------------------------------------------------------
 # problem generation
@@ -454,7 +505,10 @@ def main():
     out = args.out or f"worksheet-{'division' if args.skill == 'div' else 'multiplication'}-drill.html"
     rng = random.Random(args.seed)
 
-    # Digit shapes come straight from AGENTS.md "Difficulty pin".
+    kids = load_kids()
+
+    # Keyed on kid ID, never on a name — see load_kids(). Digit shapes come straight
+    # from AGENTS.md "Difficulty pin".
     PLANS = {
         "div": [("kid1", (2, 1), "2-digit ÷ 1-digit, with a remainder", "div_2d_1"),
                 ("kid2", (3, 1), "3-digit ÷ 1-digit, with a remainder", "div_3d_1")],
@@ -463,7 +517,8 @@ def main():
     }
 
     sheets, keys, report = [], [], []
-    for name, shape_digits, label, cost_key in PLANS[args.skill]:
+    for kid_id, shape_digits, label, cost_key in PLANS[args.skill]:
+        name = kid_name(kids, kid_id)
         skill = next(s for s in drill_cost.SKILLS if s.key == cost_key)
         count = skill.count_for(args.budget)
 

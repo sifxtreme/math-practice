@@ -116,6 +116,8 @@ class Skill:
 
 
 # The skills actually on the pin (AGENTS.md "Difficulty pin"), plus the anchor.
+# The `kid` field is an ID, never a name — see README.md "Setting it up for your
+# kids". A "+" suffix means the next rung up for that child, not yet on the pin.
 SKILLS = [
     Skill("sub_3x3", "3-digit - 3-digit, regrouping (ANCHOR)", "both", marks_subtraction(3)),
     Skill("mul_2x1", "2-digit x 1-digit", "kid1", marks_multiplication(2, 1)),

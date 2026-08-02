@@ -1,0 +1,28 @@
+{
+  "_README": [
+    "WHO THE SHEETS ARE FOR. Copy this file to `kids.local.json` and put your real",
+    "names in it. `kids.local.json` is gitignored; this example is not.",
+    "",
+    "    cp kids.example.json kids.local.json",
+    "",
+    "Committed code refers to children by `id` only (kid1, kid2). A real name is read",
+    "from kids.local.json at RENDER time and appears solely in the printed Name: field.",
+    "That way the interesting part of this repo — the time model, the constraint logic,",
+    "the verifier — can be shared without shipping somebody's family with it.",
+    "",
+    "FIELDS",
+    "  id     stable key used everywhere in code. Do not rename it casually; the drill",
+    "         plans in drill_gen.py are keyed on it.",
+    "  name   what prints in the Name: field. The only place it appears.",
+    "  grade  school grade, used for labelling. The actual difficulty comes from the",
+    "         `Difficulty pin` section of AGENTS.md, not from this number.",
+    "",
+    "If kids.local.json is missing, the generator falls back to THIS file and prints a",
+    "loud notice, so a sheet full of 'Kid One' is never a silent surprise."
+  ],
+
+  "kids": [
+    { "id": "kid1", "name": "Kid One", "grade": 3 },
+    { "id": "kid2", "name": "Kid Two", "grade": 4 }
+  ]
+}

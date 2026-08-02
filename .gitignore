@@ -2,3 +2,21 @@ __pycache__/
 *.pyc
 *.pdf
 .DS_Store
+
+# ---- private, per-family data -------------------------------------------
+# Committed code refers to children by id (kid1, kid2). Real names and anything
+# about a specific child stay out of git. See README.md "Setting it up for your
+# kids", and kids.example.json for the field docs.
+#
+# NOTE: this protects the FUTURE only. Names are already present in this repo's
+# history and in the hand-written worksheet-*.html sheets. Removing those needs a
+# history rewrite, which is a deliberate call — see README.md "What is and isn't
+# scrubbed".
+kids.local.json
+private/
+
+# Generated drill sheets — regenerable from a seed, and they carry a real name in
+# the Name: field. `python3 drill_gen.py --skill div --seed 20260801` rebuilds them
+# byte-identically, so tracking them buys nothing and leaks something.
+worksheet-division-drill.html
+worksheet-multiplication-drill.html

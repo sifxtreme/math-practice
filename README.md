@@ -1,44 +1,139 @@
-# Kids' Math Word Problems
+# Kids' Math Worksheets
 
-Printable, themed math word problems for the kids. Every sheet is 3 pages (kid1, kid2, answer key) and self-contained — open in a browser, Cmd+P → Save as PDF or print, or use `./print-worksheet.sh`.
+Printable math practice for two kids: **word problems**, **logic puzzles**, and
+**arithmetic drills**. Everything is self-contained HTML — open in a browser and print,
+or use `./print-worksheet.sh`.
 
-## Files
+Two things here are unusual and worth the thirty seconds:
 
-| File | Theme | Type |
-|------|-------|------|
-| `worksheet.html` | Space (original template) | Math |
-| `worksheet-worldcup.html` | 2026 World Cup | Math |
-| `worksheet-worldcup-final.html` | World Cup, final week | Math |
-| `worksheet-ocean.html` | Ocean / reef / research ship | Math |
-| `worksheet-dinosaur.html` | Fossil dig | Math |
-| `worksheet-worldcup-logic.html` | World Cup | Logic |
-| `worksheet-egypt-logic.html` | Ancient Egypt | Logic |
+- **Drills are sized to a clock, not a page.** Most worksheet sites give you 20 or 25
+  problems whatever the skill. 20 long divisions is a sixteen-minute sheet. If you want
+  five minutes, the count has to come from the work, and that's what `drill_cost.py`
+  computes.
+- **The grid forces the work to be shown.** Every step of the written method gets its own
+  printed box, so a child can't jump to an answer. That rule exists because one of them
+  did exactly that.
 
-## Layout (3 pages)
+---
 
-| Page | For | Grade | Content |
-|------|-----|-------|---------|
-| 1 | kid1 | 3rd grade | 5 word problems |
-| 2 | kid2 | 4th grade | 5 word problems |
-| 3 | (grown-ups) | Answer key | Worked steps for all 10 |
+## Setting it up for your kids
 
-Names are pre-filled in the header. Each problem is a **compound / multi-step** problem (2+ operations) with a boxed work area, an answer line, and a "Did you know?" fact tied to its story.
+**One step.** Copy the example config and put your own names in it:
 
-## Skill levels
+```bash
+cp kids.example.json kids.local.json
+$EDITOR kids.local.json
+```
 
-- **3rd grade (kid1):** multiply-then-subtract, multi-step grouping/division, add+subtract chains, elapsed time, division with remainder.
-- **4th grade (kid2):** multi-step mult/div, multi-week savings, area + division, fractions (part eaten / part left), large multiplication + subtraction.
+```json
+{
+  "kids": [
+    { "id": "kid1", "name": "Amira", "grade": 3 },
+    { "id": "kid2", "name": "Idris", "grade": 4 }
+  ]
+}
+```
 
-## Printing
+That's it — generate a sheet and the names are on it.
 
-**One command:** `./print-worksheet.sh <file.html>` — renders a clean 3-page PDF and prints the kids' sheets to the Brother. Add `--dry-run` to preview, `--both` to also print the answer key, `--printer NAME` for a different printer. (Chrome headless ignores the page margins and would otherwise overflow to 5 pages; the script renders a lightly-tightened, same-font copy that fits — your `.html` is untouched.)
+**`kids.local.json` is gitignored. `kids.example.json` is not.** Committed code refers to
+children by `id` (`kid1`, `kid2`) and never by name; the name is read at render time and
+appears only in the printed `Name:` field. So you can share, fork, or publish the repo
+without shipping your family with it.
 
-**Manual (full-size layout):** open the `.html`, Cmd+P → **"Headers and footers" OFF**, **100% scale** → 3 pages.
+If you skip this step nothing breaks — the generator falls back to the example file and
+prints a loud notice. Sheets will say "Kid One". That's deliberate: a *silent* fallback
+would hand you a stack of paper addressed to nobody.
 
-## Editing
+### More or fewer than two kids
 
-Everything is in one self-contained `worksheet.html` (inline CSS, no dependencies).
+`id`s are the contract. The drill plans in `drill_gen.py` are keyed on `kid1` and `kid2`:
 
-- Change a name: edit the `Name:` span in each sheet's `.meta` block, and the names inside the `.qtext` problems.
-- Swap difficulty: edit the numbers in `.qtext` and the matching `.ans` steps on the answer-key page.
-- Re-theme: replace the `.fact` blurbs and story wording; the math stays the same.
+```python
+PLANS = {
+    "div": [("kid1", (2, 1), "2-digit ÷ 1-digit, with a remainder", "div_2d_1"),
+            ("kid2", (3, 1), "3-digit ÷ 1-digit, with a remainder", "div_3d_1")],
+    ...
+}
+```
+
+Add a `kid3` to your config and a matching row there. The digit shapes `(2, 1)` mean
+2-digit dividend ÷ 1-digit divisor; the last field picks the time model from
+`drill_cost.py`.
+
+### What is and isn't scrubbed
+
+Being straight about this, because a half-private repo is worse than a known-public one:
+
+| | |
+|---|---|
+| ✅ Generator, time model, verifier | no names, keyed on ids |
+| ✅ `private/` and `kids.local.json` | gitignored |
+| ✅ Generated drill sheets | gitignored — regenerable from a seed |
+| ⚠️ **Hand-written `worksheet-*.html`** | names baked into the `Name:` field |
+| ⚠️ **Docs** (`AGENTS.md`, `PRACTICE-PLAN-2026.md`) | names, grades, school throughout |
+| ❌ **Git history** | names in every commit before 2026-08-01 |
+
+The gitignore protects the **future**. Scrubbing the past means rewriting history, which
+is a deliberate one-time decision, not something to do by accident. **Treat this repo as
+private unless you've done that.**
+
+---
+
+## Daily use
+
+A full day is **three sheets per kid**: word problems, logic, and a drill.
+
+```bash
+# drills — generated, sized to five minutes
+python3 drill_gen.py --skill div --seed $(date +%Y%m%d)   # or --skill mul
+python3 verify_drills.py                                  # must exit 0
+./print-worksheet.sh worksheet-division-drill.html --dry-run
+
+# word problems / logic — pick the day's sheet from PRACTICE-PLAN-2026.md
+./print-worksheet.sh worksheet-sailing-ships.html --date today
+```
+
+`--budget 600` makes it a ten-minute sheet instead; the problem counts re-derive
+themselves. `--seed` makes a sheet reproducible — same seed, same problems.
+
+> ⚠️ **`print-worksheet.sh` and `print-drill.sh` refuse to print ahead, print a batch, or
+> reprint a day that already exists.** That's `day-guard.sh`, and it is deliberate. A
+> genuine replacement goes through `--override-day-guard`, which is loud and logged.
+
+## The files
+
+| File | What |
+|---|---|
+| `drill_gen.py` | generates division/multiplication drills, sized to a time budget |
+| `drill_cost.py` | the time model — marks per problem → seconds → problems per sheet |
+| `verify_drills.py` | audits the rendered HTML independently. Run before printing |
+| `build_sheets.py` | generates the word-problem and logic sheets from `specs_*.py` |
+| `verify_sheets.py` | re-derives every word-problem answer. Must exit 0 |
+| `print-worksheet.sh` | render to a clean PDF and print |
+| `print-drill.sh` | same, for an external drill PDF |
+| `day-guard.sh` | the one-day-at-a-time print guard |
+| `animations/` | step-through animations of the written methods |
+| `AGENTS.md` | **the real documentation** — rules, difficulty pin, hard-won lessons |
+| `DRILLS.md` | external drill sources (fallback) |
+| `PRACTICE-PLAN-2026.md` | the day-by-day schedule |
+
+**`AGENTS.md` is the file to read before changing anything.** It carries the rules that
+have already decayed once and been reinstated — why drills are one day at a time, why the
+work has to be shown, and why a doc that says "never" needs its date checked.
+
+## Calibrating the time model
+
+Every problem count is currently a **prediction**. The model is anchored on one real
+measurement (49 problems of 3-digit subtraction in 13 minutes) and extrapolated from
+subtraction to division and multiplication.
+
+To make it a measurement instead: time a real sheet, then
+
+```python
+import drill_cost
+drill_cost.calibrate(observed_sec=41.0, marks=15.0)   # → the SEC_PER_MARK it implies
+```
+
+and update `SEC_PER_MARK`. **Don't hand-adjust the problem counts** — that breaks the
+link between the model and reality, and then the numbers mean nothing.
