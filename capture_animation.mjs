@@ -18,9 +18,11 @@
 // between screenshots. We launch the browser ourselves, so we are never attaching to
 // a Chrome someone else owns.
 //
-// The board is a FIXED size — it reserves space for every row up front — so one clip
-// works for all frames. Get it with:
-//   document.querySelector('.board').getBoundingClientRect()
+// CLIP: measure the UNION of #board AND #bubble, across every step. The bubble (the
+// "24 + 4" working chip) is display:none at rest and only appears mid-animation, so a
+// clip taken from #board alone is ~300px wide and CHOPS IT OFF — that shipped once.
+// Clip coordinates are viewport-relative, so measure at the SAME --window-size you
+// capture at.
 //
 // This file lives in the repo because the first version lived in a temp dir and was
 // gone after a reboot, with the GIF already published and no way to remake it.
@@ -61,6 +63,12 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 await send('Page.enable');
 await send('Runtime.enable');
+// Force dark. A fresh Chrome profile reports prefers-color-scheme: light, so the
+// animation captures on a white background — which is not what it looks like to a
+// visitor, and not the version anyone approved.
+await send('Emulation.setEmulatedMedia', {
+  features: [{ name: 'prefers-color-scheme', value: process.env.SCHEME || 'dark' }],
+});
 await send('Page.navigate', { url: URL_ });
 await sleep(2500);
 
