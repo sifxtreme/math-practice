@@ -129,6 +129,8 @@ themselves. `--seed` makes a sheet reproducible — same seed, same problems.
 | `DRILLS.md` | external drill sources (fallback) |
 | `KUMON.md` | the Kumon sample packets — what's in them, and **how long a page is supposed to take** |
 | `kumon_cost.py` | prices each Kumon page with the `drill_cost.py` model, against Kumon's own 15–30 min |
+| `SPEED.md` | **the published fluency benchmarks** — what Kumon, Khan Academy and CBM each say, and the probe to run |
+| `speed_check.py` | scores a timed sheet in digits correct per minute against the CBM grade norms |
 | `PRACTICE-PLAN-2026.md` | the day-by-day schedule |
 
 **`AGENTS.md` is the file to read before changing anything.** It carries the rules that
