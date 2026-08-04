@@ -168,6 +168,24 @@ def make_fact(rng, ops):
     return ("div", a * b, b)          # a*b / b == a, exact by construction
 
 
+def fact_space(ops):
+    """How many DISTINCT facts exist for these operations. 8 values (2-9) each way.
+
+    This is a hard ceiling, not a tuning knob, and it is small enough to matter:
+    multiplication alone is 64. A 60-problem sheet is 94% of that space, so two
+    different seeds give kid1 nearly the same problems in a different ORDER --
+    measured 93-95% overlap on 2026-08-03.
+
+    For a fact PROBE that is fine and arguably correct: you want the same
+    instrument each time so the score is comparable week to week. But it is not
+    what DRILLS.md's "unbounded -- it's a seed" claims about the multi-digit
+    generators, and the difference should not be a surprise. Mixing in division
+    (kid2) doubles the space to 128 and drops the overlap to ~45%.
+    """
+    per_op = (FACT_MAX - FACT_MIN + 1) ** 2
+    return per_op * len(set(ops))
+
+
 def problem_set_facts(rng, ops, count):
     """`count` distinct facts. Commuted pairs (7x8 and 8x7) count as DISTINCT.
 
@@ -176,6 +194,17 @@ def problem_set_facts(rng, ops, count):
     of 2-9 facts impossible to fill without repeats (there are only 36 unordered
     multiplication pairs).
     """
+    space = fact_space(ops)
+    if count > space:
+        # Fail on the arithmetic, not by exhausting a loop. The old behaviour drew
+        # count*200 random facts and then raised "could not build", which reads as
+        # a transient failure when it is a hard ceiling that no seed can clear.
+        raise SystemExit(
+            f"--count {count} is impossible for {'+'.join(sorted(set(ops)))}: only "
+            f"{space} distinct facts exist with operands {FACT_MIN}-{FACT_MAX}"
+            + ("" if "div" in ops else
+               " (add division to the plan to double the space to "
+               f"{space * 2})"))
     seen, out = set(), []
     guard = 0
     while len(out) < count:
@@ -669,6 +698,14 @@ def main():
                     f"{FACT_TARGET_PER_MIN}/min ({per:.1f}s each) — Rocket Math "
                     f"grade 4–5. NOT meant to be finished: score how far they got, "
                     f"then `python3 speed_check.py --facts --problems N --minutes 1`.")
+            space = fact_space(shape_digits)
+            if count / space > 0.8:
+                # Not an error — for a probe, a near-complete table is defensible.
+                # But it must not be discovered later: at this ratio the seed only
+                # reshuffles, it does not resample.
+                print(f"note: {name}'s {count} problems are {count/space:.0%} of the "
+                      f"{space} facts that exist for {'+'.join(sorted(set(shape_digits)))}"
+                      f" — different seeds change the ORDER, not the problems")
             report.append((name, label, count, per, FACT_PROBE_SEC, None))
             sheets.append(render_sheet(name, label, probs, False, note, "facts", args.layout))
             keys.append((name, label, probs, note))

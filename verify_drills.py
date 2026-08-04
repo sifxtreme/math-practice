@@ -185,6 +185,37 @@ for path, shape in TARGETS:
                     total = vals[-1]
                 check(total == a * b, f"{tag}: total {total} != {a}*{b}={a*b}")
 
+# --- the KEY must describe the sheet the kid is actually holding ---------------
+#
+# Added 2026-08-03 after a mutation that swapped two problems on a kid sheet and
+# left the key untouched passed all 1416 checks clean. Everything above audits the
+# keys' arithmetic and the kid sheets' leak-freedom, and NOTHING tied the two
+# together — so a key could be internally perfect and still grade the wrong sheet.
+#
+# That was always a hole; --skill facts made it load-bearing, because the fact
+# probe's key IS the grading instrument for a measurement the week's plan turns on.
+#
+# Compares the GIVEN cells (class "g") positionally. On a `plain` layout the kid's
+# prompt cells are deliberately blanked while the key's are not, so the kid's
+# givens must be a SUBSET of the key's, not equal to them.
+for path, shape in TARGETS:
+    groups = list(sheets(path))
+    kid_sheets = [(t, p) for t, k, p in groups if not k]
+    key_sheets = [(t, p) for t, k, p in groups if k]
+    check(len(kid_sheets) == len(key_sheets),
+          f"{path}: {len(kid_sheets)} kid sheets but {len(key_sheets)} keys")
+    for (kt, kprobs), (yt, yprobs) in zip(kid_sheets, key_sheets):
+        check(len(kprobs) == len(yprobs),
+              f"{path}:{kt[:30]}: {len(kprobs)} problems but key has {len(yprobs)}")
+        for pi, (kp, yp) in enumerate(zip(kprobs, yprobs), 1):
+            kg = {(c["r"], c["c"], c["t"]) for c in cells(kp)
+                  if "g" in c["cls"] and c["t"]}
+            yg = {(c["r"], c["c"], c["t"]) for c in cells(yp)
+                  if "g" in c["cls"] and c["t"]}
+            check(kg <= yg,
+                  f"{path}:{kt[:30]}#{pi}: key does not match the kid's problem "
+                  f"(kid-only givens: {sorted(kg - yg)[:4]})")
+
 # duplicate-problem check per sheet
 for path, shape in TARGETS:
     for title, is_key, probs in sheets(path):
