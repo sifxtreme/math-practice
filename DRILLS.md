@@ -18,6 +18,11 @@
 >
 > `python3 drill_gen.py --skill mul && python3 verify_drills.py`
 
+> **Kumon sample packets are a third source — see [`KUMON.md`](KUMON.md).** They are not
+> drills and they carry **no answer keys**, so they do not substitute for anything below.
+> Read that file for the timing: a Kumon page is a **7.5–15 min** unit by Kumon's own
+> published guidance, against the 5-minute budget everything here is built to.
+
 ## The fallback bank — math-drills.com
 
 The **drill** leg of the three-sheets-a-day rule (see [`AGENTS.md`](AGENTS.md) § "A full day = THREE sheets per child"). Drills are bare arithmetic on purpose — speed and fluency, not comprehension. Don't apply the word-problem rule to them.

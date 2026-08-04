@@ -127,6 +127,8 @@ themselves. `--seed` makes a sheet reproducible — same seed, same problems.
 | `animations/` | step-through animations of the written methods |
 | `AGENTS.md` | **the real documentation** — rules, difficulty pin, hard-won lessons |
 | `DRILLS.md` | external drill sources (fallback) |
+| `KUMON.md` | the Kumon sample packets — what's in them, and **how long a page is supposed to take** |
+| `kumon_cost.py` | prices each Kumon page with the `drill_cost.py` model, against Kumon's own 15–30 min |
 | `PRACTICE-PLAN-2026.md` | the day-by-day schedule |
 
 **`AGENTS.md` is the file to read before changing anything.** It carries the rules that
