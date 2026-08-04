@@ -108,6 +108,22 @@ against `.sheet` blocks and expects 3.
 > because Asif never asked for them.
 >
 > Before printing, count: did each kid get word problems, logic, AND a drill?
+>
+> ### 📌 AMENDED 2026-08-03 by Asif — the Aug 3–9 break is now DRILLS ONLY, ON REQUEST
+>
+> *"I know I said the kids would get a break, but they need the math fluency help.
+> I'll ask for a few drills only this week."*
+>
+> **For Aug 3–9 only**, the unit of work is **one drill per kid, on the days Asif
+> asks** — not three sheets, and not every day. Word problems and logic do **not**
+> run this week. This is a third state the plan did not have: the break was "zero",
+> Block 2 is "three a day", and this is neither.
+>
+> **This is a designation, not an invented light day.** The distinction is the whole
+> rule: Asif set it, in his words, on a dated line. Do not generalise it past Aug 9,
+> and do not let it become a precedent for trimming a Block 2 day.
+>
+> **Aug 10 onward reverts to the full three-sheet rule** with nothing carried over.
 
 > ⚠️ **The "word problems, not bare arithmetic" rule below applies to the MATH
 > sheet only.** A drill sheet is *supposed* to be bare arithmetic — that's the
