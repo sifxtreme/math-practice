@@ -81,6 +81,7 @@ TARGETS = [(p, sh) for p, sh in [
     ("worksheet-division-drill-plain.html", "div"),
     ("worksheet-multiplication-drill.html", "mul"),
     ("worksheet-multiplication-drill-plain.html", "mul"),
+    ("worksheet-facts-drill.html", "facts"),
 ] if _os.path.exists(p)]
 
 for path, shape in TARGETS:
@@ -95,7 +96,35 @@ for path, shape in TARGETS:
                 check(not fill, f"{tag}: BLANK SHEET LEAKS {len(fill)} digits")
                 continue
 
-            if shape == "div":
+            if shape == "facts":
+                # One row: [x] [op] [y] [=] [ans...]. Operands are the 'g' cells,
+                # the answer is whatever is in the fill boxes. Re-derived here with
+                # plain arithmetic, never by importing drill_gen.
+                given = sorted([c for c in cs if "g" in c["cls"] and c["t"]],
+                               key=lambda c: c["c"])
+                check(len(given) == 4, f"{tag}: {len(given)} given cells, want 4")
+                if len(given) != 4:
+                    continue
+                x, sym, y, eq = (given[0]["t"], given[1]["t"],
+                                 given[2]["t"], given[3]["t"])
+                check(eq == "=", f"{tag}: no = sign")
+                check(sym in ("×", "÷"), f"{tag}: operator {sym!r} not × or ÷")
+                x, y = int(x), int(y)
+                ans = num([c for c in cs if "f" in c["cls"]])
+                check(ans is not None, f"{tag}: key has no answer")
+                if ans is None:
+                    continue
+                if sym == "×":
+                    check(2 <= x <= 9 and 2 <= y <= 9,
+                          f"{tag}: {x}×{y} has an operand outside 2-9")
+                    check(ans == x * y, f"{tag}: {x}×{y} != {ans}")
+                else:
+                    check(2 <= y <= 9, f"{tag}: divisor {y} outside 2-9")
+                    check(x % y == 0, f"{tag}: {x}÷{y} is not exact — that's long "
+                                      f"division, not a fact")
+                    check(2 <= x // y <= 9, f"{tag}: quotient {x//y} outside 2-9")
+                    check(ans == x // y, f"{tag}: {x}÷{y} != {ans}")
+            elif shape == "div":
                 divisor = num([c for c in cs if c["r"] == 1 and c["c"] == 0])
                 dividend = num([c for c in cs if c["r"] == 1 and c["c"] >= 2])
                 quotient = num([c for c in cs if c["r"] == 0])
@@ -164,7 +193,11 @@ for path, shape in TARGETS:
         sigs = []
         for prob in probs:
             cs = cells(prob)
-            if shape == "div":
+            if shape == "facts":
+                g = sorted([c for c in cs if "g" in c["cls"] and c["t"]],
+                           key=lambda c: c["c"])
+                sigs.append(tuple(c["t"] for c in g) if len(g) == 4 else ("?",))
+            elif shape == "div":
                 sigs.append((num([c for c in cs if c["r"] == 1 and c["c"] == 0]),
                              num([c for c in cs if c["r"] == 1 and c["c"] >= 2])))
             else:

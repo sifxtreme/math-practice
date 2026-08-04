@@ -119,6 +119,104 @@ def problem_set_mul(rng, a_digits, b_digits, count):
     return out
 
 
+# --- single-digit FACTS ----------------------------------------------------
+# Added 2026-08-03. These are a different animal from the two above and the
+# difference is the whole point:
+#
+#   A DRILL IS SIZED TO FINISH. A PROBE IS SIZED TO OVERFLOW.
+#
+# Everything else in this file packs problems until a 5-minute budget runs out,
+# so a kid who works steadily completes the sheet. A fluency probe must NOT be
+# completable — a sheet the kid finishes measures the sheet, not the kid (see
+# SPEED.md § "The measurement to actually run"). So the count here is fixed and
+# deliberately larger than the benchmark rate, and `--budget` does not apply.
+#
+# Why facts at all, when drill_cost.py says the kids are fine: they may not be.
+# SPEED.md found the "fact recall is already automatic" conclusion in
+# PRACTICE-PLAN-2026.md rests on an uncited benchmark, and converting the one
+# real measurement to digits-correct-per-minute puts it below the floor of every
+# grade 3/4 band. This sheet is how that gets settled.
+
+FACT_MIN = 2         # x0 and x1 are not facts worth drilling -- same rule as the
+FACT_MAX = 9         # multiplier constraint in make_multiplication().
+
+# Rocket Math Fact Fluency Benchmarks (2013), grades 4-5: all four operations at
+# 35 problems/min. That is 1.7 s/fact and it is the target this sheet is scored
+# against -- NOT drill_cost.py, whose marks model has never been calibrated at
+# the recall end and overestimates a fact by roughly 3x. See SPEED.md.
+FACT_TARGET_PER_MIN = 35
+FACT_PROBE_SEC = 60
+# 60 problems against a 35/min target: a kid at benchmark finishes 58% of it, and
+# even 1.0 s/fact -- faster than any published benchmark -- leaves 0 spare.
+FACT_PROBE_COUNT = 60
+
+
+def make_fact(rng, ops):
+    """One single-digit fact, in an operation drawn from `ops`.
+
+    Multiplication: both operands 2-9, so no row is spent on x0 or x1.
+    Division: the INVERSE fact, built from its answer -- divisor and quotient are
+    both 2-9, so the dividend is 4-81 and it always divides exactly. A remainder
+    here would make it long division, which is a different skill and is already
+    drilled by --skill div.
+    """
+    op = rng.choice(ops)
+    a = rng.randint(FACT_MIN, FACT_MAX)
+    b = rng.randint(FACT_MIN, FACT_MAX)
+    if op == "mul":
+        return ("mul", a, b)
+    return ("div", a * b, b)          # a*b / b == a, exact by construction
+
+
+def problem_set_facts(rng, ops, count):
+    """`count` distinct facts. Commuted pairs (7x8 and 8x7) count as DISTINCT.
+
+    That is deliberate: recall is directional in practice -- a kid can be quick on
+    7x8 and slow on 8x7 -- and collapsing them would also make a 60-problem sheet
+    of 2-9 facts impossible to fill without repeats (there are only 36 unordered
+    multiplication pairs).
+    """
+    seen, out = set(), []
+    guard = 0
+    while len(out) < count:
+        guard += 1
+        if guard > count * 200:
+            raise RuntimeError(f"could not build {count} distinct facts from {ops}")
+        p = make_fact(rng, ops)
+        if p in seen:
+            continue
+        seen.add(p)
+        out.append(p)
+    return out
+
+
+def trace_fact(op, x, y):
+    """Same (rows, cols, marks, rules, boxes) contract as the two tracers above,
+    so render_problem() and verify_drills.py need no special geometry.
+
+    One row: [x] [op] [y] [=] [box] [box]. Two answer cells on multiplication
+    because a product of 2-9 facts is 4-81 -- one or two digits -- and a
+    single-cell answer would tell the kid which. Division quotients are always
+    one digit, so they get one cell.
+    """
+    sym = "×" if op == "mul" else "÷"
+    ans = x * y if op == "mul" else x // y
+    width = 2 if op == "mul" else 1
+
+    marks = [(0, 0, str(x), "given"), (0, 1, sym, "given"),
+             (0, 2, str(y), "given"), (0, 3, "=", "given")]
+
+    # right-align the answer in its cells; the unused leading cell stays an empty
+    # open box so a 1-digit product is not advertised as such.
+    txt = str(ans).rjust(width)
+    for i, ch in enumerate(txt):
+        if ch != " ":
+            marks.append((0, 4 + i, ch, "ans"))
+
+    boxes = {(0, 4 + i) for i in range(width)}
+    return 1, 4 + width, marks, set(), boxes
+
+
 # --------------------------------------------------------------------------
 # the algorithm, simulated one written mark at a time
 # --------------------------------------------------------------------------
@@ -370,16 +468,22 @@ body { font-family: Georgia, 'Times New Roman', serif; margin: 0; color: #111; }
 """
 
 
-def render_problem(idx, x, y, show_answers, shape="div", layout="grid"):
+def render_problem(idx, x, y, show_answers, shape="div", layout="grid", op=None):
     if shape == "div":
         rows, cols, marks, rules, boxes = trace_division(x, y)
+    elif shape == "facts":
+        rows, cols, marks, rules, boxes = trace_fact(op, x, y)
     else:
         rows, cols, marks, rules, boxes = trace_multiplication(x, y)
 
     # "plain" drops the boxes from the KID's sheet only — same geometry, so the
     # work space is unchanged, but nothing tells them how many digits go where.
     # A test will not hand them a grid; once the method is solid, take it away.
-    boxed = (layout == "grid") or show_answers
+    #
+    # Facts opt out: there is no written method to force or withhold, and the
+    # answer box is the only place to write. `--layout plain` on a fact sheet
+    # would produce a row of naked equals signs.
+    boxed = (layout == "grid") or show_answers or shape == "facts"
 
     grid = {}
     for (r, c, t, kind) in marks:
@@ -440,7 +544,9 @@ def render_problem(idx, x, y, show_answers, shape="div", layout="grid"):
 
 def render_sheet(name, skill_label, probs, show_answers, budget_note, shape="div", layout="grid"):
     cls = "sheet key" if show_answers else "sheet"
-    head = "Long Division" if shape == "div" else "Multiplication"
+    # Kept short for facts: the header is one flex row with a Name, a Date AND a
+    # "Stopped at #" field, and a long title wraps it onto two lines.
+    head = {"div": "Long Division", "mul": "Multiplication", "facts": "Facts"}[shape]
     title = f"{head} — {skill_label}" + (" — ANSWERS" if show_answers else "")
     h = [f'<div class="{cls}">']
     h.append('<div class="head">')
@@ -448,20 +554,40 @@ def render_sheet(name, skill_label, probs, show_answers, budget_note, shape="div
     if show_answers:
         h.append('<div class="meta">for the grown-up</div>')
     else:
-        h.append(f'<div class="meta">Name: <span>&nbsp;{html.escape(name)}</span>'
-                 f'&nbsp;&nbsp;Date: <span>&nbsp;</span></div>')
+        meta = (f'Name: <span>&nbsp;{html.escape(name)}</span>'
+                f'&nbsp;&nbsp;Date: <span>&nbsp;</span>')
+        if shape == "facts":
+            # A probe is scored on how far they GOT, so the sheet has to carry the
+            # stop point. Without it the number is unrecoverable an hour later.
+            meta += '&nbsp;&nbsp;Stopped at #: <span>&nbsp;</span>'
+        h.append(f'<div class="meta">{meta}</div>')
     h.append("</div>")
-    instr = ('Work each one down the boxes. <b>Every box gets a digit</b> — the steps '
-             'are the answer.' if layout == "grid" else
-             '<b>Show every step.</b> No boxes this time — line the columns up yourself.')
+    if shape == "facts":
+        # "in order, left to right" and not "down the columns": the layout is
+        # row-major and so is the numbering, and the score is HOW FAR THEY GOT —
+        # which is only meaningful if they went in the printed order.
+        instr = ('<b>One minute. Work in order, left to right.</b> Skip any you don\'t '
+                 'know instantly — come back only if there is time left.')
+    elif layout == "grid":
+        instr = ('Work each one down the boxes. <b>Every box gets a digit</b> — the steps '
+                 'are the answer.')
+    else:
+        instr = '<b>Show every step.</b> No boxes this time — line the columns up yourself.'
     h.append(f'<p class="instr">{instr}</p>')
     h.append('<div class="grid-wrap">')
-    for i, (n, d) in enumerate(probs, 1):
-        h.append(render_problem(i, n, d, show_answers, shape, layout))
+    for i, p in enumerate(probs, 1):
+        if shape == "facts":
+            op, n, d = p
+            h.append(render_problem(i, n, d, show_answers, shape, layout, op=op))
+        else:
+            n, d = p
+            h.append(render_problem(i, n, d, show_answers, shape, layout))
     h.append("</div>")
     h.append(f'<div class="note">{html.escape(budget_note)}</div>')
-    foot = ("Divide → Multiply → Subtract → Bring down" if shape == "div"
-            else "One row per digit · shift each row one column left · then add")
+    foot = {"div": "Divide → Multiply → Subtract → Bring down",
+            "mul": "One row per digit · shift each row one column left · then add",
+            "facts": ("Not meant to be finished — how far you get IS the measurement · "
+                      f"target {FACT_TARGET_PER_MIN}/min")}[shape]
     h.append(f'<div class="foot">{foot}</div>')
     h.append("</div>")
     return "".join(h)
@@ -474,9 +600,15 @@ def main():
     ap.add_argument("--seed", type=int, default=20260801)
     ap.add_argument("--budget", type=int, default=drill_cost.DEFAULT_BUDGET_SEC,
                     help="seconds per sheet (default 300 = five minutes)")
-    ap.add_argument("--skill", choices=["div", "mul"], default="div",
+    ap.add_argument("--skill", choices=["div", "mul", "facts"], default="div",
                     help="which drill to build. One skill per kid per day — the "
-                         "budget is five minutes TOTAL, not five minutes each.")
+                         "budget is five minutes TOTAL, not five minutes each. "
+                         "'facts' is a 1-minute single-digit PROBE, not a drill: "
+                         "fixed count, sized to overflow, --budget ignored.")
+    ap.add_argument("--count", type=int, default=None,
+                    help="facts only: how many problems (default "
+                         f"{FACT_PROBE_COUNT}). Must exceed what the kid can "
+                         "finish in a minute or it stops being a measurement.")
     ap.add_argument("--layout", choices=["grid", "plain"], default="grid",
                     help="grid = every step gets a printed box (forces the work); "
                          "plain = the problem and blank space, the way a test gives it. "
@@ -485,8 +617,10 @@ def main():
     args = ap.parse_args()
 
     suffix = "" if args.layout == "grid" else "-plain"
-    out = args.out or (f"worksheet-{'division' if args.skill == 'div' else 'multiplication'}"
-                       f"-drill{suffix}.html")
+    base = {"div": "division", "mul": "multiplication", "facts": "facts"}[args.skill]
+    # A facts sheet has no layout variants, so it never takes the -plain suffix.
+    out = args.out or (f"worksheet-{base}-drill"
+                       f"{'' if args.skill == 'facts' else suffix}.html")
     rng = random.Random(args.seed)
 
     kids = kids_by_id()
@@ -498,11 +632,48 @@ def main():
                 ("kid2", (3, 1), "3-digit ÷ 1-digit, with a remainder", "div_3d_1")],
         "mul": [("kid1", (3, 1), "3-digit × 1-digit", "mul_3x1"),
                 ("kid2", (2, 2), "2-digit × 2-digit", "mul_2x2")],
+        # Facts: the shape field carries the OPERATIONS, not digit counts, and
+        # there is no drill_cost key because a probe is not sized to a budget.
+        # kid1 gets multiplication only; kid2 gets both, because operation-
+        # switching is itself part of what the grade 4-5 benchmark measures.
+        # Labels stay short — the header is one flex row and "Facts — <label>"
+        # plus three fields wraps if the label runs long.
+        "facts": [("kid1", ("mul",), "×, 2–9", None),
+                  ("kid2", ("mul", "div"), "× and ÷, 2–9", None)],
     }
+
+    if args.count is not None and args.skill != "facts":
+        raise SystemExit("--count applies to --skill facts only; the other skills "
+                         "derive their count from --budget via drill_cost.py")
 
     sheets, keys, report = [], [], []
     for kid_id, shape_digits, label, cost_key in PLANS[args.skill]:
         name = kid_name(kids, kid_id)
+
+        if args.skill == "facts":
+            count = args.count or FACT_PROBE_COUNT
+            probs = problem_set_facts(rng, list(shape_digits), count)
+            for op, x, y in probs:          # verify BEFORE anything is rendered
+                if op == "mul":
+                    ok = FACT_MIN <= x <= FACT_MAX and FACT_MIN <= y <= FACT_MAX
+                    why = f"{x}×{y} outside {FACT_MIN}-{FACT_MAX}"
+                else:
+                    ok = (FACT_MIN <= y <= FACT_MAX and x % y == 0
+                          and FACT_MIN <= x // y <= FACT_MAX)
+                    why = f"{x}÷{y} not an exact 2-9 fact"
+                if not ok:
+                    raise SystemExit(f"VERIFY FAILED {name}: {why}")
+
+            per = 60.0 / FACT_TARGET_PER_MIN
+            note = (f"{count} problems in {FACT_PROBE_SEC}s. Target "
+                    f"{FACT_TARGET_PER_MIN}/min ({per:.1f}s each) — Rocket Math "
+                    f"grade 4–5. NOT meant to be finished: score how far they got, "
+                    f"then `python3 speed_check.py --facts --problems N --minutes 1`.")
+            report.append((name, label, count, per, FACT_PROBE_SEC, None))
+            sheets.append(render_sheet(name, label, probs, False, note, "facts", args.layout))
+            keys.append((name, label, probs, note))
+            continue
+
         skill = next(s for s in drill_cost.SKILLS if s.key == cost_key)
         count = skill.count_for(args.budget)
 
@@ -540,24 +711,38 @@ def main():
     # is FIXED at the source now (it counts occurrences), so this is no longer load-
     # bearing — kept because a sheet per line diffs and greps far better than a 50KB
     # single line.
-    title = ("Long Division" if args.skill == "div" else "Multiplication")
+    title = {"div": "Long Division", "mul": "Multiplication",
+             "facts": "Fact fluency probe"}[args.skill]
     # A real <head>: the sheets are served on the web as well as printed, and a
     # page with no <title> shows as a bare URL in a tab and in search results.
     doc = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
            '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
-           f'<title>{title} drill — 5 minutes</title>\n'
+           f'<title>{title} — '
+           f'{"1 minute" if args.skill == "facts" else "5 minutes"}</title>\n'
            f"<style>{CSS}</style>\n</head>\n<body>\n"
            + "\n".join(sheets) + "\n" + key_html + "\n</body>\n</html>\n")
     with open(out, "w") as f:
         f.write(doc)
 
-    print(f"seed {args.seed}   budget {args.budget}s   skill {args.skill}   layout {args.layout}   -> {out}")
+    if args.skill == "facts":
+        print(f"seed {args.seed}   skill facts   probe {FACT_PROBE_SEC}s   "
+              f"(--budget and --layout do not apply)   -> {out}")
+    else:
+        print(f"seed {args.seed}   budget {args.budget}s   skill {args.skill}   "
+              f"layout {args.layout}   -> {out}")
     print(f"{'kid':<8}{'skill':<34}{'n':>4}{'sec/ea':>8}{'est':>8}{'math-drills':>13}")
     print("-" * 75)
     for nm, lbl, n, per, est, md in report:
-        print(f"{nm:<8}{lbl:<34}{n:>4}{per:>8.0f}{est/60:>7.1f}m{str(md):>13}")
+        print(f"{nm:<8}{lbl:<34}{n:>4}{per:>8.1f}{est/60:>7.1f}m"
+              f"{(str(md) if md else 'n/a'):>13}")
     print(f"\nsheets: {len(sheets)} kid + {len(keys)} key = {len(sheets)+len(keys)} pages")
-    print("every problem verified by independent re-derivation from its own marks")
+    if args.skill == "facts":
+        print(f"every fact checked in range {FACT_MIN}-{FACT_MAX}; every division "
+              f"fact checked exact")
+        print(f"'est' is the PROBE WINDOW, not a prediction — the sheet is sized to "
+              f"overflow it")
+    else:
+        print("every problem verified by independent re-derivation from its own marks")
 
 
 if __name__ == "__main__":

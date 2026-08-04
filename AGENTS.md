@@ -124,6 +124,21 @@ against `.sheet` blocks and expects 3.
 > and do not let it become a precedent for trimming a Block 2 day.
 >
 > **Aug 10 onward reverts to the full three-sheet rule** with nothing carried over.
+>
+> **What a requested day looks like — facts first, then the algorithm.** Asif chose
+> both legs on 2026-08-03:
+>
+> ```bash
+> python3 drill_gen.py --skill facts --seed $(date +%Y%m%d)   # 1 min, NEW
+> python3 drill_gen.py --skill div   --seed $(date +%Y%m%d)   # 5 min, or --skill mul
+> python3 verify_drills.py                                    # MUST exit 0
+> ./print-worksheet.sh worksheet-facts-drill.html --date today
+> ./print-worksheet.sh worksheet-division-drill.html --date today
+> ```
+>
+> ~6 minutes per kid against ~15 for the old three-sheet day. **Print the facts sheet
+> first** — it is a measurement, and a kid who has already done five minutes of long
+> division is not measuring recall any more.
 
 > ⚠️ **The "word problems, not bare arithmetic" rule below applies to the MATH
 > sheet only.** A drill sheet is *supposed* to be bare arithmetic — that's the

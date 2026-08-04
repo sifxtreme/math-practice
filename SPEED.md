@@ -151,12 +151,28 @@ Rules that make it a measurement instead of a vibe:
   the same answer still count if they're right.
 - Run it **twice on different days** before believing it. One probe is a mood.
 
-Standardized probes, free: the [Intervention Central Math Worksheet
-Generator](http://www.interventioncentral.org/teacher-resources/math-work-sheet-generator)
-makes CBM-compatible single-skill and mixed-skill sheets with answer keys, timed or
-untimed. `drill_gen.py --budget 120` gets close but is sized to *finish* in the window,
-which is the opposite of what a probe needs — use the generator, or pass a bigger
-`--problems` override.
+**The fact probe is now generated — `drill_gen.py --skill facts`** (added 2026-08-03).
+60 single-digit problems, operands 2–9, sized to **overflow** a 60-second window rather
+than fit it, with a "Stopped at #" field in the header because the score is how far they
+got. kid1 gets × only; kid2 gets × and ÷ mixed, since operation-switching is part of what
+the grade 4–5 benchmark measures.
+
+```bash
+python3 drill_gen.py --skill facts --seed $(date +%Y%m%d)
+python3 verify_drills.py          # MUST exit 0
+./print-worksheet.sh worksheet-facts-drill.html --date today
+```
+
+> **`--budget` does not apply to `--skill facts`, and that is the point.** Every other
+> sheet in this repo is packed until a 5-minute budget runs out, so a steady worker
+> finishes it. **A probe must not be completable** — a sheet the kid finishes measures
+> the sheet, not the kid. 60 problems against a 35/min target means even a kid at 1.0
+> s/fact, faster than any published benchmark, runs out of time before paper.
+
+For the **computation** probe there is no generator yet — `drill_gen.py --skill div`
+is sized to finish, which is the wrong shape. Use the free [Intervention Central Math
+Worksheet Generator](http://www.interventioncentral.org/teacher-resources/math-work-sheet-generator),
+which makes CBM-compatible single- and mixed-skill sheets with answer keys.
 
 ### Then what
 

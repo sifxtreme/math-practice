@@ -22,6 +22,7 @@ worksheet-division-drill.html
 worksheet-multiplication-drill.html
 worksheet-division-drill-plain.html
 worksheet-multiplication-drill-plain.html
+worksheet-facts-drill.html
 
 # Build output of build_site.py. Regenerable; not tracked.
 site/
