@@ -52,7 +52,14 @@ LEDGER="${GUARD_LEDGER:-$GUARD_DIR/print-ledger.tsv}"
 to_iso_day() {
   local raw="$1"
   if [ -z "$raw" ] || [ "$raw" = "today" ]; then
-    date +%F
+    # GUARD_TODAY for the same reason guard_one_day honours it, and it MUST be the
+    # same source: this function resolved "today" from the real clock while
+    # guard_one_day compared against GUARD_TODAY, so under test the two disagreed
+    # and `--date today` silently targeted the real date. That made the most common
+    # real invocation — the one AGENTS.md documents — the one case the suite could
+    # not express, and a simulated Aug 8 morning quietly printed for Aug 3.
+    # Unset in normal use, so this is `date +%F` exactly as before.
+    echo "${GUARD_TODAY:-$(date +%F)}"
     return 0
   fi
   python3 - "$raw" <<'PY' 2>/dev/null

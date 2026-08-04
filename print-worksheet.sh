@@ -70,7 +70,19 @@ if [ ! -x "$CHROME" ]; then
 fi
 
 if [ "$STAMP_DATE" = "today" ]; then
-  STAMP_DATE="$(date '+%B %-d, %Y')"
+  # GUARD_TODAY here for the same reason day-guard.sh honours it, and it has to be
+  # BOTH places or neither: this line resolved "today" from the real clock and then
+  # handed the result to the guard, so under simulation an Aug 8 morning stamped and
+  # targeted Aug 3 while the guard compared against Aug 8. Fixing to_iso_day alone
+  # did nothing, because "today" never reached it — it was already rewritten here.
+  # Unset in normal use, so this is `date` exactly as before.
+  if [ -n "${GUARD_TODAY:-}" ]; then
+    STAMP_DATE="$(python3 -c 'import sys,datetime
+d = datetime.date.fromisoformat(sys.argv[1])
+print(f"{d.strftime(\"%B\")} {d.day}, {d.year}")' "$GUARD_TODAY")"
+  else
+    STAMP_DATE="$(date '+%B %-d, %Y')"
+  fi
 fi
 
 TMP="$(mktemp -d)"

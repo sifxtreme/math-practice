@@ -119,6 +119,36 @@ for pair in "July 31, 2026:2026-07-31" "August 1, 2026:2026-08-01" "2026-08-02:2
 done
 
 echo
+echo "'--date today' — the invocation AGENTS.md actually documents"
+# This section exists because the suite had 23 passing cases and NONE of them
+# reached the "today" path, which is the one every real morning uses. The reason
+# was a seam bug: to_iso_day resolved "today" from the real clock while
+# guard_one_day compared against GUARD_TODAY, so any test of it silently targeted
+# the real date. Found 2026-08-03 by simulating a print with a stubbed `lp` — a
+# simulated Aug 8 morning reported "Sent to ... (for 2026-08-03)".
+reset_ledger
+for d in 2026-08-01 2026-08-10 2026-07-29; do
+  got="$(GUARD_TODAY="$d" bash -c '. ./day-guard.sh; to_iso_day "today"')"
+  if [ "$got" = "$d" ]; then PASS=$((PASS+1)); echo "  ✓ 'today' under GUARD_TODAY=$d -> $got"
+  else FAIL=$((FAIL+1)); echo "  ✗ 'today' under GUARD_TODAY=$d -> $got (wanted $d)"; fi
+done
+# An empty --date must resolve identically; print-worksheet.sh passes "" when the
+# flag is omitted, so a divergence here would mis-target every unflagged print.
+got="$(GUARD_TODAY=2026-08-10 bash -c '. ./day-guard.sh; to_iso_day ""')"
+if [ "$got" = "2026-08-10" ]; then PASS=$((PASS+1)); echo "  ✓ empty --date matches 'today'"
+else FAIL=$((FAIL+1)); echo "  ✗ empty --date -> $got (wanted 2026-08-10)"; fi
+
+# End-to-end: on a day that already has paper, `--date today` must hit Guard C.
+# Before the fix this resolved to the real date and the guard saw the wrong day.
+T_OUT="$(GUARD_LEDGER="$SEED" GUARD_TODAY=2026-08-01 bash -c \
+        '. ./day-guard.sh; guard_one_day "$(to_iso_day today)" "test" 0' 2>&1)"; T_RC=$?
+if [ "$T_RC" -ne 0 ] && printf '%s' "$T_OUT" | grep -q "ALREADY ON PAPER"; then
+  PASS=$((PASS+1)); echo "  ✓ '--date today' on Aug 1 hits Guard C, not the real date"
+else
+  FAIL=$((FAIL+1)); echo "  ✗ '--date today' did not reach Guard C (rc=$T_RC): $T_OUT"
+fi
+
+echo
 echo "Seeded ledger has the shape the guards expect"
 check_ledger_shape
 

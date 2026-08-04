@@ -124,6 +124,8 @@ themselves. `--seed` makes a sheet reproducible — same seed, same problems.
 | `print-worksheet.sh` | render to a clean PDF and print |
 | `print-drill.sh` | same, for an external drill PDF |
 | `day-guard.sh` | the one-day-at-a-time print guard |
+| `test-day-guard.sh` | unit tests for the guard's logic — calls `guard_one_day` directly |
+| `test-print-path.sh` | end-to-end test of the **whole** print path, via a stub `lp`. Catches what the unit tests structurally cannot |
 | `animations/` | step-through animations of the written methods |
 | `AGENTS.md` | **the real documentation** — rules, difficulty pin, hard-won lessons |
 | `DRILLS.md` | external drill sources (fallback) |
