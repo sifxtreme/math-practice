@@ -152,6 +152,14 @@ export CLOUDFLARE_API_TOKEN=$(grep ^CLOUDFLARE_API_TOKEN= ~/code/experiments/clo
 npx wrangler pages deploy site --project-name sifxtreme-math --branch master
 ```
 
+⚠️ **If the token looks dead, check with `cf`, not curl.** This site shares its
+credential with `../typing/`. A `cfat_` token is an **account** token and returns
+`Invalid API Token` from `/user/tokens/verify` — the **user** endpoint — however
+healthy it is; `wrangler` misleads identically by failing on `/accounts`. On
+2026-08-10 that cost an hour and an invented expiry story for a token that was alive
+and merely lacked *Pages* permission. `../../cloudflare-cli/cf whoami` reports it
+correctly. Full write-up: [`../typing/AGENTS.md`](../typing/AGENTS.md) § Deploying.
+
 ⚠️ **Verify by grepping the live page, never by status code** — Pages serves its fallback
 with a `200`, so an unpublished URL still looks fine:
 
