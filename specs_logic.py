@@ -284,4 +284,61 @@ AUG2L = {
     "kid2_watch": "#3 flips the rule from Tuesday's puzzle: exactly one <b>lies</b>, not exactly one tells the truth. If he answers Bilal, he pattern-matched Tuesday instead of reading the line — which is exactly what a cumulative sheet is built to catch. Worth more as a lesson than as a mark.",
 }
 
-ALL = [JUL29L, JUL30L, JUL31L, AUG1L, AUG2L]
+# ---------------------------------------------------------------- Aug 16 (Block 2 restart)
+# Four reasoning types per kid, none of them the type that sat in the same slot on the
+# last sheet either kid saw (Aug 1 / Aug 2). kid1 #3 is the classic rate trap — it needs
+# no arithmetic at all, which is deliberate on a first sheet back after two weeks off.
+l6_start = (11 * 2) - 9 + 6        # backwards: end 11, halved, found 9, gave away 6
+l6_neither = 24 - (13 + 11 - 6)
+l6_minutes = 3                     # 3 monkeys / 3 mangoes / 3 minutes -> 9 and 9 is still 3
+l6_calls = 5 * 4 // 2
+l6_cycle = lcm(8, 14)
+l6_in5min = 300 // l6_cycle
+l6_weigh = 3                       # 3**2 = 9 < 12 <= 27 = 3**3
+
+AUG16L = {
+    "file": "worksheet-rainforest-logic.html",
+    "title_plain": "Rainforest Logic",
+    "title": "🌴 Rainforest Logic",
+    "sub": "Puzzles from under the canopy — no calculator, and for one of these you need no arithmetic at all",
+    "kid1": [
+        {"q": "Nusayba picks a basket of figs. She gives <b>6</b> of them to her brother. Then she finds <b>9</b> more on the path. She shares what she is carrying equally with a friend, keeping <b>half</b>, and ends up with <b>11</b> figs. How many did she pick to start with?",
+         "fact": "Fig trees feed more rainforest animals than almost any other tree, because somewhere in the forest a fig is always ripe.",
+         "a": "%d figs." % l6_start,
+         "steps": "Work backwards, flipping each step. 11 left after halving &rarr; 22 before it. Undo finding 9 &rarr; 13. Undo giving 6 away &rarr; <b>%d</b>. Check forwards: %d &minus; 6 = 13, + 9 = 22, half of 22 = 11. &check;" % (l6_start, l6_start)},
+        {"q": "There are <b>24 birds</b> in a clearing. <b>13</b> of them are green. <b>11</b> of them can copy other sounds. <b>6</b> birds can do <b>both</b>. How many birds are <b>neither</b> green nor able to copy sounds?",
+         "fact": "A toucan's huge beak is mostly hollow, full of air pockets, and it lets the bird dump heat like a radiator.",
+         "a": "%d birds." % l6_neither,
+         "steps": "The 6 both-birds got counted twice, so birds with at least one = 13 + 11 &minus; 6 = 18. Then 24 &minus; 18 = <b>%d</b>. Draw two overlapping circles and it goes obvious." % l6_neither},
+        {"q": "<b>3 monkeys</b> eat <b>3 mangoes</b> in <b>3 minutes</b>. How long would <b>9 monkeys</b> take to eat <b>9 mangoes</b>? <i>Think before you write. This one is not the calculation it looks like.</i>",
+         "fact": "Howler monkeys are the loudest land animal in the Americas — a troop can be heard about 5 km through thick forest.",
+         "a": "%d minutes — the same as before." % l6_minutes,
+         "steps": "Read it as one monkey and one mango: if 3 monkeys finish 3 mangoes in 3 minutes, then <b>each monkey eats one mango in 3 minutes</b>. Nine monkeys with a mango each still take <b>%d minutes</b> — they are all eating at once. The trap is multiplying by three." % l6_minutes},
+        {"q": "<b>5 parrots</b> sit in a tree. Each parrot calls to <b>every other parrot</b> exactly once. How many calls happen altogether?",
+         "fact": "Wild parrots appear to use a signature call for each bird, rather like a name, and they learn it as chicks.",
+         "a": "%d calls." % l6_calls,
+         "steps": "Each of the 5 calls to the other 4, which is 20 &mdash; but that counts every call from both ends, so 20 &divide; 2 = <b>%d</b>. Or add 4 + 3 + 2 + 1." % l6_calls},
+    ],
+    "kid2": [
+        {"q": "Three researchers — <b>Ibrahim, Khadija, and Sumayya</b> — each study a different animal (toucan, jaguar, sloth) from a different camp (Canopy, Ridge, River). Who studies what, and from where?<br><b>1.</b> The researcher at the <b>Canopy</b> camp studies the toucan. &nbsp;<b>2.</b> Ibrahim is not at the River camp, and does not study the sloth. &nbsp;<b>3.</b> Khadija studies the jaguar. &nbsp;<b>4.</b> Sumayya is not at the Ridge camp.",
+         "fact": "Sloths climb down to the forest floor only about once a week, and it is the most dangerous trip they make.",
+         "a": "Ibrahim — toucan — Canopy · Khadija — jaguar — Ridge · Sumayya — sloth — River.",
+         "steps": "Clue 3 gives <b>Khadija the jaguar</b>. Clue 2 then leaves Ibrahim only the toucan, and clue 1 puts the toucan at the Canopy &rarr; <b>Ibrahim, Canopy</b>. Sumayya takes the sloth, and clue 4 keeps her off the Ridge &rarr; <b>Sumayya, River</b>, so Khadija has the Ridge."},
+        {"q": "Two frogs call on a steady beat. One calls every <b>8 seconds</b>, the other every <b>14 seconds</b>. They call together at exactly 6:00:00. How many seconds until they call together again? How many times will they call together in the <b>first 5 minutes</b>?",
+         "fact": "Poison dart frogs build their poison from what they eat, so the same frog raised in a zoo is completely harmless.",
+         "a": "Every %d seconds; %d times in the first 5 minutes." % (l6_cycle, l6_in5min),
+         "steps": "Together on the shared multiples of 8 and 14. Multiples of 14 are 14, 28, 42, <b>56</b> &mdash; and 56 &divide; 8 = 7, so <b>%d seconds</b>. Five minutes is 300 seconds, and 56, 112, 168, 224, 280 all fit: <b>%d</b> times (not counting the 6:00:00 start)." % (l6_cycle, l6_in5min)},
+        {"q": "Someone let the last canoe drift away.<br><b>Umar</b> says: \"It wasn't me.\" &nbsp;<b>Harun</b> says: \"It was Umar.\" &nbsp;<b>Zaynab</b> says: \"It wasn't Harun.\"<br><b>Exactly one</b> of the three is telling the <b>truth</b>. Who let it drift?",
+         "fact": "Rain can take about ten minutes to reach the rainforest floor — the canopy catches it and lets it down leaf by leaf.",
+         "a": "Harun let it drift.",
+         "steps": "Test all three. If <b>Umar</b> did it: Umar false, Harun true, Zaynab true &mdash; two truths. &cross; If <b>Harun</b> did it: Umar true, Harun false, Zaynab false &mdash; exactly one. &check; If <b>Zaynab</b> did it: Umar true, Harun false, Zaynab true &mdash; two. &cross; Only Harun fits."},
+        {"q": "You have <b>12 seed pods</b> that look identical, but <b>one</b> is heavier than the rest. Using a <b>balance scale</b> and no weights, what is the <b>fewest weighings</b> that is guaranteed to find it? Explain your plan.",
+         "fact": "A single hectare of Amazon rainforest can hold more than 300 different tree species — more than some whole countries.",
+         "a": "%d weighings." % l6_weigh,
+         "steps": "Split 4 / 4 / 4. <b>Weigh 1:</b> two of the fours. A sinking side names that four; a balance names the four left out. <b>Weigh 2:</b> split that four 2 / 2 and weigh them. <b>Weigh 3:</b> weigh the last two against each other. <b>%d</b> every time. Two is not enough: each weighing has only 3 outcomes, and 3 &times; 3 = 9 is fewer than 12." % l6_weigh},
+    ],
+    "kid1_watch": "#3 is the one to sit with. Almost every child answers 9 minutes, and that is the <i>useful</i> mistake &mdash; it means he multiplied instead of reading. Don't tell him; ask \"how many mangoes does one monkey eat?\" and wait. #1 is the first working-backwards puzzle in over two weeks, so if he stalls, ask him to start from the 11 and undo one step at a time.",
+    "kid2_watch": "#1 has FOUR clues, not three, and clue 4 is the one that does the last bit of work &mdash; if he stops at three clues he will place the animals correctly and guess the camps. Ask him which clue proved Sumayya's camp. #4 is a step up from the 8-kite version: the answer moves from 2 to 3, and the reason is that 3 &times; 3 = 9 no longer covers 12. If he says 2, that is the sentence to draw out of him.",
+}
+
+ALL = [JUL29L, JUL30L, JUL31L, AUG1L, AUG2L, AUG16L]

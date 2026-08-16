@@ -72,3 +72,18 @@
 # EXISTS, and a row missing here reads as "no paper" to tomorrow's Guard C.
 # It is kid2's REDO of the Aug 1 division drill: he produced answers with no written
 # work, so the redo moved to a grid/prompts sheet where each step has its own box.
+2026-08-16T13:28:44	2026-08-16	worksheet-castles
+2026-08-16T13:28:53	2026-08-16	worksheet-rainforest-logic
+2026-08-16T13:29:02	2026-08-16	worksheet-division-drill
+2026-08-16T13:36:16	2026-08-16	worksheet-division-drill
+# 2026-08-16: ONE day's paper (Block 2 opener), not four items. The two identical
+# division-drill rows are the SAME sheet — job 169 was cancelled in the queue before
+# anything reached paper and replaced by job 170. Reason: 169 printed UNDATED, because
+# print-worksheet.sh's --date pattern required the worksheet template's <div>Date: shape
+# and drill_gen.py emits Date: inside a flex .meta row. The stamper was loosened the same
+# hour, so job 170 carries "August 16, 2026". Zero sheets were spent on 169 — the printer
+# was offline for the whole window, which is the only reason the swap was free.
+#
+# Also on 2026-08-16: the printer is a NETWORK queue (dnssd://…_ipp._tcp), not USB. Jobs
+# 167/168/170 sat queued with "offline-report" until it rejoined the network. `lp`
+# returning a request id means CUPS ACCEPTED the job; it says nothing about paper.

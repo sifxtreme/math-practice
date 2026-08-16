@@ -119,6 +119,35 @@ check("W-Aug2 Y5 gain", sum([320] * 7) - 465, 1775)
 check("W-Aug2 kid1 has 5 problems", len(specs_word.AUG2["kid1"]), 5)
 check("W-Aug2 kid2 has 5 problems", len(specs_word.AUG2["kid2"]), 5)
 
+# --- Aug 16 castles (Block 2 restart, faded TEACH)
+q, r = divmod_by_repeated_subtraction(59, 7)
+check("W-Aug16 M1 full/left", (q, r), (8, 3))
+check("W-Aug16 M1 carts for all", boxes_needed(59, 7), 9)
+check("W-Aug16 M2 towers", boxes_needed(94, 8), 12)
+check("W-Aug16 M2 eleven is short", 11 * 8 < 94, True)
+check("W-Aug16 M3 bricks", sum([136] * 6) - 87, 729)
+check("W-Aug16 M4 5/6 > 3/4", F(5, 6) > F(3, 4), True)
+check("W-Aug16 M4 margin is one 12th", F(5, 6) - F(3, 4), F(1, 12))
+check("W-Aug16 M5 side", next(s for s in range(1, 100) if 8 * s == 96), 12)
+check("W-Aug16 M5 perimeter", 8 + 12 + 8 + 12, 40)
+check("W-Aug16 Y1 2/5+1/3", F(2, 5) + F(1, 3), F(11, 15))
+check("W-Aug16 Y1 still under 1", F(11, 15) < 1, True)
+check("W-Aug16 Y2 5/6-2/9", F(5, 6) - F(2, 9), F(11, 18))
+check("W-Aug16 Y3 5/6+3/4", F(5, 6) + F(3, 4), F(19, 12))
+check("W-Aug16 Y3 is >1 (mixed)", F(19, 12) > 1, True)
+check("W-Aug16 Y4 47x36", sum([47] * 36), 1692)
+check("W-Aug16 Y5 day rate", next(d for d in range(1, 300) if sum([d] * 6) == 288), 48)
+check("W-Aug16 Y5 eleven days", sum([48] * 11), 528)
+check("W-Aug16 Y5 good ones", sum([48] * 11) - 37, 491)
+
+# the guided problem is the whole point of a faded TEACH — assert it is still there,
+# on the PROTECTED skill for each kid, and that it is problem #1 and only problem #1.
+for _kid, _slot in (("kid1", "remainder"), ("kid2", "unlike denominators")):
+    _probs = specs_word.AUG16[_kid]
+    check("W-Aug16 %s problem 1 is guided" % _kid, bool(_probs[0].get("guided")), True)
+    check("W-Aug16 %s only #1 is guided" % _kid,
+          [i for i, p in enumerate(_probs) if p.get("guided")], [0])
+
 # ============================== LOGIC SHEETS ==============================
 # --- patterns, by generating the sequence forward
 seq = [1]
@@ -410,6 +439,80 @@ kits = [(h, j) for h in ("red", "green", "brown") for j in ("leather", "silk")
         if not (h == "brown" and j == "silk")]
 check("L-Jul30 M4 kits", len(kits), 5)
 check("L-Jul30 Y4 greetings", len(list(combinations(range(7), 2))), 21)
+
+# --- Aug 16 rainforest logic (all helpers above are defined by now)
+v = 19
+v -= 6
+v += 9
+v = v // 2
+check("L-Aug16 M1 replay forwards", v, 11)
+check("L-Aug16 M2 neither", neither(24, 13, 11, 6), 6)
+
+# the monkey/mango trap, modelled from the per-monkey rate rather than asserted
+def eat_minutes(monkeys, mangoes, base_minutes=3):
+    """Each monkey eats one mango in base_minutes; they eat in parallel."""
+    rounds = mangoes // monkeys + (1 if mangoes % monkeys else 0)
+    return rounds * base_minutes
+
+
+check("L-Aug16 M3 nine monkeys nine mangoes", eat_minutes(9, 9), 3)
+check("L-Aug16 M3 baseline reproduces", eat_minutes(3, 3), 3)
+check("L-Aug16 M3 the trap answer is wrong", eat_minutes(9, 9) != 9, True)
+check("L-Aug16 M4 parrot calls", len(list(combinations(range(5), 2))), 10)
+
+sols = []
+for animals in permutations(["toucan", "jaguar", "sloth"]):
+    for camps in permutations(["Canopy", "Ridge", "River"]):
+        a = dict(zip(["Ibrahim", "Khadija", "Sumayya"], animals))
+        c = dict(zip(["Ibrahim", "Khadija", "Sumayya"], camps))
+        if a[[p for p in c if c[p] == "Canopy"][0]] != "toucan":
+            continue                                  # 1
+        if c["Ibrahim"] == "River" or a["Ibrahim"] == "sloth":
+            continue                                  # 2
+        if a["Khadija"] != "jaguar":
+            continue                                  # 3
+        if c["Sumayya"] == "Ridge":
+            continue                                  # 4
+        sols.append({p: (a[p], c[p]) for p in a})
+check("L-Aug16 Y1 grid unique", len(sols), 1)
+check("L-Aug16 Y1 grid solution", sols[0],
+      {"Ibrahim": ("toucan", "Canopy"), "Khadija": ("jaguar", "Ridge"),
+       "Sumayya": ("sloth", "River")})
+# clue 4 must be load-bearing: without it the camps are ambiguous, which is the
+# thing kid2_watch tells the grown-up to listen for
+sols_no4 = []
+for animals in permutations(["toucan", "jaguar", "sloth"]):
+    for camps in permutations(["Canopy", "Ridge", "River"]):
+        a = dict(zip(["Ibrahim", "Khadija", "Sumayya"], animals))
+        c = dict(zip(["Ibrahim", "Khadija", "Sumayya"], camps))
+        if a[[p for p in c if c[p] == "Canopy"][0]] != "toucan":
+            continue
+        if c["Ibrahim"] == "River" or a["Ibrahim"] == "sloth":
+            continue
+        if a["Khadija"] != "jaguar":
+            continue
+        sols_no4.append(1)
+check("L-Aug16 Y1 clue 4 is load-bearing", len(sols_no4) > 1, True)
+
+check("L-Aug16 Y2 frogs together", first_common(8, 14), 56)
+check("L-Aug16 Y2 times in 5 min",
+      len([t for t in range(1, 301) if t % 8 == 0 and t % 14 == 0]), 5)
+
+
+# Umar "not me", Harun "it was Umar", Zaynab "not Harun". Exactly one truth.
+def st_aug16(speaker, culprit):
+    if speaker == "Umar":
+        return culprit != "Umar"
+    if speaker == "Harun":
+        return culprit == "Umar"
+    return culprit != "Harun"                          # Zaynab
+
+
+check("L-Aug16 Y3 liar unique",
+      liar_solve(["Umar", "Harun", "Zaynab"], st_aug16, want_true=1), ["Harun"])
+check("L-Aug16 Y4 twelve pods", min_weighings(12), 3)
+check("L-Aug16 Y4 two weighings insufficient", 3 ** 2 < 12, True)
+check("L-Aug16 Y4 three suffice", 3 ** 3 >= 12, True)
 
 # ============================== RENDERED HTML ==============================
 import build_sheets

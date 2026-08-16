@@ -103,8 +103,17 @@ h = open(src).read()
 # Matches whether the span is empty or already carries a date, so it overrides a
 # stale baked-in date rather than doubling up. The answer key has no Date: field,
 # so it stays undated automatically — don't add one.
+#
+# The pattern anchors on `Date: <span>` alone and NOT on a wrapping <div>. It used
+# to require `<div>Date:` … `</span></div>`, which is the worksheet template's shape
+# but not drill_gen.py's — drills put Name and Date in one flex `.meta` row, so every
+# drill ever printed through here went out UNDATED behind a warning nobody read.
+# Caught 2026-08-16 when the Aug 16 division drill printed with a blank Date. An
+# undated sheet is unfilable: a week later you cannot tell which day it was for or
+# whether it was done. Both shapes end the field at the first `</span>`, and the key
+# pages carry no Date span at all, so loosening this cannot stamp a key by accident.
 if stamp:
-    pat = re.compile(r'(<div>Date:\s*<span>).*?(</span></div>)', re.S)
+    pat = re.compile(r'(Date:\s*<span>).*?(</span>)', re.S)
     h, n = pat.subn(lambda m: m.group(1) + '&nbsp;' + _html.escape(stamp) + m.group(2), h)
     if n == 0:
         sys.stderr.write("WARNING: --date given but no 'Date: <span>' field matched — sheet will print undated.\n")

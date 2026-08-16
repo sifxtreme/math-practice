@@ -364,4 +364,82 @@ AUG2 = {
     "kid2_watch": "Same test for the 4th grader — #2 is unlike denominators with no heading announcing it. Watch whether he still reaches for a common denominator when the problem doesn't look like a fractions worksheet. If he adds across the top and bottom here after four clean days, the skill is Shaky, not Solid, and the plan says re-teach rather than push on.",
 }
 
-ALL = [JUL29, JUL30, JUL31, AUG1, AUG2]
+# ---------------------------------------------------------------- Aug 16 (Block 2 restart)
+# Nothing printed between Aug 1 and Aug 16 — the Aug 10-16 TEACH day never ran, so this
+# is the Block 2 OPENER, not the Sunday cumulative the schedule grid names. Same shape as
+# JUL29: a faded TEACH, guided problem #1, no worked example. Each kid's guided problem
+# sits on his PROTECTED skill (kid1 remainder interpretation, kid2 unlike denominators),
+# which is what "Aug 10 opens with the guided problem again" means in PRACTICE-PLAN-2026.
+w6_full, w6_left = divmod(59, 7)
+w6_carts = ceil(59 / 7)
+w6_towers = ceil(94 / 8)
+w6_bricks = 136 * 6 - 87
+w6_side = 96 // 8
+w6_per = 2 * (8 + w6_side)
+y6_a = F(2, 5) + F(1, 3)
+y6_b = F(5, 6) - F(2, 9)
+y6_c = F(5, 6) + F(3, 4)
+y6_d = 47 * 36
+y6_rate = 288 // 6
+y6_e = y6_rate * 11 - 37
+
+AUG16 = {
+    "file": "worksheet-castles.html",
+    "title_plain": "Castle Keep",
+    "title": "🏰 Castle Keep",
+    "sub": "Back after a break — take the first one slowly, the steps are printed for you",
+    "kid1": [
+        {"guided": ["59 &divide; 7 = <span class='blank'></span> remainder <span class='blank'></span>",
+                    "Carts that go out completely full: <span class='blank'></span>",
+                    "The leftover stones still need a cart, so carts needed: <span class='blank'></span>"],
+         "q": "A mason loads 59 stones onto carts. Each cart holds 7. How many carts go out <b>completely full</b>, and how many stones are left over? Then: how many carts does he need to move <b>every</b> stone?",
+         "fact": "Masons carved a personal mark into each stone they cut, because they were paid by the stone.",
+         "a": "%d full carts, %d left over — but %d carts to move them all." % (w6_full, w6_left, w6_carts),
+         "steps": "59 &divide; 7 = <b>%d remainder %d</b>. Those %d spare stones still have to travel, so one more cart: <b>%d</b>." % (w6_full, w6_left, w6_left, w6_carts)},
+        {"q": "94 archers are posted to the towers. Each tower holds 8 archers. How many towers are needed so that <b>every</b> archer has a place?",
+         "fact": "An arrow slit is narrow on the outside and wide on the inside, so the archer can swing his aim while staying a tiny target.",
+         "a": "%d towers." % w6_towers,
+         "steps": "94 &divide; 8 = 11 remainder 6. Eleven towers leaves 6 archers standing in the yard, so the answer is <b>%d</b>, not 11." % w6_towers},
+        {"q": "A wall crew lays <b>136 bricks</b> a day for <b>6 days</b>. Then <b>87</b> bricks are found cracked and pulled back out. How many bricks are left in the wall?",
+         "fact": "Many castle walls were whitewashed. The Tower of London's keep is called the White Tower for exactly that reason.",
+         "a": "%d bricks." % w6_bricks,
+         "steps": "136 &times; 6 = 816, then 816 &minus; 87 = <b>%d</b>." % w6_bricks},
+        {"q": "Two water barrels stand in the courtyard. One is <b>5/6</b> full. The other is <b>3/4</b> full. Which barrel holds more water? How do you know?",
+         "fact": "Most castle moats were dry. A ditch was there to stop attackers tunnelling under the wall, not to hold water.",
+         "a": "The 5/6 barrel.",
+         "steps": "Give them the same bottom number. Twelfths work: 5/6 = <b>10/12</b> and 3/4 = <b>9/12</b>. Ten twelfths beats nine."},
+        {"q": "A rectangular courtyard covers <b>96 square metres</b>. One side measures <b>8 m</b>. How long is the other side? What is the perimeter all the way around?",
+         "fact": "The base of a castle wall was often built sloping outward, so a stone dropped from above bounced off it into the attackers.",
+         "a": "Other side %d m; perimeter %d m." % (w6_side, w6_per),
+         "steps": "Area = side &times; side, so 96 &divide; 8 = <b>%d m</b>. Perimeter = 8 + %d + 8 + %d = <b>%d m</b>." % (w6_side, w6_side, w6_side, w6_per)},
+    ],
+    "kid2": [
+        {"guided": ["A common bottom number for 5 and 3 is <span class='blank'></span>",
+                    "2/5 = <span class='blank'></span>/15 &nbsp; and &nbsp; 1/3 = <span class='blank'></span>/15",
+                    "Now add the top numbers only, keep the bottom: <span class='blank'></span>"],
+         "q": "A cistern is filled in two goes. In the morning <b>2/5</b> of it is filled. In the afternoon another <b>1/3</b> is filled. How much of the cistern is full?",
+         "fact": "A castle under siege lost to thirst long before hunger, so the well was usually the first thing dug.",
+         "a": "%s of the cistern." % mixed(y6_a),
+         "steps": "Fifteenths work for both. 2/5 = 6/15 and 1/3 = 5/15, so 6/15 + 5/15 = <b>%s</b>. Add the tops, keep the bottom." % mixed(y6_a)},
+        {"q": "A grain store is <b>5/6</b> full. Over the winter, <b>2/9</b> of the store is eaten. How much grain is left?",
+         "fact": "Grain was stored high up and dry, because damp grain rots and a rotten store could end a siege on its own.",
+         "a": "%s of the store." % mixed(y6_b),
+         "steps": "Eighteenths: 5/6 = 15/18 and 2/9 = 4/18. 15/18 &minus; 4/18 = <b>%s</b>." % mixed(y6_b)},
+        {"q": "One quarry sends <b>5/6</b> of a cartload of lime. Another sends <b>3/4</b> of a cartload. How much lime arrives altogether? Give your answer as a <b>mixed number</b>.",
+         "fact": "Lime mortar sets slowly and keeps hardening for years, which is why 900-year-old walls are still standing.",
+         "a": "%s cartloads (that is %s)." % (mixed(y6_c), y6_c),
+         "steps": "Twelfths: 5/6 = 10/12 and 3/4 = 9/12. 10/12 + 9/12 = %s, which is more than a whole, so <b>%s</b>." % (y6_c, mixed(y6_c))},
+        {"q": "A castle has <b>47</b> arrow slits. Each one is stocked with <b>36</b> arrows. How many arrows is that altogether?",
+         "fact": "A trained longbowman could loose about ten arrows a minute, so a well-stocked slit emptied fast.",
+         "a": "%s arrows." % "{:,}".format(y6_d),
+         "steps": "47 &times; 36. Split it: (47 &times; 30) + (47 &times; 6) = 1,410 + 282 = <b>%s</b>." % "{:,}".format(y6_d)},
+        {"q": "A workshop makes <b>288 arrowheads in 6 days</b>, working at a steady rate. At that same rate, how many would it make in <b>11 days</b>? If <b>37</b> of those fail inspection, how many good arrowheads are there?",
+         "fact": "A portcullis was dropped, not lowered — its own weight was the whole point, and winching it back up took several people.",
+         "a": "%d arrowheads, %d of them good." % (y6_rate * 11, y6_e),
+         "steps": "Find the one-day rate first: 288 &divide; 6 = <b>%d a day</b>. Then %d &times; 11 = <b>%d</b>. Finally %d &minus; 37 = <b>%d</b> good ones." % (y6_rate, y6_rate, y6_rate * 11, y6_rate * 11, y6_e)},
+    ],
+    "kid1_watch": "It has been over two weeks since the last sheet, so expect the remainder rule to have gone quiet rather than gone missing. #1 prints the steps; #2 does not, and #2 is the real read &mdash; \"11 towers\" means he divided correctly and stopped one step early. Ask \"where do the last 6 archers stand?\" and let him fix it himself. On #5, expect the missing side right and the perimeter forgotten.",
+    "kid2_watch": "Expect 2/5 + 1/3 = 3/8 on #1 &mdash; adding straight across the top and bottom. That is THE error of this unit and it is the one most likely to have crept back over the break. Don't just correct it: ask whether 3/8 can be right when the morning alone already filled 2/5. #3 asks for a mixed number, so 19/12 is only half marks. On #5, if he jumps to 288 &times; 11, the missing idea is \"find one day first\".",
+}
+
+ALL = [JUL29, JUL30, JUL31, AUG1, AUG2, AUG16]

@@ -39,6 +39,8 @@ worksheet-sailing-ships.html
 worksheet-clocks-logic.html
 worksheet-mountains-cumulative.html
 worksheet-kites-logic-cumulative.html
+worksheet-castles.html
+worksheet-rainforest-logic.html
 
 # wrangler deploy cache
 .wrangler/
