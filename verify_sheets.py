@@ -514,6 +514,273 @@ check("L-Aug16 Y4 twelve pods", min_weighings(12), 3)
 check("L-Aug16 Y4 two weighings insufficient", 3 ** 2 < 12, True)
 check("L-Aug16 Y4 three suffice", 3 ** 3 >= 12, True)
 
+# --- Aug 17 immune system (word). Multiplications are re-derived as repeated
+#     addition and divisions as repeated subtraction, so a slipped digit in
+#     specs_word.py cannot agree with a slipped digit here.
+check("W-Aug17 M1 side from area", next(s for s in range(1, 200) if 9 * s == 72), 8)
+check("W-Aug17 M1 perimeter", 9 + 8 + 9 + 8, 34)
+q, r = divmod_by_repeated_subtraction(75, 8)
+check("W-Aug17 M2 full/left", (q, r), (9, 3))
+check("W-Aug17 M2 trays for all", boxes_needed(75, 8), 10)
+check("W-Aug17 M3 good samples", sum([128] * 7) - 94, 802)
+check("W-Aug17 M4 two-thirds is the bigger vial", F(2, 3) > F(5, 8), True)
+check("W-Aug17 M5 side from perimeter",
+      next(s for s in range(1, 200) if 2 * (14 + s) == 46), 9)
+check("W-Aug17 M5 area", sum([14] * 9), 126)
+check("W-Aug17 M5 the trap answer is wrong", 46 - 14 != 9, True)
+check("W-Aug17 Y1 decimal subtract", F(84, 10) - F(375, 100), F(93, 20))
+check("W-Aug17 Y1 renders as 4.65", "%.2f" % float(F(93, 20)), "4.65")
+check("W-Aug17 Y1 unpadded trap differs", F(93, 20) != F(475, 100), True)
+check("W-Aug17 Y2 34x26", sum([34] * 26), 884)
+q2, r2 = divmod_by_repeated_subtraction(1347, 6)
+check("W-Aug17 Y3 long division", (q2, r2), (224, 3))
+check("W-Aug17 Y3 reconstructs 1347", sum([6] * 224) + 3, 1347)
+check("W-Aug17 Y4 fraction sum", F(3, 8) + F(1, 3), F(17, 24))
+check("W-Aug17 Y5 strip cost", F(35, 100) * 240, F(84))
+check("W-Aug17 Y5 change from 100", 100 - F(35, 100) * 240, F(16))
+
+# --- Aug 17 immune logic
+_v = 23
+_v -= 7
+_v += 12
+_v //= 2
+check("L-Aug17 M1 replay forwards", _v, 14)
+check("L-Aug17 M2 neither", neither(30, 17, 14, 8), 7)
+
+
+def climb_day(rise, fall, target):
+    """Independent simulation of the climb-and-slip; no closed form."""
+    pos, day = 0, 0
+    while True:
+        day += 1
+        pos += rise
+        if pos >= target:
+            return day
+        pos -= fall
+
+
+check("L-Aug17 M3 climb reaches on day 8", climb_day(3, 2, 10), 8)
+check("L-Aug17 M3 net-gain trap answer is wrong", 10 // (3 - 2) != climb_day(3, 2, 10), True)
+
+from itertools import product as _product
+
+
+def can_avoid_pair(kinds, picks):
+    """Exhaustive: is ANY run of this many picks free of a repeat?"""
+    return any(len(set(c)) == picks for c in _product(range(kinds), repeat=picks))
+
+
+check("L-Aug17 M4 three picks can still miss", can_avoid_pair(3, 3), True)
+check("L-Aug17 M4 four picks cannot", can_avoid_pair(3, 4), False)
+
+_people = ["Idris", "Hafsa", "Zakariya"]
+
+
+def immune_grid(use_clue4=True):
+    out = []
+    for cells in permutations(["T-cell", "B-cell", "macrophage"]):
+        for labs in permutations(["North", "South", "Central"]):
+            a = dict(zip(_people, cells))
+            b = dict(zip(_people, labs))
+            central = [p for p in _people if b[p] == "Central"][0]
+            if a[central] != "macrophage":                    # clue 1
+                continue
+            if a["Idris"] == "B-cell":                        # clue 2
+                continue
+            if a["Hafsa"] != "T-cell":                        # clue 3
+                continue
+            if use_clue4 and b["Zakariya"] == "North":        # clue 4
+                continue
+            out.append((a, b))
+    return out
+
+
+_sols = immune_grid()
+check("L-Aug17 Y1 grid unique", len(_sols), 1)
+check("L-Aug17 Y1 grid solution",
+      tuple((_sols[0][0][p], _sols[0][1][p]) for p in _people),
+      (("macrophage", "Central"), ("T-cell", "North"), ("B-cell", "South")))
+check("L-Aug17 Y1 clue 4 is load-bearing", len(immune_grid(use_clue4=False)) > 1, True)
+
+
+def pour_reachable(cap_a, cap_b, target):
+    """BFS over syringe states — proves 4 mL is actually obtainable."""
+    seen, frontier = set(), [(0, 0)]
+    while frontier:
+        st = frontier.pop()
+        if st in seen:
+            continue
+        seen.add(st)
+        a, b = st
+        if a == target or b == target:
+            return True
+        t1 = min(a, cap_b - b)
+        t2 = min(b, cap_a - a)
+        frontier += [(cap_a, b), (a, cap_b), (0, b), (a, 0),
+                     (a - t1, b + t1), (a + t2, b - t2)]
+    return False
+
+
+check("L-Aug17 Y2 four mL is reachable", pour_reachable(5, 3, 4), True)
+check("L-Aug17 Y2 and it needs both syringes", pour_reachable(5, 0, 4), False)
+
+
+def st_aug17(speaker, culprit):
+    if speaker == "Anas":
+        return culprit == "Bilal"
+    if speaker == "Bilal":
+        return culprit != "Bilal"
+    return culprit == "Anas"                           # Ruqayya
+
+
+check("L-Aug17 Y3 liar unique (exactly one lying = two true)",
+      liar_solve(["Anas", "Bilal", "Ruqayya"], st_aug17, want_true=2), ["Anas"])
+check("L-Aug17 Y4 pieces", 42 // 6, 7)
+check("L-Aug17 Y4 cuts by internal boundary count",
+      len([x for x in range(6, 42, 6)]), 6)
+check("L-Aug17 Y4 minutes", len([x for x in range(6, 42, 6)]) * 3, 18)
+check("L-Aug17 Y4 one-cut-per-piece trap is wrong", (42 // 6) * 3 != 18, True)
+
+# --- Aug 18 white cells (word). Same discipline as Aug 17: multiplication by
+#     repeated addition, division by repeated subtraction, missing sides by
+#     search over candidates rather than by rearranging the formula.
+check("W-Aug18 M1 side from perimeter",
+      next(s for s in range(1, 200) if 2 * (11 + s) == 58), 18)
+check("W-Aug18 M1 area", sum([11] * 18), 198)
+check("W-Aug18 M1 the no-halving trap is wrong", 58 - 11 != 18, True)
+q, r = divmod_by_repeated_subtraction(92, 6)
+check("W-Aug18 M2 full/left", (q, r), (15, 2))
+check("W-Aug18 M2 racks for all", boxes_needed(92, 6), 16)
+check("W-Aug18 M3 good cultures", sum([146] * 8) - 79, 1089)
+check("W-Aug18 M4 three-fifths is the bigger dish", F(3, 5) > F(7, 12), True)
+check("W-Aug18 M4 and it is close", F(3, 5) - F(7, 12), F(1, 60))
+check("W-Aug18 M5 side from area", next(s for s in range(1, 200) if 12 * s == 108), 9)
+check("W-Aug18 M5 perimeter", 12 + 9 + 12 + 9, 42)
+check("W-Aug18 Y1 unlike denominators add", F(1, 4) + F(2, 5), F(13, 20))
+check("W-Aug18 Y1 add-across trap differs", F(1, 4) + F(2, 5) != F(3, 9), True)
+check("W-Aug18 Y2 unlike denominators subtract", F(7, 8) - F(1, 3), F(13, 24))
+check("W-Aug18 Y2 subtract-across trap differs", F(7, 8) - F(1, 3) != F(6, 5), True)
+check("W-Aug18 Y3 48x27", sum([48] * 27), 1296)
+check("W-Aug18 Y4 doses given", F(24, 10) + F(375, 100), F(123, 20))
+check("W-Aug18 Y4 renders as 6.15", "%.2f" % float(F(123, 20)), "6.15")
+check("W-Aug18 Y4 remaining", F(95, 10) - (F(24, 10) + F(375, 100)), F(67, 20))
+check("W-Aug18 Y4 renders as 3.35", "%.2f" % float(F(67, 20)), "3.35")
+_rate, _rem_r = divmod_by_repeated_subtraction(1455, 5)
+check("W-Aug18 Y5 rate is exact", (_rate, _rem_r), (291, 0))
+check("W-Aug18 Y5 nine-day total", sum([291] * 9), 2619)
+_f, _fr = divmod_by_repeated_subtraction(2619, 8)
+check("W-Aug18 Y5 folders/left", (_f, _fr), (327, 3))
+check("W-Aug18 Y5 reconstructs 2619", sum([8] * 327) + 3, 2619)
+
+# --- Aug 18 lab bench logic
+check("L-Aug18 M1 handshakes by enumerating pairs",
+      len(list(combinations(range(6), 2))), 15)
+check("L-Aug18 M1 the double-count trap is wrong", 6 * 5 != 15, True)
+check("L-Aug18 M2 balance by search",
+      [(v, f) for v in range(1, 100) for f in range(1, 100)
+       if 3 * v == f and f + v == 32], [(8, 24)])
+_t = 9 * 60 + 45
+for _leg in (50, 25, 40):
+    _t += _leg
+check("L-Aug18 M3 finish time", (_t // 60, _t % 60), (11, 40))
+check("L-Aug18 M3 is 1h55m of legs, not 1h15m", 50 + 25 + 40, 115)
+
+
+def doubling_days(full_day):
+    """Walk it forwards from 1 and read the day each level is reached."""
+    level, out = 1, {}
+    for day in range(1, full_day + 1):
+        out[day] = level
+        level *= 2
+    full = out[full_day]
+    half = [d for d, v in out.items() if v * 2 == full][0]
+    quarter = [d for d, v in out.items() if v * 4 == full][0]
+    return half, quarter
+
+
+check("L-Aug18 M4 half and quarter days", doubling_days(12), (11, 10))
+check("L-Aug18 M4 the halve-the-day trap is wrong", 12 // 2 != 11, True)
+
+_techs = ["Yusra", "Bilal", "Amina"]
+
+
+def bench_grid(use_clue4=True):
+    out = []
+    for tests in permutations(["blood", "swab", "culture"]):
+        for shifts in permutations(["morning", "evening", "night"]):
+            a = dict(zip(_techs, tests))
+            b = dict(zip(_techs, shifts))
+            culture = [p for p in _techs if a[p] == "culture"][0]
+            if b[culture] != "night":                       # clue 1
+                continue
+            if a["Bilal"] != "culture":                     # clue 2
+                continue
+            if b["Yusra"] == "morning":                     # clue 3
+                continue
+            if use_clue4:
+                blood = [p for p in _techs if a[p] == "blood"][0]
+                if b[blood] != "morning":                   # clue 4
+                    continue
+            out.append((a, b))
+    return out
+
+
+_sol = bench_grid()
+check("L-Aug18 Y1 grid has one solution", len(_sol), 1)
+check("L-Aug18 Y1 assignment", (_sol[0][0], _sol[0][1]),
+      ({"Yusra": "swab", "Bilal": "culture", "Amina": "blood"},
+       {"Yusra": "evening", "Bilal": "night", "Amina": "morning"}))
+check("L-Aug18 Y1 clue 4 is load-bearing", len(bench_grid(use_clue4=False)) > 1, True)
+
+
+def scan_rounds(slides, capacity):
+    """Fewest rounds to scan both sides of every slide, searched not reasoned.
+
+    A round is a set of (slide, side) tasks, at most `capacity` of them, and a
+    slide cannot have both its sides done in the same round.
+    """
+    tasks = [(s, side) for s in range(slides) for side in (0, 1)]
+    for rounds in range(1, len(tasks) + 1):
+        for assign in _product(range(rounds), repeat=len(tasks)):
+            grouped = {}
+            for t, rd in zip(tasks, assign):
+                grouped.setdefault(rd, []).append(t)
+            if any(len(g) > capacity for g in grouped.values()):
+                continue
+            if any(len({s for s, _ in g}) != len(g) for g in grouped.values()):
+                continue
+            if len(grouped) == rounds:
+                return rounds
+    return None
+
+
+check("L-Aug18 Y2 three rounds suffice", scan_rounds(3, 2), 3)
+check("L-Aug18 Y2 minutes", scan_rounds(3, 2) * 5, 15)
+# The trap is NOT fully serial (that would be 6 rounds). It is filling the
+# scanner greedily and finishing each group before starting the next: slides A+B
+# take 2 rounds, then C alone takes 2 more with the machine half empty.
+_naive_rounds = 2 * -(-3 // 2)
+check("L-Aug18 Y2 finish-each-group trap costs 4 rounds", _naive_rounds, 4)
+check("L-Aug18 Y2 trap in minutes", _naive_rounds * 5, 20)
+check("L-Aug18 Y2 optimal really is faster", scan_rounds(3, 2) < _naive_rounds, True)
+
+
+def can_avoid_triple(kinds, picks):
+    """Exhaustive: is ANY run of this many picks free of three of a kind?"""
+    return any(max(c.count(k) for k in set(c)) < 3
+               for c in _product(range(kinds), repeat=picks))
+
+
+check("L-Aug18 Y3 eight picks can still miss", can_avoid_triple(4, 8), True)
+check("L-Aug18 Y3 nine picks cannot", can_avoid_triple(4, 9), False)
+check("L-Aug18 Y3 the pair answer is not the triple answer", 4 + 1 != 9, True)
+
+_n = 34
+_n -= _n // 2                                    # half to North
+_n -= 3                                          # set aside
+_n -= _n // 2                                    # half to South
+check("L-Aug18 Y4 replay forwards", _n, 7)
+
 # ============================== RENDERED HTML ==============================
 import build_sheets
 

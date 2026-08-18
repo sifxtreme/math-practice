@@ -2,7 +2,7 @@
 
 Recurring task: generate printable math word-problem worksheets for Asif's kids.
 
-**Active plan: [`PRACTICE-PLAN-2026.md`](PRACTICE-PLAN-2026.md)** — daily practice Jul 25 → Aug 30, 2026 (school starts Aug 31). Check it for which sheet is due before generating a new one.
+**Active plan: [`PRACTICE-PLAN-2026.md`](private/PRACTICE-PLAN-2026.md)** — daily practice Jul 25 → Aug 30, 2026 (school starts Aug 31). Check it for which sheet is due before generating a new one.
 
 ## 🔒 ONE DAY'S WORTH OF PAPER AT A TIME
 
@@ -63,6 +63,31 @@ guard can.
 tokens and lets themes be planned. It is only *printing* ahead that is banned. Keep
 the two verbs separate: `build_sheets.py` may run for a batch; `print-worksheet.sh`
 runs for one day.
+
+## 🧒 ONE KID ASKED FOR = ONE KID PRINTED — `--kid`
+
+**Added 2026-08-16, in code, after it went wrong.** Asif: *"Musa didn't do well on
+his long division today. Print a new set."* — and **both** kids' pages printed,
+because the sheet file holds Musa, Yusuf and the key, and nothing filtered it.
+
+**The generator has no per-kid mode and does not need one.** One file, both children,
+plus the key is the right artifact. **The filter belongs at print time:**
+
+```bash
+./print-worksheet.sh worksheet-division-drill.html --date today --kid Musa
+./print-worksheet.sh worksheet-division-drill.html --date today --kid Musa --no-key
+```
+
+- Sheets are matched on the `Name:` field **in document order**, so the page number
+  is the sheet's index — no hard-coded "kid1 is page 1."
+- A sheet with **no** `Name:` field is a key page. Keys are included unless `--no-key`.
+- **An unknown name aborts with exit 3 and lists the names it did find.** It never
+  falls through to `lp` and quietly prints everything, which is the failure mode that
+  would otherwise repeat the original bug in reverse.
+
+> **Read the request for a name before printing.** "Print a new set" after naming one
+> child means **that child**. If the request is genuinely for both, no flag is needed
+> — but the default is only right by accident, so say which one you concluded and why.
 
 ## The kids
 
@@ -305,7 +330,7 @@ silently changes a sentence in the narration.
 [`animations/CURRICULUM.md`](animations/CURRICULUM.md) maps all 45 fourth- and fifth-grade
 standards onto the six drawing surfaces they need. Two exist; **22 of 45 need no new one**.
 
-**Read the target board in [`PRACTICE-PLAN-2026.md`](PRACTICE-PLAN-2026.md) before
+**Read the target board in [`PRACTICE-PLAN-2026.md`](private/PRACTICE-PLAN-2026.md) before
 picking.** *Reachable on an existing surface* is an engineering fact, not a reason.
 Add/subtract with regrouping is the cheapest thing on the list **and worthless here** —
 both kids already run it at ~16 sec/problem, inside the fluency benchmark. Cheapness is
@@ -358,7 +383,7 @@ Straight to 5 compound word problems, no example box. This is the original forma
 ## How to make a new set
 
 1. Copy the closest existing sheet — `worksheet.html` for PRACTICE, `worksheet-teach-remainders-fractions.html` for TEACH. The layout/CSS is already dialed in.
-2. Pick a new **theme** (and matching "Did you know?" facts). **Themes already used — do not repeat:** space · World Cup (×3) · ocean · dinosaur · Ancient Egypt · astronomy · human body · national parks · trains · volcano · Silk Road · bridges · weather · Mars rovers · honeybees · sailing ships · mountains & climbing · lighthouses · falconry · deserts & caravans · clocks & timekeeping · kites & flight. **Append yours here when you add a sheet.**
+2. Pick a new **theme** (and matching "Did you know?" facts). **Themes already used — do not repeat:** space · World Cup (×3) · ocean · dinosaur · Ancient Egypt · astronomy · human body · national parks · trains · volcano · Silk Road · bridges · weather · Mars rovers · honeybees · sailing ships · mountains & climbing · lighthouses · falconry · deserts & caravans · clocks & timekeeping · kites & flight · rainforest · castles · **immune system** *(set by Asif 2026-08-17 for the whole Aug 17–23 week — both the word sheet and the logic sheet, so it does not burn two themes)*. **Append yours here when you add a sheet.**
 
 ⚠️ **Theme supply is the binding constraint now**, not build time — three sheets a day burns two themes a day. Unspent ideas: rainforest · the Olympics · castles · animal migration · rivers · caves · bridges of the world *(distinct from `bridges`)* · printing & books · glass & mirrors · wells and water · silk & dye · maps and mapmaking.
 3. Write 5 fresh compound problems per grade, using the skill spread in **Difficulty pin** below (that section is the live setting — read it, don't use the baseline unless it says to).
@@ -468,6 +493,19 @@ answer independently and must exit 0 before any of them is printed.
 | `worksheet-clocks-logic.html` | Aug 1 | logic — incl. the 4/7 hourglass |
 | `worksheet-mountains-cumulative.html` | Aug 2 | word problems — **cumulative** |
 | `worksheet-kites-logic-cumulative.html` | Aug 2 | logic — **cumulative** |
+| `worksheet-castles.html` | Aug 16 | word problems — Block 2 opener, teach/faded |
+| `worksheet-rainforest-logic.html` | Aug 16 | logic |
+| `worksheet-immune-system.html` | Aug 17 | word problems — practice |
+| `worksheet-immune-logic.html` | Aug 17 | logic |
+| `worksheet-white-cells.html` | Aug 18 | word problems — practice, **split tracks** |
+| `worksheet-lab-bench-logic.html` | Aug 18 | logic |
+
+> ⚠️ **The 3-page render is a budget, and the ANSWER KEY is what blows it.** Both Aug 18
+> sheets came out at 4 pages on the first build even though their *questions* were
+> shorter than Aug 17's — the worked steps and the two `Watch for:` boxes were ~25%
+> longer, and page 3 spilled. The kids' pages give no warning at all. When
+> `--dry-run` says 4, measure `a` + `steps` + `_watch` against a sheet that fits
+> before touching anything else.
 
 > **Editing one of these? Edit the spec, not the HTML.** Regenerating overwrites the
 > `.html`. Re-run `python3 verify_sheets.py` after any change — it also asserts the

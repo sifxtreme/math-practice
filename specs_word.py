@@ -442,4 +442,170 @@ AUG16 = {
     "kid2_watch": "Expect 2/5 + 1/3 = 3/8 on #1 &mdash; adding straight across the top and bottom. That is THE error of this unit and it is the one most likely to have crept back over the break. Don't just correct it: ask whether 3/8 can be right when the morning alone already filled 2/5. #3 asks for a mixed number, so 19/12 is only half marks. On #5, if he jumps to 288 &times; 11, the missing idea is \"find one day first\".",
 }
 
-ALL = [JUL29, JUL30, JUL31, AUG1, AUG2, AUG16]
+# ---------------------------------------------------------------- Aug 17
+# Block 2 week 2 opens. The Shape column in PRACTICE-PLAN-2026 moves kid1 to
+# area/perimeter-with-a-missing-side and kid2 to decimals, so THOSE take the
+# guided slot this week — the guided problem always sits on the skill being
+# introduced, not on last week's. kid1's old protected skill (remainder
+# interpretation) drops to #2 unguided, which is where you read whether it held.
+# Theme set by Asif 2026-08-17: immune system, for the whole week.
+w7_side = 72 // 9
+w7_per = 2 * (9 + w7_side)
+w7_full, w7_left = divmod(75, 8)
+w7_trays = ceil(75 / 8)
+w7_good = 128 * 7 - 94
+w7_p_side = (46 - 2 * 14) // 2          # perimeter 46, one side 14 -> other side
+w7_area = 14 * w7_p_side
+y7_a = F(84, 10) - F(375, 100)          # 8.4 - 3.75, exact
+y7_b = 34 * 26
+y7_c_full, y7_c_left = divmod(1347, 6)
+y7_d = F(3, 8) + F(1, 3)
+y7_cost = F(35, 100) * 240
+y7_change = 100 - y7_cost
+
+AUG17 = {
+    "file": "worksheet-immune-system.html",
+    "title_plain": "The Body's Defences",
+    "title": "🛡️ The Body's Defences",
+    "sub": "Word problems from inside the immune system — the first one has its steps printed for you",
+    "kid1": [
+        {"guided": ["Area = one side &times; the other side, so 72 &divide; 9 = <span class='blank'></span>",
+                    "So the other side measures <span class='blank'></span> cm",
+                    "Perimeter = 9 + <span class='blank'></span> + 9 + <span class='blank'></span> = <span class='blank'></span> cm"],
+         "q": "A rectangular tray of blood samples covers <b>72 square centimetres</b>. One side measures <b>9 cm</b>. How long is the other side? What is the perimeter all the way around the tray?",
+         "fact": "White blood cells are made inside your bones, in the soft marrow at the centre.",
+         "a": "Other side %d cm; perimeter %d cm." % (w7_side, w7_per),
+         "steps": "Area = side &times; side, so 72 &divide; 9 = <b>%d cm</b>. Perimeter goes all the way round: 9 + %d + 9 + %d = <b>%d cm</b>." % (w7_side, w7_side, w7_side, w7_per)},
+        {"q": "A clinic packs 75 vaccine vials into trays. Each tray holds 8. How many trays go out <b>completely full</b>, and how many vials are left over? Then: how many trays are needed to carry <b>every</b> vial?",
+         "fact": "A vaccine works by showing your immune system a harmless piece of a germ, so it can practise before the real one arrives.",
+         "a": "%d full trays, %d left over — but %d trays to carry them all." % (w7_full, w7_left, w7_trays),
+         "steps": "75 &divide; 8 = <b>%d remainder %d</b>. Those %d spare vials still have to travel, so one more tray: <b>%d</b>." % (w7_full, w7_left, w7_left, w7_trays)},
+        {"q": "A lab grows <b>128 cell samples</b> a day for <b>7 days</b>. Then <b>94</b> of them are found spoiled and thrown out. How many good samples are left?",
+         "fact": "Your body makes billions of new white blood cells every single day, and most of them last only a few days.",
+         "a": "%d samples." % w7_good,
+         "steps": "128 &times; 7 = 896, then 896 &minus; 94 = <b>%d</b>." % w7_good},
+        {"q": "Two vials of serum sit on the bench. One is <b>5/8</b> full. The other is <b>2/3</b> full. Which vial holds more? How do you know?",
+         "fact": "Tears and saliva both contain an enzyme that breaks bacteria apart — your eyes and mouth are defending you all day.",
+         "a": "The 2/3 vial.",
+         "steps": "Same bottom number &mdash; twenty-fourths: 5/8 = <b>15/24</b>, 2/3 = <b>16/24</b>. Sixteen beats fifteen, so the <i>smaller</i>-looking fraction wins."},
+        {"q": "A rectangular culture plate has a <b>perimeter of 46 cm</b>. One side measures <b>14 cm</b>. How long is the other side? What is the <b>area</b> of the plate?",
+         "fact": "Fever is not the germ hurting you — it is your body turning the heat up on purpose, because most germs breed badly when they are too warm.",
+         "a": "Other side %d cm; area %d square cm." % (w7_p_side, w7_area),
+         "steps": "Half the perimeter is one of each side: 46 &divide; 2 = <b>23</b>. Then 23 &minus; 14 = <b>%d cm</b>. Area = 14 &times; %d = <b>%d square cm</b>." % (w7_p_side, w7_p_side, w7_area)},
+    ],
+    "kid2": [
+        {"guided": ["Give 8.4 the same number of decimal places as 3.75: <span class='blank'></span>",
+                    "Line up the decimal points, then subtract: <span class='blank'></span>",
+                    "So the amount still to give is <span class='blank'></span> mL"],
+         "q": "A course of medicine is <b>8.4 mL</b> in total. So far <b>3.75 mL</b> has been given. How much is still to be given?",
+         "fact": "Antibodies are Y-shaped, and each kind locks onto one specific germ and nothing else — like a key cut for a single door.",
+         "a": "%s mL." % money(float(y7_a)),
+         "steps": "Pad the short one: 8.4 becomes <b>8.40</b>. Then 8.40 &minus; 3.75 = <b>%s mL</b>. Skipping the padding is what produces 5.65 or 4.75." % money(float(y7_a))},
+        {"q": "A researcher prepares <b>34</b> slides, and counts <b>26</b> antibodies on each one. How many antibodies is that altogether?",
+         "fact": "Memory cells are why you usually catch chickenpox only once — some of them can still recognise the virus decades later.",
+         "a": "%s antibodies." % "{:,}".format(y7_b),
+         "steps": "34 &times; 26. Split it: (34 &times; 20) + (34 &times; 6) = 680 + 204 = <b>%s</b>." % "{:,}".format(y7_b)},
+        {"q": "A hospital logs <b>1,347</b> cell counts and sorts them into batches of <b>6</b>. How many <b>complete</b> batches are there, and how many counts are left over?",
+         "fact": "Your lymph system has no pump of its own. It only moves when you move, which is one reason walking helps you shake off an illness.",
+         "a": "%d complete batches, %d left over." % (y7_c_full, y7_c_left),
+         "steps": "1,347 &divide; 6 = <b>%d remainder %d</b>. Walk it: 13&divide;6 = 2 r1, bring down 4 &rarr; 14&divide;6 = 2 r2, bring down 7 &rarr; 27&divide;6 = 4 r3. Check: %s + %d = 1,347. &check;" % (y7_c_full, y7_c_left, "{:,}".format(y7_c_full * 6), y7_c_left)},
+        {"q": "One study covers <b>3/8</b> of the samples in a freezer. A second study covers another <b>1/3</b> of them. What fraction of the freezer is covered by the two studies together?",
+         "fact": "Most of your immune system sits around your gut — the body puts its defences where the outside world comes in.",
+         "a": "%s of the freezer." % mixed(y7_d),
+         "steps": "Twenty-fourths work for both. 3/8 = 9/24 and 1/3 = 8/24, so 9/24 + 8/24 = <b>%s</b>. Add the tops, keep the bottom." % mixed(y7_d)},
+        {"q": "Antibody test strips cost <b>$0.35</b> each. A clinic buys <b>240</b> of them and pays with <b>$100</b>. What do the strips cost altogether, and how much change comes back?",
+         "fact": "The thymus, the gland that trains your T-cells, is at its biggest when you are a child and slowly shrinks for the rest of your life.",
+         "a": "$%s for the strips; $%s change." % (money(float(y7_cost)), money(float(y7_change))),
+         "steps": "240 &times; $0.35 = (240&times;0.3) + (240&times;0.05) = 72 + 12 = <b>$%s</b>. Change: $100 &minus; $%s = <b>$%s</b>." % (money(float(y7_cost)), money(float(y7_cost)), money(float(y7_change)))},
+    ],
+    "kid1_watch": "#1 prints the steps and <b>#5 does not</b> &mdash; #5 is the real read, and it is the inverse: it hands him the perimeter and asks for a side. Expect 46 &minus; 14 = 32. One question fixes it: \"how many sides does the perimeter go along?\" On #2, remainder interpretation is unguided for the first time this week &mdash; \"9 trays\" means the method held and he stopped a step early. #4's trap is inverted on purpose.",
+    "kid2_watch": "This unit lives or dies on <b>padding the short number</b>. #1 prints that step; nothing else does &mdash; expect 4.75 or 5.65 wherever he skips it. #5 stacks a rate, a decimal and a subtraction, and the usual failure is a right answer with a misplaced point ($8.40 or $840 for $84); make him say what it means aloud before writing. #3 has a real remainder &mdash; not 224.5.",
+}
+
+# ---------------------------------------------------------------- Aug 18
+# THE TRACKS SPLIT HERE (PRACTICE-PLAN-2026, "DECIDED 2026-08-17 by Asif").
+# kid1 continues on area/perimeter-with-a-missing-side, and his guided slot moves
+# to the HARDER direction — perimeter given, find the side — because that is the
+# one Aug 17 left unguided at #5 and flagged as the real read. The area->side
+# direction he was guided through yesterday reappears at #5 unguided; that swap is
+# the whole design of the day.
+# kid2 goes BACK to unlike denominators for the guided slot — he had exactly one
+# guided day on it (Aug 16) before the calendar moved him to decimals. Decimals do
+# NOT disappear: #4 keeps one, unguided, so Aug 17 is not wasted.
+# Theme stays immune system all week (Asif, 2026-08-17).
+w8_p_side = (58 - 2 * 11) // 2          # perimeter 58, one side 11 -> other side
+w8_area = 11 * w8_p_side
+w8_full, w8_left = divmod(92, 6)
+w8_racks = ceil(92 / 6)
+w8_good = 146 * 8 - 79
+w8_side = 108 // 12
+w8_per = 2 * (12 + w8_side)
+y8_a = F(1, 4) + F(2, 5)
+y8_b = F(7, 8) - F(1, 3)
+y8_c = 48 * 27
+y8_given = F(24, 10) + F(375, 100)      # 2.4 + 3.75, exact
+y8_left = F(95, 10) - y8_given          # 9.5 - that
+y8_rate = 1455 // 5
+y8_total = y8_rate * 9
+y8_fold, y8_rem = divmod(y8_total, 8)
+
+AUG18 = {
+    "file": "worksheet-white-cells.html",
+    "title_plain": "White Cell Patrol",
+    "title": "🩸 White Cell Patrol",
+    "sub": "Word problems from the blood lab — the first one has its steps printed for you",
+    "kid1": [
+        {"guided": ["Half the perimeter is one of each side: 58 &divide; 2 = <span class='blank'></span>",
+                    "Take away the side you know: <span class='blank'></span> &minus; 11 = <span class='blank'></span> cm",
+                    "Area = 11 &times; <span class='blank'></span> = <span class='blank'></span> square cm"],
+         "q": "A rectangular sample tray has a <b>perimeter of 58 cm</b>. One side measures <b>11 cm</b>. How long is the other side? What is the <b>area</b> of the tray?",
+         "fact": "A cut stops bleeding because tiny cell fragments called platelets pile into the gap and turn sticky.",
+         "a": "Other side %d cm; area %d square cm." % (w8_p_side, w8_area),
+         "steps": "Halve the perimeter first: 58 &divide; 2 = <b>29</b> &mdash; one long side plus one short side. Then 29 &minus; 11 = <b>%d cm</b>. Area = 11 &times; %d = <b>%d square cm</b>. Answering 47 means the halving was skipped." % (w8_p_side, w8_p_side, w8_area)},
+        {"q": "A lab loads 92 blood samples into racks. Each rack holds 6. How many racks are <b>completely full</b>, and how many samples are left over? Then: how many racks are needed to hold <b>every</b> sample?",
+         "fact": "Pus is mostly white blood cells that have finished their work — it is a sign the defence turned up.",
+         "a": "%d full racks, %d left over — but %d racks to hold them all." % (w8_full, w8_left, w8_racks),
+         "steps": "92 &divide; 6 = <b>%d remainder %d</b>. Those %d spare samples still need somewhere to sit, so one more rack: <b>%d</b>." % (w8_full, w8_left, w8_left, w8_racks)},
+        {"q": "A lab grows <b>146 cultures</b> a day for <b>8 days</b>. Then <b>79</b> of them are found spoiled and thrown out. How many good cultures are left?",
+         "fact": "Your tonsils are lumps of immune tissue placed right at the back of the throat, where swallowed germs go past.",
+         "a": "%s cultures." % "{:,}".format(w8_good),
+         "steps": "146 &times; 8 = 1,168, then 1,168 &minus; 79 = <b>%s</b>." % "{:,}".format(w8_good)},
+        {"q": "Two dishes sit on the bench. One is <b>3/5</b> full. The other is <b>7/12</b> full. Which dish holds more? How do you know?",
+         "fact": "Mucus is not waste. It traps dust and germs, and tiny hairs then sweep the whole lot back out.",
+         "a": "The 3/5 dish.",
+         "steps": "Bigger numbers do not mean a bigger fraction. Sixtieths: 3/5 = <b>36/60</b>, 7/12 = <b>35/60</b>. <b>3/5</b> wins, by one sixtieth."},
+        {"q": "A rectangular culture plate covers <b>108 square centimetres</b>. One side measures <b>12 cm</b>. How long is the other side? What is the <b>perimeter</b> all the way around?",
+         "fact": "A swollen lump in your neck when you are ill is a lymph node at work — it fills with cells fighting the infection.",
+         "a": "Other side %d cm; perimeter %d cm." % (w8_side, w8_per),
+         "steps": "Area = side &times; side, so 108 &divide; 12 = <b>%d cm</b>. Perimeter goes all the way round: 12 + %d + 12 + %d = <b>%d cm</b>." % (w8_side, w8_side, w8_side, w8_per)},
+    ],
+    "kid2": [
+        {"guided": ["A common bottom number for 4 and 5 is <span class='blank'></span>",
+                    "1/4 = <span class='blank'></span>/20 &nbsp; and &nbsp; 2/5 = <span class='blank'></span>/20",
+                    "Now add the top numbers only, keep the bottom: <span class='blank'></span>"],
+         "q": "A vial is filled in two goes. In the morning <b>1/4</b> of it is filled. In the afternoon another <b>2/5</b> is filled. How full is the vial?",
+         "fact": "Your stomach acid is strong enough to kill most germs you swallow before they ever reach the gut.",
+         "a": "%s of the vial." % mixed(y8_a),
+         "steps": "Twentieths: 1/4 = 5/20 and 2/5 = 8/20, so 5/20 + 8/20 = <b>%s</b>. Add the tops, keep the bottom." % mixed(y8_a)},
+        {"q": "A store of serum is <b>7/8</b> full. Over one week, <b>1/3</b> of the store is used. How much serum is left?",
+         "fact": "Blood is a little over half liquid plasma; the red cells, white cells and platelets float in it.",
+         "a": "%s of the store." % mixed(y8_b),
+         "steps": "Twenty-fourths: 7/8 = 21/24 and 1/3 = 8/24. 21/24 &minus; 8/24 = <b>%s</b>. The bottom number never changes." % mixed(y8_b)},
+        {"q": "A store room holds <b>48</b> trays, and each tray carries <b>27</b> slides. How many slides is that altogether?",
+         "fact": "A microlitre of blood — far less than a drop — holds roughly 4,000 to 11,000 white blood cells.",
+         "a": "%s slides." % "{:,}".format(y8_c),
+         "steps": "48 &times; 27. Split it: (48 &times; 20) + (48 &times; 7) = 960 + 336 = <b>%s</b>." % "{:,}".format(y8_c)},
+        {"q": "A course of medicine is <b>9.5 mL</b> in total. A nurse gives <b>2.4 mL</b>, then later <b>3.75 mL</b>. How much has been given, and how much is still to come?",
+         "fact": "Bone marrow makes about two million red blood cells every second.",
+         "a": "%s mL given; %s mL still to come." % (money(float(y8_given)), money(float(y8_left))),
+         "steps": "Pad to two places, line up the points. 2.40 + 3.75 = <b>%s</b>. Then 9.50 &minus; %s = <b>%s mL</b>. Skipped padding gives 6.79." % (money(float(y8_given)), money(float(y8_given)), money(float(y8_left)))},
+        {"q": "A clinic runs <b>1,455 tests in 5 days</b>, at a steady rate. At that same rate, how many tests would it run in <b>9 days</b>? Those results are filed into folders of <b>8</b> — how many <b>complete</b> folders is that, and how many results are left over?",
+         "fact": "White blood cells follow a chemical trail to a wound, moving toward wherever the signal is strongest.",
+         "a": "%s tests — %d complete folders, %d left over." % ("{:,}".format(y8_total), y8_fold, y8_rem),
+         "steps": "Find one day first: 1,455 &divide; 5 = <b>%d a day</b>. Then %d &times; 9 = <b>%s</b>. Finally %s &divide; 8 = <b>%d remainder %d</b>. Check: %s + %d = %s. &check;" % (y8_rate, y8_rate, "{:,}".format(y8_total), "{:,}".format(y8_total), y8_fold, y8_rem, "{:,}".format(y8_fold * 8), y8_rem, "{:,}".format(y8_total))},
+    ],
+    "kid1_watch": "Yesterday's guided problem and today's have <b>swapped directions</b>, on purpose. #1 walks him through the hard one &mdash; perimeter in, side out &mdash; and the halving line is the whole lesson; expect <b>47</b> if he treats it like an area problem. #5 is yesterday's <i>guided</i> problem with the scaffolding gone, so it reads whether that stuck. On #2 expect \"15 racks\": right division, one step short.",
+    "kid2_watch": "He is back on unlike denominators after only <b>one</b> guided day on it. #1 prints the common-denominator step; <b>#2 does not</b>, and #2 is the real read &mdash; 6/11 there means he added straight across. Ask whether 6/11 can be right when the store started nearly full. #4 is yesterday's decimals unscaffolded: watch the padding. On #5, jumping to 1,455 &times; 9 means \"find one day first\" did not arrive.",
+}
+
+ALL = [JUL29, JUL30, JUL31, AUG1, AUG2, AUG16, AUG17, AUG18]

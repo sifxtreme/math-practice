@@ -341,4 +341,134 @@ AUG16L = {
     "kid2_watch": "#1 has FOUR clues, not three, and clue 4 is the one that does the last bit of work &mdash; if he stops at three clues he will place the animals correctly and guess the camps. Ask him which clue proved Sumayya's camp. #4 is a step up from the 8-kite version: the answer moves from 2 to 3, and the reason is that 3 &times; 3 = 9 no longer covers 12. If he says 2, that is the sentence to draw out of him.",
 }
 
-ALL = [JUL29L, JUL30L, JUL31L, AUG1L, AUG2L, AUG16L]
+# ---------------------------------------------------------------- Aug 17
+# Theme set by Asif 2026-08-17: immune system, all week. Deliberately NOT a
+# repeat of the Aug 16 shapes — the monkeys/mangoes rate trap is replaced by a
+# climb-and-slip (different trap, same "don't just multiply" lesson), and kid2's
+# weighing puzzle by an off-by-one cut puzzle. Only the logic grid is a staple
+# and stays, because it is the one that rewards a written table.
+def _first_day(rise, fall, target):
+    """Climb-and-slip, simulated. The closed form is a classic off-by-one."""
+    pos, day = 0, 0
+    while True:
+        day += 1
+        pos += rise
+        if pos >= target:
+            return day
+        pos -= fall
+
+
+l7_start = (14 * 2) - 12 + 7        # backwards: end 14, halved, 12 arrived, 7 removed
+l7_neither = 30 - (17 + 14 - 8)
+l7_day = _first_day(3, 2, 10)
+l7_pick = 3 + 1                     # pigeonhole: 3 kinds, so the 4th must repeat
+l7_cuts = 42 // 6 - 1
+l7_time = l7_cuts * 3
+
+AUG17L = {
+    "file": "worksheet-immune-logic.html",
+    "title_plain": "Immune System Logic",
+    "title": "🦠 Immune System Logic",
+    "sub": "Puzzles from the lab — two of these are traps, and the trap is the lesson",
+    "kid1": [
+        {"q": "A lab counts a batch of white blood cell samples. <b>7</b> are removed as spoiled. Then <b>12</b> more arrive from the clinic. The batch is then split <b>equally</b> between two microscopes, and one microscope receives <b>14</b> samples. How many samples were in the batch to start with?",
+         "fact": "A white blood cell can squeeze itself out through the wall of a blood vessel to reach a wound — it changes shape to get there.",
+         "a": "%d samples." % l7_start,
+         "steps": "Work backwards, flipping every step. One microscope got 14 after an equal split &rarr; 28 before it. Undo the 12 arriving &rarr; 16. Undo the 7 removed &rarr; <b>%d</b>. Check forwards: %d &minus; 7 = 16, + 12 = 28, half of 28 = 14. &check;" % (l7_start, l7_start)},
+        {"q": "A tray holds <b>30 samples</b>. <b>17</b> of them show antibodies. <b>14</b> of them show a fever marker. <b>8</b> samples show <b>both</b>. How many samples show <b>neither</b>?",
+         "fact": "Your skin is your largest immune organ. Most germs never get past it at all.",
+         "a": "%d samples." % l7_neither,
+         "steps": "The 8 both-samples got counted twice, so samples with at least one = 17 + 14 &minus; 8 = 22. Then 30 &minus; 22 = <b>%d</b>. Draw two overlapping circles and it goes obvious." % l7_neither},
+        {"q": "A patient's antibody level <b>rises 3 units</b> during each day, then <b>falls back 2 units</b> each night. It starts at <b>0</b> and needs to reach <b>10</b>. On which <b>day</b> does it first reach 10? <i>Think it through. This one is not the calculation it looks like.</i>",
+         "fact": "After an infection, some antibody-making cells become memory cells and simply wait — sometimes for the rest of your life.",
+         "a": "Day %d." % l7_day,
+         "steps": "It gains 1 unit a day overall, so 10 days looks right &mdash; and it is wrong. Track it: end of day 1 it is at 3, then 1 overnight. Day 2 &rarr; 4, then 2. By the end of <b>day 7</b> it is at 9, dropping to 7. On <b>day %d</b> it climbs 7 &rarr; 10 and it has <i>arrived</i> &mdash; the night-time fall never happens. The last climb is the one that escapes." % l7_day},
+        {"q": "A tray holds vials of <b>3 different vaccines</b>, all mixed together and all looking identical. Without looking, what is the <b>fewest</b> vials you must pick to be <b>certain</b> you have two of the same kind?",
+         "fact": "Vaccines are usually kept cold because the harmless germ pieces inside them fall apart when they get warm.",
+         "a": "%d vials." % l7_pick,
+         "steps": "Think about the unluckiest possible run. You could pick 3 and get one of every kind &mdash; still no pair. But there are only 3 kinds, so the <b>%dth</b> vial has to match one you already hold. <b>%d</b>. The answer is not 2, because \"certain\" means even on your worst day." % (l7_pick, l7_pick)},
+    ],
+    "kid2": [
+        {"q": "Three researchers — <b>Idris, Hafsa, and Zakariya</b> — each study a different cell (T-cell, B-cell, macrophage) in a different lab (North, South, Central). Who studies what, and where?<br><b>1.</b> The researcher in the <b>Central</b> lab studies the macrophage. &nbsp;<b>2.</b> Idris does not study the B-cell. &nbsp;<b>3.</b> Hafsa studies the T-cell. &nbsp;<b>4.</b> Zakariya is not in the North lab.",
+         "fact": "A macrophage's name means \"big eater\" — it swallows germs whole and digests them.",
+         "a": "Idris — macrophage — Central · Hafsa — T-cell — North · Zakariya — B-cell — South.",
+         "steps": "Clue 3 gives <b>Hafsa the T-cell</b>. Clue 2 then leaves Idris only the macrophage, and clue 1 puts the macrophage in <b>Central</b>. Zakariya takes the B-cell. Clue 4 keeps him out of the North &rarr; <b>Zakariya, South</b>, so Hafsa has the North."},
+        {"q": "You need to measure exactly <b>4 mL</b> of a solution. You have only a <b>5 mL</b> syringe, a <b>3 mL</b> syringe, and a large bottle of the solution. Neither syringe has any markings on it. How do you do it?",
+         "fact": "Doses for children are worked out by body weight, not age — which is why the same medicine comes in different amounts.",
+         "a": "Fill 5, pour off 3, keep the 2, then top the 5 up and pour 1 more into the 3.",
+         "steps": "<b>1.</b> Fill the 5 mL. <b>2.</b> Pour from it into the 3 mL until the 3 is full &mdash; that leaves exactly <b>2 mL</b> in the 5. <b>3.</b> Empty the 3 mL. <b>4.</b> Tip the 2 mL into the 3 mL syringe. <b>5.</b> Refill the 5 mL. <b>6.</b> Pour from the 5 into the 3 &mdash; it only has room for <b>1 more mL</b>, so exactly <b>4 mL</b> is left behind in the 5. That is your 4."},
+        {"q": "A sample was contaminated.<br><b>Anas</b> says: \"It was Bilal.\" &nbsp;<b>Bilal</b> says: \"It wasn't me.\" &nbsp;<b>Ruqayya</b> says: \"It was Anas.\"<br><b>Exactly one</b> of the three is <b>lying</b>. Who contaminated the sample?",
+         "fact": "Labs work in sterile cabinets with the air always flowing outward, so nothing from the room can drift onto a sample.",
+         "a": "Anas contaminated it.",
+         "steps": "Test each one and count the lies. If <b>Anas</b> did it: Anas lies, Bilal tells the truth, Ruqayya tells the truth &mdash; exactly one lie. &check; If <b>Bilal</b> did it: Anas true, Bilal lies, Ruqayya lies &mdash; two. &cross; If <b>Ruqayya</b> did it: Anas lies, Bilal true, Ruqayya lies &mdash; two. &cross; Only Anas fits. Note it is <i>one lie</i> here, not one truth &mdash; read that line twice."},
+        {"q": "A <b>42 cm</b> length of tubing must be cut into <b>6 cm</b> pieces. Each cut takes <b>3 minutes</b>. How long does the whole job take?",
+         "fact": "Blood for a transfusion is passed through a filter fine enough to catch tiny clots but not the blood cells themselves.",
+         "a": "%d minutes." % l7_time,
+         "steps": "42 &divide; 6 = <b>7 pieces</b> &mdash; but that is not the number of cuts. Lay it out: the last piece falls free on the cut before it, so 7 pieces need only <b>%d cuts</b>. Then %d &times; 3 = <b>%d minutes</b>. Answering 21 means counting a cut that never happens." % (l7_cuts, l7_cuts, l7_time)},
+    ],
+    "kid1_watch": "#3 is the one to sit with. Almost every child answers 10 days, and that is the <i>useful</i> mistake &mdash; it means he found the net gain of 1 a day and stopped. Don't tell him; ask \"what is it at the end of day 7, and what happens next morning?\" and wait. #4 is a new shape for him &mdash; the word doing the work is <b>certain</b>. If he says 2, ask him to describe the unluckiest possible run of picks.",
+    "kid2_watch": "#1 has FOUR clues and clue 4 is the one that finishes it &mdash; without it Hafsa and Zakariya could swap labs, so if he stops at three clues he will get the cells right and guess the labs. Ask him which clue proved Zakariya's lab. #3 flips last time's puzzle: exactly one is <b>lying</b>, where the rainforest version had exactly one telling the truth. If he answers Harun-style out of habit he has pattern-matched instead of reading. #4 is an off-by-one; 21 is the expected wrong answer and it is worth drawing the 7 pieces to settle it.",
+}
+
+# ---------------------------------------------------------------- Aug 18
+# Immune-system theme continues (Asif, 2026-08-17). Every shape here is new
+# against Aug 16 and Aug 17: no working-backwards for kid1 (he had one
+# yesterday), and NO liar puzzle for either kid — that has now run two days
+# running and a third would be pattern-matching practice, not reasoning. The
+# logic grid stays, because it is the one puzzle that rewards a written table.
+l8_shakes = (6 * 5) // 2                # each pair once, not 6 x 5
+l8_vial = 32 // 4                       # flask = 3 vials, so flask + vial = 4 vials
+l8_flask = 3 * l8_vial
+l8_finish = (9 * 60 + 45) + 50 + 25 + 40
+l8_half = 12 - 1                        # doubling: full on 12 -> half on 11
+l8_quarter = 12 - 2
+m8_scan = 3 * 5                         # 6 side-scans, 2 at a time, 5 min a round
+m8_pick = 4 * 2 + 1                     # 4 kinds, want 3 alike: worst case 2 each
+m8_start = ((7 * 2) + 3) * 2            # replayed forwards in the key
+
+AUG18L = {
+    "file": "worksheet-lab-bench-logic.html",
+    "title_plain": "Lab Bench Logic",
+    "title": "🧫 Lab Bench Logic",
+    "sub": "Puzzles from the bench — none of these are the sum they look like",
+    "kid1": [
+        {"q": "<b>6 researchers</b> meet at the bench. Every researcher shakes hands with every other researcher <b>exactly once</b>. How many handshakes happen altogether?",
+         "fact": "Your body's defences learn. The second time a germ shows up, the answer to it is faster and stronger than the first.",
+         "a": "%d handshakes." % l8_shakes,
+         "steps": "Each of the 6 shakes 5 hands = 30 &mdash; but that counts <i>every handshake twice</i>, once from each side. So 30 &divide; 2 = <b>%d</b>. Or count down the line: 5 + 4 + 3 + 2 + 1 = <b>%d</b>." % (l8_shakes, l8_shakes)},
+        {"q": "On a balance, <b>3 vials</b> exactly balance <b>1 flask</b>. A flask and a vial together weigh <b>32 grams</b>. How much does <b>one vial</b> weigh? How much does the flask weigh?",
+         "fact": "A neutrophil, the commonest white blood cell, lives less than a day once it leaves the blood.",
+         "a": "A vial is %d g; the flask is %d g." % (l8_vial, l8_flask),
+         "steps": "Swap the flask for what it balances: a flask <i>is</i> 3 vials, so \"flask + vial\" is <b>4 vials</b> = 32 g. One vial = 32 &divide; 4 = <b>%d g</b>; flask = 3 &times; %d = <b>%d g</b>. Check: %d + %d = 32. &check;" % (l8_vial, l8_vial, l8_flask, l8_flask, l8_vial)},
+        {"q": "A test starts at <b>9:45 am</b>. It runs for <b>50 minutes</b>, then cools down for <b>25 minutes</b>, then is scanned for <b>40 minutes</b>. At what time is it finished?",
+         "fact": "Much of your immune repair happens while you sleep, which is one reason being ill makes you so tired.",
+         "a": "%d:%02d am." % (l8_finish // 60, l8_finish % 60),
+         "steps": "One stage at a time: 9:45 + 50 &rarr; <b>10:35</b>; + 25 &rarr; <b>11:00</b>; + 40 &rarr; <b>%d:%02d am</b>. Adding 115 minutes first also works &mdash; if you know that is 1 h <b>55</b>, not 1 h 15." % (l8_finish // 60, l8_finish % 60)},
+        {"q": "A dish of bacteria <b>doubles every day</b>. On <b>day 12</b> the dish is completely full. On which day was it <b>half</b> full? And on which day was it a <b>quarter</b> full? <i>Careful — this one is not half of 12.</i>",
+         "fact": "In good conditions some bacteria can double in number about every twenty minutes.",
+         "a": "Half full on day %d; a quarter full on day %d." % (l8_half, l8_quarter),
+         "steps": "Run it backwards: doubling forwards is <i>halving</i> backwards. The day before full it was half full &mdash; <b>day %d</b> &mdash; and one more back, <b>day %d</b>. Day 6 is the expected wrong answer; the last day adds as much as every day before it put together." % (l8_half, l8_quarter)},
+    ],
+    "kid2": [
+        {"q": "Three lab technicians — <b>Yusra, Bilal, and Amina</b> — each run a different test (blood, swab, culture) on a different shift (morning, evening, night). Who runs what, and when?<br><b>1.</b> The <b>culture</b> test is run on the <b>night</b> shift. &nbsp;<b>2.</b> Bilal runs the culture test. &nbsp;<b>3.</b> Yusra does not work the morning shift. &nbsp;<b>4.</b> The <b>blood</b> test is run on the <b>morning</b> shift.",
+         "fact": "The spleen filters blood and holds a reserve of white blood cells, ready to be released.",
+         "a": "Bilal — culture — night · Yusra — swab — evening · Amina — blood — morning.",
+         "steps": "Clue 2 gives <b>Bilal the culture</b>; clue 1 puts him on <b>night</b>. Clue 3 keeps Yusra off the morning and night is taken, so <b>Yusra is evening</b>, leaving Amina the morning. Clue 4 makes morning the blood test &rarr; <b>Amina blood</b>, Yusra swab. Without clue 4 those two could swap."},
+        {"q": "A scanner holds only <b>2 slides at a time</b>. Every slide must be scanned on <b>both</b> of its sides, and each scan takes <b>5 minutes</b>. What is the <b>shortest</b> time to finish <b>3 slides</b>? <i>It is less than you think.</i>",
+         "fact": "Antiseptic on a cut kills germs — but it kills some of your own repairing cells too, which is why clean water is often enough.",
+         "a": "%d minutes." % m8_scan,
+         "steps": "Slides A, B, C. <b>Round 1</b>: A-front, B-front. <b>Round 2</b>: A-back, <i>C-front</i> &mdash; this is the move; B comes off half done on purpose. <b>Round 3</b>: B-back, C-back. 3 &times; 5 = <b>%d minutes</b>. The 20-minute trap finishes A and B first, then runs C alone with the scanner half empty." % m8_scan},
+        {"q": "A box holds vials of <b>4 different vaccines</b>, all mixed together and all looking identical. Without looking, what is the <b>fewest</b> vials you must pick to be <b>certain</b> you have <b>3 of the same kind</b>?",
+         "fact": "Identical twins can accept each other's organs without rejection — their immune systems read them as the same person.",
+         "a": "%d vials." % m8_pick,
+         "steps": "Ask what the <i>unluckiest</i> run looks like: 2 of every kind &mdash; 4 &times; 2 = <b>8</b> &mdash; and still no set of three. There are only 4 kinds, so vial <b>%d</b> must be a third of something. <b>%d</b>. \"Certain\" means it holds on your worst day." % (m8_pick, m8_pick)},
+        {"q": "A tray of samples is sorted. <b>Half</b> of them go to the North lab. Then <b>3</b> are set aside for retesting. Then <b>half</b> of what is left goes to the South lab, and <b>7</b> samples remain on the tray. How many samples were on the tray to start with?",
+         "fact": "Breast milk carries the mother's antibodies, so a baby borrows a defence while building its own.",
+         "a": "%d samples." % m8_start,
+         "steps": "Work backwards, flipping every step. 7 left after half went south &rarr; <b>14</b>. Undo the 3 set aside &rarr; <b>17</b>. That was what remained after half went north, so double it &rarr; <b>%d</b>. Forwards: %d &rarr; %d &rarr; %d &minus; 3 = 14 &rarr; <b>7</b>. &check;" % (m8_start, m8_start, m8_start // 2, m8_start // 2)},
+    ],
+    "kid1_watch": "#1 and #4 are one lesson in two costumes: the obvious multiplication is the wrong one. Expect <b>30</b> on #1 &mdash; ask him to name the two people in one handshake, then ask how many times he counted it. Expect <b>day 6</b> on #4; the question that fixes it is \"what was it the day before it was full?\" #2 is his first substitution puzzle &mdash; if he stalls: \"the flask <i>is</i> three vials.\" #3 is the careless one.",
+    "kid2_watch": "#2 is the one worth sitting with. Nearly everyone answers <b>20 minutes</b>, because they finish one slide before starting the next; the whole idea is taking B off half-done. If he stalls, give him the three rounds on paper, then ask why the scanner is never idle. #3 is yesterday's pigeonhole made harder &mdash; 3 of a kind from 4 kinds &mdash; so <b>5</b> is the expected wrong answer. On #1 watch whether he writes a table. #4 goes wrong when done in his head.",
+}
+
+ALL = [JUL29L, JUL30L, JUL31L, AUG1L, AUG2L, AUG16L, AUG17L, AUG18L]

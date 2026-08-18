@@ -41,6 +41,16 @@ worksheet-mountains-cumulative.html
 worksheet-kites-logic-cumulative.html
 worksheet-castles.html
 worksheet-rainforest-logic.html
+worksheet-immune-system.html
+worksheet-immune-logic.html
+worksheet-white-cells.html
+worksheet-lab-bench-logic.html
+# ^ ADD EVERY NEW SPEC'S FILE HERE, in the same commit as the spec. This list is
+# explicit rather than a worksheet-*.html glob because the hand-written sheets
+# above ARE tracked. A generated sheet left off this list sits untracked with a
+# real child's name in its Name: field, one `git add -A` away from being
+# committed — the Aug 17 pair (immune-*) were missed that way and are added here
+# retroactively.
 
 # wrangler deploy cache
 .wrangler/
