@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Vaccine Day</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #1e3a8a; }
+  .header .sub { font-size: 12px; color: #7d8bb0; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #1e3a8a;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #1e3a8a; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #eef2ff; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #1e3a8a;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #c7d2fe;
+  }
+  .teach .step b { color: #1e3a8a; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #eef2ff; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #1e3a8a; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #1e3a8a; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #1e3a8a; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #1e3a8a; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #7d8bb0; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #c7d2fe;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #eef2ff;
+    border-left: 3px solid #4f46e5;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #1e3a8a; }
+
+  .key h1 { color: #1e3a8a; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #d5dcf7; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #1e3a8a; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #1e3a8a; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ==== MUSA ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>💉 Vaccine Day</h1>
+      <div class="sub">Word problems from the clinic — no steps printed today, you know these</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Musa</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A clinic gives out <b>128 doses a day for 7 days</b>. At the end of the week <b>96</b> doses come back unused. How many doses were actually used?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A vaccine is a practice run. It shows your body a harmless piece of a germ so the real one is already familiar.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A nurse packs <b>75 vials</b> into cool boxes. Each box holds <b>8</b>. How many boxes are <b>completely full</b>, and how many vials are left over? Then: how many boxes must she carry to take <b>every</b> vial?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Most vaccines must stay cold the whole way from the factory to the arm. That chain of fridges has a name: the cold chain.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A nurse sets out <b>6 trays</b> with <b>24 doses</b> on each. By the end of the day she has used <b>89</b> doses. How many are left?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Smallpox is the only human disease ever wiped out completely, and vaccines are how it was done.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">One cool box is <b>5/8</b> full. Another is <b>2/3</b> full. Which box holds more? How do you know?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The word vaccine comes from <i>vacca</i>, the Latin for cow — the first one was made from a mild cattle disease.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A rectangular fridge shelf has a <b>perimeter of 46 cm</b>. One side measures <b>14 cm</b>. How long is the other side? What is the <b>area</b> of the shelf?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> When enough people in a town are vaccinated, a germ runs out of people to jump to. That protects the few who cannot be.</div>
+  </div>
+
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>💉 Vaccine Day</h1>
+      <div class="sub">Word problems from the clinic — the first one has its steps printed for you</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Yusuf</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem guided">
+    <span class="qnum">1.</span> <span class="tag">GUIDED</span>
+    <div class="qtext">A cool box is filled in two goes. In the morning <b>1/6</b> of it is filled. In the afternoon another <b>3/4</b> is filled. How full is the box now?</div>
+    <div class="scaffold">
+      <div>A common bottom number for 6 and 4 is <span class='blank'></span></div>
+      <div>1/6 = <span class='blank'></span>/12 &nbsp; and &nbsp; 3/4 = <span class='blank'></span>/12</div>
+      <div>Now add the top numbers only, keep the bottom: <span class='blank'></span></div>
+    </div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Some vaccines need a second dose weeks later. The first teaches, the second makes the lesson stick for years.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A store of vaccine is <b>5/6</b> full. Over one week, <b>3/8</b> of the store is used. How much is left?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Antibodies are shaped to lock onto one germ and no other, a bit like a key cut for a single door.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A clinic orders <b>36 cartons</b>, and each carton holds <b>45 doses</b>. How many doses is that altogether?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A sore arm after a jab is not the vaccine hurting you. It is your own defence arriving at the spot.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A vial holds <b>12.5 mL</b>. A nurse draws <b>3.6 mL</b>, then later <b>4.25 mL</b>. How much has she drawn, and how much is still in the vial?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Your body keeps memory cells for decades. Some people still carry a defence from a jab given in childhood.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A team vaccinates <b>1,824 people in 6 days</b>, at a steady rate. At that same rate, how many would they vaccinate in <b>11 days</b>? Those records are filed into folders of <b>9</b> — how many <b>complete</b> folders is that, and how many records are left over?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Polio has been pushed out of almost every country on earth by vaccination campaigns that went village by village.</div>
+  </div>
+
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — Musa</div>
+  <div class="ans"><b>1. 800 doses.</b>
+    <div class="steps">128 &times; 7 = <b>896</b> handed out over the week, then 896 &minus; 96 = <b>800</b> actually used. Multiply first, subtract second.</div>
+  </div>
+  <div class="ans"><b>2. 9 full boxes, 3 left over — but 10 boxes to carry them all.</b>
+    <div class="steps">75 &divide; 8 = <b>9 remainder 3</b>. Those 3 spare vials still have to travel, so one more box: <b>10</b>.</div>
+  </div>
+  <div class="ans"><b>3. 55 doses left.</b>
+    <div class="steps">6 &times; 24 = 144 set out, then 144 &minus; 89 = <b>55</b>.</div>
+  </div>
+  <div class="ans"><b>4. The 2/3 box.</b>
+    <div class="steps">Twenty-fourths: 5/8 = <b>15/24</b> and 2/3 = <b>16/24</b>. So <b>2/3</b> holds more, by one twenty-fourth — and note it is the fraction with the <i>smaller</i> numbers this time.</div>
+  </div>
+  <div class="ans"><b>5. Other side 9 cm; area 126 square cm.</b>
+    <div class="steps">Halve first: 46 &divide; 2 = <b>23</b>, one long side plus one short. Then 23 &minus; 14 = <b>9 cm</b>. Area = 14 &times; 9 = <b>126 square cm</b>.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> Day three on missing sides, <b>scaffolding all gone</b> &mdash; #5 is yesterday's guided problem alone. Halving is the whole test: <b>32</b> means he never halved. On #2 expect "9 boxes", one step short. On #4 he may pick 5/8 for its bigger numbers.</div>
+
+  <div class="section-title">4th Grade — Yusuf</div>
+  <div class="ans"><b>1. 11/12 of the box.</b>
+    <div class="steps">Twelfths: 1/6 = 2/12 and 3/4 = 9/12, so 2/12 + 9/12 = <b>11/12</b>. Add the tops, keep the bottom. <i>Both</i> had to change here &mdash; neither bottom was already 12.</div>
+  </div>
+  <div class="ans"><b>2. 11/24 of the store.</b>
+    <div class="steps">Twenty-fourths: 5/6 = 20/24 and 3/8 = 9/24. 20/24 &minus; 9/24 = <b>11/24</b>. The bottom number never changes once you have it.</div>
+  </div>
+  <div class="ans"><b>3. 1,620 doses.</b>
+    <div class="steps">36 &times; 45. Split it: (36 &times; 40) + (36 &times; 5) = 1,440 + 180 = <b>1,620</b>.</div>
+  </div>
+  <div class="ans"><b>4. 7.85 mL drawn; 4.65 mL left.</b>
+    <div class="steps">Pad and line up the points. 3.60 + 4.25 = <b>7.85</b>. Then 12.50 &minus; 7.85 = <b>4.65 mL</b>. Padding matters most in the subtraction: 12.5 read as 12.05 gives <b>4.20</b>.</div>
+  </div>
+  <div class="ans"><b>5. 3,344 people — 371 complete folders, 5 left over.</b>
+    <div class="steps">Find one day first: 1,824 &divide; 6 = <b>304 a day</b>. Then 304 &times; 11 = <b>3,344</b>. Finally 3,344 &divide; 9 = <b>371 remainder 5</b>. Check: 3,339 + 5 = 3,344. &check;</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> Second guided day back on unlike denominators. #1 needs <b>both</b> fractions converted, which yesterday's did not. <b>#2 is the real read</b> &mdash; no scaffold, and a subtraction. Working straight across gives <b>2/2</b>; ask whether the store can be empty when it started 5/6 full. On #5, jumping to 1,824 &times; 11 is yesterday's miss repeating.</div>
+
+</div>
+
+</body>
+</html>

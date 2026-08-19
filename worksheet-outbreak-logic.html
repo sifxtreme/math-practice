@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Outbreak Logic</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #1e3a8a; }
+  .header .sub { font-size: 12px; color: #7d8bb0; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #1e3a8a;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #1e3a8a; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #eef2ff; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #1e3a8a;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #c7d2fe;
+  }
+  .teach .step b { color: #1e3a8a; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #eef2ff; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #1e3a8a; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #1e3a8a; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #1e3a8a; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #1e3a8a; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #7d8bb0; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #c7d2fe;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #eef2ff;
+    border-left: 3px solid #4f46e5;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #1e3a8a; }
+
+  .key h1 { color: #1e3a8a; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #d5dcf7; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #1e3a8a; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #1e3a8a; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ==== MUSA ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🦠 Outbreak Logic</h1>
+      <div class="sub">Puzzles from the clinic — none of these are the sum they look like</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Musa</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A nurse must see <b>8 children</b>. Each appointment takes <b>6 minutes</b>, and she takes a <b>4-minute break between</b> appointments. From the start of the first to the end of the last, how long does she take? <i>Careful — count the breaks.</i></div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A fever is not the germ heating you up. Your body turns the heat up on purpose, because many germs breed badly when warm.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">On a balance, <b>4 syringes</b> exactly balance <b>1 tray</b>. A tray and a syringe together weigh <b>45 grams</b>. How much does <b>one syringe</b> weigh? How much does the tray weigh?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Handwashing with plain soap works because soap pulls apart the greasy coat that many germs are wrapped in.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A vaccination clinic opens at <b>8:50 am</b>. It runs for <b>1 hour 35 minutes</b>, pauses for <b>20 minutes</b>, then runs for <b>45 minutes</b> more. At what time does it finish?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Doctors trace an outbreak backwards, person by person, to find the very first case. They call that one the index case.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A row of <b>12 chairs</b> is set out. Every <b>3rd</b> chair is marked for a nurse. Every <b>4th</b> chair is marked for a helper. How many chairs carry <b>both</b> marks? How many carry <b>no mark at all</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Quarantine gets its name from the Italian for forty days, the time ships once had to wait offshore before anyone could land.</div>
+  </div>
+
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🦠 Outbreak Logic</h1>
+      <div class="sub">Puzzles from the clinic — none of these are the sum they look like</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Yusuf</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">You have <b>9 vials</b>. Eight weigh exactly the same; <b>one is heavier</b>. You have a balance scale — it only tells you which side is heavier, not by how much. What is the <b>fewest number of weighings</b> that is <b>certain</b> to find the heavy one? Explain how.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Your lymph system has no pump of its own. It moves because your muscles squeeze it as you walk about.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">One nurse can vaccinate a whole class in <b>40 minutes</b>. A second nurse can do the same class in <b>24 minutes</b>. Working together at those speeds, how long does the class take? <i>Hint: think about how much of the class each one finishes in a single minute.</i></div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> White blood cells can squeeze straight through the wall of a blood vessel to reach a wound, changing shape to get out.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">The code on a vaccine fridge is <b>3 digits</b> long. Each digit is one of <b>1, 2, 3, 4</b>, and <b>no digit may repeat</b>. How many different codes are possible?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Vaccines are checked in stages on thousands of volunteers before anyone else is offered them. The stages are called trial phases.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Five sample boxes are stacked. The <b>blue</b> box is directly above the <b>red</b>. The <b>green</b> is at the very bottom. The <b>yellow</b> is directly below the <b>white</b>. The <b>red</b> is directly above the <b>green</b>. List the stack from <b>top to bottom</b>.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Some people carry a germ, feel perfectly well, and still pass it on. Tracing an outbreak has to allow for that.</div>
+  </div>
+
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — Musa</div>
+  <div class="ans"><b>1. 76 minutes — 1 hour 16 minutes.</b>
+    <div class="steps">Appointments: 8 &times; 6 = <b>48</b> minutes. Breaks come <i>between</i> them, so there are only <b>7</b>, not 8: 7 &times; 4 = <b>28</b>. Total 48 + 28 = <b>76</b>. Answering 80 means he put a break after the last child.</div>
+  </div>
+  <div class="ans"><b>2. A syringe is 9 g; the tray is 36 g.</b>
+    <div class="steps">The tray weighs the same as 4 syringes, so a tray plus a syringe is really <b>5 syringes</b>. 45 &divide; 5 = <b>9 g</b> each, and the tray is 4 &times; 9 = <b>36 g</b>. Check: 36 + 9 = 45. &check;</div>
+  </div>
+  <div class="ans"><b>3. 11:30 am.</b>
+    <div class="steps">8:50 + 1 h 35 min = <b>10:25</b>. Then + 20 min = <b>10:45</b>. Then + 45 min = <b>11:30 am</b>. Adding the three spans first (2 h 40 min) and then to 8:50 works too.</div>
+  </div>
+  <div class="ans"><b>4. 1 chair has both marks; 6 chairs have none.</b>
+    <div class="steps">Nurse chairs: 3, 6, 9, 12 &mdash; that is <b>4</b>. Helper chairs: 4, 8, 12 &mdash; that is <b>3</b>. Chair <b>12</b> is on both lists, so only <b>1</b> carries both. Marked chairs altogether: 4 + 3 &minus; 1 = <b>6</b>, so 12 &minus; 6 = <b>6</b> are bare.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> #1 is the fencepost trap and it catches almost everyone the first time &mdash; <b>80 minutes</b> is the expected wrong answer. Draw the eight appointments as blocks and let him count the gaps himself rather than telling him. On #4, the trap is adding 4 + 3 = 7 marked chairs; chair 12 must not be counted twice.</div>
+
+  <div class="section-title">4th Grade — Yusuf</div>
+  <div class="ans"><b>1. Two weighings.</b>
+    <div class="steps">Split the 9 into <b>three groups of 3</b>. Weigh group A against group B. If one side sinks, the heavy vial is in that group; if they balance, it is in group C. That is <b>one</b> weighing to find the group of 3. Now take that group, weigh <b>one vial against another</b>: heavier side wins, and if they balance it is the third. That is <b>two</b> total. Answering 3 or 4 usually means he weighed one vial at a time.</div>
+  </div>
+  <div class="ans"><b>2. 15 minutes.</b>
+    <div class="steps">In one minute the first nurse does <b>1/40</b> of the class and the second does <b>1/24</b>. Together: 1/40 + 1/24. Sixtieths do not work here &mdash; use <b>120ths</b>: 3/120 + 5/120 = <b>8/120</b>, which is <b>1/15</b>. One fifteenth of the class each minute means the whole class takes <b>15 minutes</b>. Note it is faster than either nurse alone, which is the sanity check.</div>
+  </div>
+  <div class="ans"><b>3. 24 codes.</b>
+    <div class="steps">First digit: <b>4</b> choices. Second: only <b>3</b> left. Third: <b>2</b> left. 4 &times; 3 &times; 2 = <b>24</b>. Answering 64 means he allowed repeats (4 &times; 4 &times; 4).</div>
+  </div>
+  <div class="ans"><b>4. White, yellow, blue, red, green.</b>
+    <div class="steps">Green is at the bottom. Red is directly above green, so red is second. Blue is directly above red, so blue is third. That leaves the top two slots for yellow and white, and white must be directly above yellow &mdash; so yellow is fourth and <b>white is on top</b>.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> #2 is the one to sit with. It runs straight into this week's skill &mdash; unlike denominators &mdash; but wearing a story, so watch whether he reaches for a common denominator on his own or tries to average 40 and 24 (that gives 32, and "slower than one nurse alone" is the tell). #1 rewards saying the plan out loud before touching the scale; if he starts weighing single vials, ask how many vials one weighing could rule out.</div>
+
+</div>
+
+</body>
+</html>
