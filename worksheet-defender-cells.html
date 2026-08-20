@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Defender Cells</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #1e3a8a; }
+  .header .sub { font-size: 12px; color: #7d8bb0; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #1e3a8a;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #1e3a8a; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #eef2ff; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #1e3a8a;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #c7d2fe;
+  }
+  .teach .step b { color: #1e3a8a; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #eef2ff; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #1e3a8a; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #1e3a8a; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #1e3a8a; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #1e3a8a; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #7d8bb0; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #c7d2fe;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #eef2ff;
+    border-left: 3px solid #4f46e5;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #1e3a8a; }
+
+  .key h1 { color: #1e3a8a; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #d5dcf7; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #1e3a8a; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #1e3a8a; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ==== MUSA ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🛡️ Defender Cells</h1>
+      <div class="sub">Word problems from the body's defences — you know these, no steps printed</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Musa</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A lab grows <b>115 defender cells</b> in each of <b>6 dishes</b>. In one battle with a germ, <b>89</b> of the cells are used up. How many defender cells are left?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> White blood cells are your body's defender cells. You make billions of fresh ones every single day.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A team collects <b>94 blood samples</b>. Each tray holds <b>8</b> samples. How many trays are <b>completely full</b>, and how many trays are needed to hold <b>every</b> sample?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A single drop of blood holds thousands of defender cells, all patrolling for anything that does not belong.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A ward has <b>4 rooms with 15 beds</b> each, and <b>1 more room with 12 beds</b>. How many beds are there altogether?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> When you rest, your body spends more energy on defence. That is one reason sleep helps you get better faster.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">One medicine bottle is <b>3/4</b> full. Another is <b>5/8</b> full. Which bottle holds <b>more</b> medicine? How do you know?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Antibodies are tiny Y-shaped tools your defender cells make, each one built to grab a single kind of germ.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A rectangular lab tray has an <b>area of 72 square cm</b>. One side measures <b>8 cm</b>. How long is the other side? What is the <b>perimeter</b> of the tray?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Once your body beats a germ, it keeps a memory of it. Meet the same germ again and the defence is ready in hours, not days.</div>
+  </div>
+
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🛡️ Defender Cells</h1>
+      <div class="sub">Word problems from the body's defences — the first one still shows a couple of steps</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Yusuf</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem guided">
+    <span class="qnum">1.</span> <span class="tag">GUIDED</span>
+    <div class="qtext">A test tube is filled in two goes. First <b>2/5</b> of it is filled, then <b>1/3</b> more. How full is the tube now?</div>
+    <div class="scaffold">
+      <div>A common bottom number for 5 and 3 is <span class='blank'></span></div>
+      <div>Rewrite both, then add the tops: 2/5 = <span class='blank'></span>/15 &nbsp;+&nbsp; 1/3 = <span class='blank'></span>/15 &nbsp;=&nbsp; <span class='blank'></span></div>
+    </div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Your bone marrow — the soft centre of your bones — is the factory where most defender cells are born.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A store of vaccine is <b>7/8</b> full. Over one week, <b>1/3</b> of the full store is used. How much is left?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Some defender cells live only a few days; others patrol for years, remembering old battles the whole time.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A lab runs <b>24 trays</b>, and each tray holds <b>36 sample wells</b>. How many wells is that altogether?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A fever is your body turning up the heat on purpose — many germs breed badly when things get warm.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A vial of serum costs <b>$4.75</b>. A nurse buys <b>3 vials</b> and pays with a <b>$20</b> note. How much does she spend, and how much change does she get?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The word serum means the clear liquid part of blood — the part that carries antibodies once the cells are removed.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A clinic screens <b>1,464 people in 6 days</b>, at a steady rate. At that same rate, how many would they screen in <b>9 days</b>? Those results are filed into folders of <b>8</b> — how many <b>complete</b> folders is that, and how many results are left over?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Contact tracing during an outbreak is a giant sorting job — thousands of records filed, checked, and followed up one by one.</div>
+  </div>
+
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — Musa</div>
+  <div class="ans"><b>1. 601 defender cells left.</b>
+    <div class="steps">115 &times; 6 = <b>690</b>, then 690 &minus; 89 = <b>601</b>. Multiply first, subtract second.</div>
+  </div>
+  <div class="ans"><b>2. 11 full trays, 6 left over — but 12 trays to hold them all.</b>
+    <div class="steps">94 &divide; 8 = <b>11 remainder 6</b>. The 6 spares still need a tray, so <b>12</b>. "11" is one step short.</div>
+  </div>
+  <div class="ans"><b>3. 72 beds.</b>
+    <div class="steps">4 &times; 15 = <b>60</b>, then 60 + 12 = <b>72</b>. Multiply first, then add the last room.</div>
+  </div>
+  <div class="ans"><b>4. The 3/4 bottle.</b>
+    <div class="steps">Eighths: 3/4 = <b>6/8</b> vs <b>5/8</b>, so <b>3/4</b> holds more — but only once the eighths make them fair to compare.</div>
+  </div>
+  <div class="ans"><b>5. Other side 9 cm; perimeter 34 cm.</b>
+    <div class="steps">72 &divide; 8 = <b>9 cm</b> (the missing side). Perimeter = 2 &times; (8 + 9) = <b>34 cm</b>. Gives area, asks perimeter — reverse of yesterday.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> Day four on missing sides, now clued by <b>area, not perimeter</b> — #5 needs a <i>divide</i>, then the perimeter. Halving 72 (yesterday's move) is the slip. #2: expect "11 trays". #4: he may still pick the bigger top number.</div>
+
+  <div class="section-title">4th Grade — Yusuf</div>
+  <div class="ans"><b>1. 11/15 of the tube.</b>
+    <div class="steps">Fifteenths: 2/5 = 6/15, 1/3 = 5/15, so 6/15 + 5/15 = <b>11/15</b>. <i>Both</i> had to change — neither was already 15.</div>
+  </div>
+  <div class="ans"><b>2. 13/24 of the store.</b>
+    <div class="steps">Twenty-fourths: 7/8 = 21/24, 1/3 = 8/24. 21/24 &minus; 8/24 = <b>13/24</b>. No scaffold, and a subtraction.</div>
+  </div>
+  <div class="ans"><b>3. 864 wells.</b>
+    <div class="steps">24 &times; 36 = (24 &times; 30) + (24 &times; 6) = 720 + 144 = <b>864</b>.</div>
+  </div>
+  <div class="ans"><b>4. $14.25 spent; $5.75 change.</b>
+    <div class="steps">4.75 &times; 3 = <b>14.25</b>, then 20.00 &minus; 14.25 = <b>5.75</b>. Pad the 20 as 20.00 and line up the points.</div>
+  </div>
+  <div class="ans"><b>5. 2,196 people — 274 complete folders, 4 left over.</b>
+    <div class="steps">Day first: 1,464 &divide; 6 = <b>244</b>. Then 244 &times; 9 = <b>2,196</b>. Then 2,196 &divide; 8 = <b>274 r 4</b>. Check: 274 &times; 8 + 4 = 2,196. &check;</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> <b>Third and last guided day</b> on unlike denominators — #1 keeps a light scaffold, #2 has none. If both come back clean <i>with work shown</i>, the guided slot moves to <b>decimals</b> tomorrow. #2 straight across gives 6/5 — ask if a store can be more than full. #5: jumping to 1,464 &times; 9 skips the daily rate.</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Germ Patrol Logic</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #1e3a8a; }
+  .header .sub { font-size: 12px; color: #7d8bb0; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #1e3a8a;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .qnum { font-weight: bold; font-size: 15px; color: #1e3a8a; }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 92px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #eef2ff;
+    border-left: 3px solid #4f46e5;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #1e3a8a; }
+
+  .key h1 { color: #1e3a8a; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #d5dcf7; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #1e3a8a; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #1e3a8a; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ==== MUSA ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🔬 Germ Patrol Logic</h1>
+      <div class="sub">Puzzles from the lab — none of these are the sum they look like</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Musa</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A lab hallway has <b>7 doors</b> in a row, evenly spaced. It is <b>48 metres</b> from the first door to the last. How far apart are <b>two doors next to each other</b>? <i>Careful — count the gaps, not the doors.</i></div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Germs are far too small to see. A dot the size of this full stop could hold thousands of bacteria.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">On a balance, <b>3 test tubes</b> weigh exactly the same as <b>1 beaker</b>. A beaker and a test tube together weigh <b>32 grams</b>. How much does <b>one test tube</b> weigh? How much does the beaker weigh?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Not all germs are harmful. Your gut is home to trillions of helpful bacteria that help you digest your food.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A lab test starts at <b>9:40 am</b>. It runs for <b>1 hour 50 minutes</b>, waits <b>25 minutes</b>, then runs for <b>40 minutes</b> more. At what time does it finish?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Bacteria can split in two in about 20 minutes. One becomes two, two become four — that is how a few turn into millions.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A tray holds <b>15 sample cups</b> in a row. Every <b>2nd</b> cup gets a <b>blue</b> dot. Every <b>3rd</b> cup gets a <b>red</b> dot. How many cups have <b>both</b> dots? How many have <b>no dot at all</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A virus is not quite alive on its own. It can only make copies of itself once it gets inside a living cell.</div>
+  </div>
+
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🔬 Germ Patrol Logic</h1>
+      <div class="sub">Puzzles from the lab — none of these are the sum they look like</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Yusuf</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A lab has a <b>5-litre</b> jug, a <b>3-litre</b> jug, and a tap. Neither jug has any marks on it. Using only these, how can you measure out <b>exactly 4 litres</b>? Write the steps.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Lab work uses exact amounts on purpose. A test can give the wrong answer if a measure is off by even a little.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">At a science meeting, <b>6 scientists</b> each shake hands <b>once</b> with every other scientist. How many handshakes happen in total? <i>Hint: two people share one handshake, so don't count it twice.</i></div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Handshakes spread germs, which is why hospitals now use gel and elbow-bumps during an outbreak.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">Four labs — <b>P, Q, R,</b> and <b>S</b> — are ranked by how many tests they ran. <b>Q</b> ran more than <b>P</b>. <b>S</b> ran fewer than <b>P</b>. <b>R</b> ran more than <b>Q</b>. List the four labs in order, from <b>most</b> tests to <b>fewest</b>.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Scientists check each other's work before it is trusted. That review is a big part of how science stays honest.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Two taps fill a sample tank. On its own, tap A fills the tank in <b>6 hours</b>. Tap B fills the same tank in <b>4 hours</b>. With <b>both taps</b> running together, how long does the tank take to fill? <i>Think about how much of the tank each tap fills in one hour.</i></div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Your kidneys are a filter tank of their own. They clean your entire blood supply about 40 times a day.</div>
+  </div>
+
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — Musa</div>
+  <div class="ans"><b>1. 8 metres apart.</b>
+    <div class="steps">7 doors in a row have only <b>6 gaps</b> between them, not 7. So 48 &divide; 6 = <b>8 metres</b>. Dividing by 7 gives 6.86 &mdash; the fencepost trap in reverse. Draw the 7 doors and count the spaces.</div>
+  </div>
+  <div class="ans"><b>2. A test tube is 8 g; the beaker is 24 g.</b>
+    <div class="steps">The beaker weighs the same as 3 test tubes, so a beaker plus a tube is really <b>4 test tubes</b>. 32 &divide; 4 = <b>8 g</b> each, and the beaker is 3 &times; 8 = <b>24 g</b>. Check: 24 + 8 = 32. &check;</div>
+  </div>
+  <div class="ans"><b>3. 12:35 pm.</b>
+    <div class="steps">9:40 + 1 h 50 min = <b>11:30</b>. Then + 25 min = <b>11:55</b>. Then + 40 min = <b>12:35 pm</b>. Crossing noon is the tricky part &mdash; 11:55 + 40 goes past 12:00.</div>
+  </div>
+  <div class="ans"><b>4. 2 cups have both dots; 5 cups have none.</b>
+    <div class="steps">Blue cups: 2, 4, 6, 8, 10, 12, 14 &mdash; that is <b>7</b>. Red cups: 3, 6, 9, 12, 15 &mdash; that is <b>5</b>. Cups <b>6 and 12</b> are on both lists, so <b>2</b> have both. Marked cups altogether: 7 + 5 &minus; 2 = <b>10</b>, so 15 &minus; 10 = <b>5</b> are bare.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> #1 is the fencepost trap and it catches almost everyone &mdash; dividing by 7 (the door count) instead of 6 (the gaps) is the expected slip. Let him draw it. On #4, the trap is adding 7 + 5 = 12 marked cups; cups 6 and 12 must not be counted twice.</div>
+
+  <div class="section-title">4th Grade — Yusuf</div>
+  <div class="ans"><b>1. Fill the 5, pour into the 3, and 2 is left; empty the 3, move the 2 across, refill the 5, top up the 3 — 4 litres stay in the big jug.</b>
+    <div class="steps">Fill the 5-L jug. Pour it into the 3-L jug until full &mdash; that leaves <b>2 L</b> in the big jug. Empty the 3-L jug, pour the 2 L into it. Fill the 5-L jug again, then top up the 3-L jug &mdash; it only needs <b>1 L</b> more, so <b>4 L</b> remain in the 5-L jug. There is a longer route too; any that ends at exactly 4 is right.</div>
+  </div>
+  <div class="ans"><b>2. 15 handshakes.</b>
+    <div class="steps">Each of the 6 shakes hands with the other 5, which counts <b>6 &times; 5 = 30</b> &mdash; but that counts every handshake twice (once from each side). So 30 &divide; 2 = <b>15</b>. Answering 30 means he forgot to halve; 36 means he counted people shaking their own hand.</div>
+  </div>
+  <div class="ans"><b>3. R, Q, P, S — most to fewest.</b>
+    <div class="steps">R &gt; Q (R ran more than Q). Q &gt; P. P &gt; S (S ran fewer than P). Chain them: <b>R &gt; Q &gt; P &gt; S</b>. Building the chain one link at a time beats trying to hold all four in mind at once.</div>
+  </div>
+  <div class="ans"><b>4. 2 hours 24 minutes.</b>
+    <div class="steps">In one hour tap A fills <b>1/6</b> of the tank and tap B fills <b>1/4</b>. Together: 1/6 + 1/4. Twelfths: 2/12 + 3/12 = <b>5/12</b> of the tank each hour. So the whole tank takes <b>12/5</b> hours = <b>2 2/5</b> hours = <b>2 h 24 min</b>. Note it is faster than either tap alone &mdash; the sanity check.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> #4 is the one to sit with &mdash; it runs straight into this week's skill, unlike denominators, but wearing a story. Watch whether he finds a common denominator on his own or tries to average 6 and 4 (that gives 5 hours, and "slower than one tap alone" is the tell). #1 rewards saying the plan aloud before pouring; if he is stuck, ask what is left in the big jug after the 3-L jug is filled once.</div>
+
+</div>
+
+</body>
+</html>

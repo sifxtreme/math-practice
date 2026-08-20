@@ -657,10 +657,15 @@ def main():
     # Keyed on kid ID, never on a name — see load_kids(). Digit shapes come straight
     # from AGENTS.md "Difficulty pin".
     PLANS = {
-        "div": [("kid1", (2, 1), "2-digit ÷ 1-digit, with a remainder", "div_2d_1"),
-                ("kid2", (3, 1), "3-digit ÷ 1-digit, with a remainder", "div_3d_1")],
-        "mul": [("kid1", (3, 1), "3-digit × 1-digit", "mul_3x1"),
-                ("kid2", (2, 2), "2-digit × 2-digit", "mul_2x2")],
+        # Stepped up one notch 2026-08-20 on Asif's direct instruction ("make the
+        # drills slightly harder"). One extra digit each — same method, one more
+        # step — NOT a new act (Yusuf's flagged 2-digit-divisor rung is deliberately
+        # skipped: that is a genuinely new skill, not "slightly"). Not evidence-gated
+        # off RESULTS.md; this is the owner overriding the pin.
+        "div": [("kid1", (3, 1), "3-digit ÷ 1-digit, with a remainder", "div_3d_1"),
+                ("kid2", (4, 1), "4-digit ÷ 1-digit, with a remainder", "div_4d_1")],
+        "mul": [("kid1", (4, 1), "4-digit × 1-digit", "mul_4x1"),
+                ("kid2", (3, 2), "3-digit × 2-digit", "mul_3x2")],
         # Facts: the shape field carries the OPERATIONS, not digit counts, and
         # there is no drill_cost key because a probe is not sized to a budget.
         # kid1 gets multiplication only; kid2 gets both, because operation-
