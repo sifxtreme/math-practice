@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Memory Cells</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #1e3a8a; }
+  .header .sub { font-size: 12px; color: #7d8bb0; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #1e3a8a;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #1e3a8a; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #eef2ff; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #1e3a8a;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #c7d2fe;
+  }
+  .teach .step b { color: #1e3a8a; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #eef2ff; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #1e3a8a; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #1e3a8a; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #1e3a8a; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #1e3a8a; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #7d8bb0; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #c7d2fe;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #eef2ff;
+    border-left: 3px solid #4f46e5;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #1e3a8a; }
+
+  .key h1 { color: #1e3a8a; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #d5dcf7; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #1e3a8a; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #1e3a8a; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ==== MUSA ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🧠 Memory Cells</h1>
+      <div class="sub">Sunday cumulative — everything from this block</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Musa</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">Aisha's lab printed <b>6</b> sheets of memory-cell labels with <b>145</b> labels on each sheet. <b>218</b> labels were used on the charts. How many labels are <b>left</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> After you beat an infection, a few cells stay behind for years just to remember it. They are called memory cells.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">There are <b>196</b> memory cells to store. Each tube holds <b>8</b> cells. How many tubes are needed so that <b>no cell is left out</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Memory cells are why you usually catch chickenpox only once. Your body recognises it the second time and stops it early.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A lab counted <b>187</b> memory cells in the morning and <b>233</b> in the afternoon. All of them are shared evenly across <b>6</b> racks. How many cells go on <b>each rack</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A vaccine works by teaching memory cells without you ever getting sick. It is a practice drill for your immune system.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">One vial is <b>5/6</b> full. Another vial is <b>3/4</b> full. Which vial holds <b>more</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Some memory cells live longer than you have been alive. Measles memory can last a whole lifetime.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A rectangular storage tray has an <b>area of 96 square centimetres</b>. One side is <b>8 cm</b> long. How long is the <b>other side</b>, and what is the <b>perimeter</b> of the tray?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Your bone marrow, spleen and lymph nodes all store memory cells, so the record is kept in more than one place.</div>
+  </div>
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🧠 Memory Cells</h1>
+      <div class="sub">Sunday cumulative — everything from this block</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Yusuf</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">Bilal weighs one memory-cell sample at <b>5.4 g</b> and another at <b>2.75 g</b>. What is their <b>total</b> weight, and how much <b>heavier</b> is the first sample than the second?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Memory cells are rare — often fewer than one in a thousand of the cells in your blood — but they are the ones that end a repeat infection fast.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A tray was <b>5/6</b> full of samples. <b>1/4</b> of a tray was used up in testing. What fraction of a tray is <b>left</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> There are two kinds of memory cell. B cells remember how to build the antibody; T cells remember how to kill an infected cell.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A cold store holds <b>58</b> racks, and each rack holds <b>34</b> vials. How many vials are in the store <b>altogether</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Samples like these are stored at about &minus;80&deg;C. That is colder than the coldest temperature ever recorded in Antarctica.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A technician packs <b>2,617</b> memory cells into boxes that hold <b>6</b> each. How many boxes are <b>completely full</b>, and how many cells are <b>left over</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Your immune system can remember roughly a billion different germ shapes — without ever having met most of them.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A counting machine logged <b>1,944</b> memory cells in <b>8</b> hours, at a steady rate. At that same rate, how many would it log in the <b>next 5 hours</b>? If those cells are loaded into trays of <b>8</b>, how many trays are <b>full</b> and how many cells are <b>left over</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A booster shot works by finding the memory cells you already have and multiplying them, which is why the second dose acts faster than the first.</div>
+  </div>
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — Musa</div>
+  <div class="ans"><b>1. 652 labels left.</b>
+    <div class="steps">145 &times; 6 = <b>870</b>, then 870 &minus; 218 = <b>652</b>. Multiply first, subtract second.</div>
+  </div>
+  <div class="ans"><b>2. 25 tubes.</b>
+    <div class="steps">196 &divide; 8 = <b>24 remainder 4</b>. Those 4 spare cells still need a tube, so round up to <b>25</b>. "24" is one step short.</div>
+  </div>
+  <div class="ans"><b>3. 70 cells per rack.</b>
+    <div class="steps">187 + 233 = <b>420</b>, then 420 &divide; 6 = <b>70</b>. Add both parts of the day first, then split. Dividing 187 by 6 alone forgets the afternoon.</div>
+  </div>
+  <div class="ans"><b>4. The 5/6 vial.</b>
+    <div class="steps">Twelfths: 5/6 = <b>10/12</b> vs 3/4 = <b>9/12</b>, so <b>5/6</b> holds more — but only once the twelfths make them fair to compare.</div>
+  </div>
+  <div class="ans"><b>5. Other side 12 cm; perimeter 40 cm.</b>
+    <div class="steps">96 &divide; 8 = <b>12 cm</b> (the missing side). Perimeter = 2 &times; (8 + 12) = <b>40 cm</b>. Gives area, asks perimeter — divide for the side, don't halve.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> <b>Sunday cumulative — five different skills, one sheet.</b> Day seven on missing sides, no scaffold: halving 96 to get 48 is the slip, it must be a <i>divide</i> by the known side. #2: expect "24". #4: he may still read the bigger bottom number as "more" — 3/4 <i>looks</i> bigger than 5/6 until both are twelfths.</div>
+
+  <div class="section-title">4th Grade — Yusuf</div>
+  <div class="ans"><b>1. Total 8.15 g; the first is heavier by 2.65 g.</b>
+    <div class="steps">Write 5.4 as <b>5.40</b> and line up the points. 5.40 + 2.75 = <b>8.15</b>; 5.40 &minus; 2.75 = <b>2.65</b>. <b>Scaffold is off entirely today</b> — the padding line is no longer printed, he has to write it himself.</div>
+  </div>
+  <div class="ans"><b>2. 7/12 of a tray left.</b>
+    <div class="steps">Twelfths: 5/6 = 10/12, 1/4 = 3/12. 10/12 &minus; 3/12 = <b>7/12</b>. Unlike denominators, no scaffold, subtraction again.</div>
+  </div>
+  <div class="ans"><b>3. 1,972 vials.</b>
+    <div class="steps">58 &times; 34 = (58 &times; 30) + (58 &times; 4) = 1,740 + 232 = <b>1,972</b>. Two-by-two: the second partial row shifts one column left.</div>
+  </div>
+  <div class="ans"><b>4. 436 full boxes, 1 cell left over.</b>
+    <div class="steps">2,617 &divide; 6 = <b>436 remainder 1</b>. Check: 436 &times; 6 + 1 = 2,617. &check; The question asks for both the full count and the leftover.</div>
+  </div>
+  <div class="ans"><b>5. 1,215 cells — 151 full trays, 7 left over.</b>
+    <div class="steps">Rate first: 1,944 &divide; 8 = <b>243</b> per hour. Then 243 &times; 5 = <b>1,215</b>. Then 1,215 &divide; 8 = <b>151 r 7</b>. Check: 151 &times; 8 + 7 = 1,215. &check;</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> <b>Day three on decimals, and the scaffold is now completely off.</b> The whole point is whether he pads 5.4 to 5.40 <i>unprompted</i> — an answer of 8.15 with no padding written is not a pass on these sheets. <i>No RESULTS.md entry was logged for Aug 22, so this moved on the plan's designated day rather than on confirmed evidence.</i> #2 straight across gives 4/2 — a tray cannot have more left than it started with, so that answer fails its own sense check. #5: jumping to 1,944 &times; 5 skips the per-hour rate.</div>
+
+</div>
+
+</body>
+</html>

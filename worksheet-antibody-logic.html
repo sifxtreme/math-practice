@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Antibody Lab Logic</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #1e3a8a; }
+  .header .sub { font-size: 12px; color: #7d8bb0; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #1e3a8a;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #1e3a8a; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #eef2ff; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #1e3a8a;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #c7d2fe;
+  }
+  .teach .step b { color: #1e3a8a; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #eef2ff; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #1e3a8a; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #1e3a8a; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #1e3a8a; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #1e3a8a; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #7d8bb0; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #c7d2fe;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #eef2ff;
+    border-left: 3px solid #4f46e5;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #1e3a8a; }
+
+  .key h1 { color: #1e3a8a; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #d5dcf7; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #1e3a8a; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #1e3a8a; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ==== MUSA ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🧪 Antibody Lab Logic</h1>
+      <div class="sub">Reasoning puzzles — think it through, then write why</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Musa</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">Four antibodies — <b>P, Q, R,</b> and <b>S</b> — each caught some germs. <b>Q</b> caught more than <b>P</b>. <b>R</b> caught fewer than <b>P</b>. <b>S</b> caught more than <b>Q</b>. List all four from <b>most</b> to <b>least</b>.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">Three scientists — <b>Nadia, Yusra,</b> and <b>Tariq</b> — each study one antibody shape: <b>Y-shape</b>, <b>T-shape</b>, or <b>disc</b>. Nadia does <b>not</b> study the disc. Tariq studies the <b>Y-shape</b>. Who studies each shape?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A dish starts with <b>4</b> antibodies at <b>2:00</b>. The number <b>doubles every 20 minutes</b>. How many antibodies are in the dish at <b>3:00</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Vials are numbered <b>1 to 24</b>. Every <b>3rd</b> vial gets a <b>green</b> dot. Every <b>4th</b> vial gets a <b>yellow</b> dot. Which vials get <b>both</b> dots? And how many vials get <b>no dot at all</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🧪 Antibody Lab Logic</h1>
+      <div class="sub">Reasoning puzzles — think it through, then write why</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Yusuf</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">Four researchers — <b>Amina, Bilal, Hafsa,</b> and <b>Idris</b> — each matched an antibody to one germ: <b>flu</b>, <b>measles</b>, <b>tetanus</b>, or <b>cholera</b>. Amina matched <b>neither</b> flu <b>nor</b> cholera. Bilal matched <b>measles</b>. Hafsa did <b>not</b> match cholera. Who matched which germ?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext"><b>Nine</b> sealed vials look identical, but <b>one is heavier</b> than the other eight. You have a <b>balance scale</b>. What is the <b>fewest number of weighings</b> that is guaranteed to find the heavy vial? Explain <b>why</b> it always works.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A counting log reads <b>5</b>, then <b>11</b>, then <b>23</b>, then <b>47</b>. What comes <b>next</b>, and what is the <b>rule</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A sample must be checked <b>every 12 minutes</b>, starting at <b>9:00</b> and finishing at <b>11:00</b>, with a check at <b>both</b> the start and the finish. <b>How many checks</b> are made altogether?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — Musa</div>
+  <div class="ans"><b>1. S, Q, P, R.</b>
+    <div class="steps">Q &gt; P and R &lt; P gives <b>Q, P, R</b>. S &gt; Q puts S on top. Chain them one clue at a time rather than guessing a whole order.</div>
+  </div>
+  <div class="ans"><b>2. Tariq — Y-shape; Nadia — T-shape; Yusra — disc.</b>
+    <div class="steps">Tariq is given. That leaves Nadia and Yusra for T-shape and disc; Nadia is <b>not</b> the disc, so Nadia takes the T-shape and Yusra the disc. A "not" clue is as useful as a "yes" clue.</div>
+  </div>
+  <div class="ans"><b>3. 32 antibodies.</b>
+    <div class="steps">2:00 &rarr; 3:00 is 60 minutes, so <b>three</b> doublings at 2:20, 2:40 and 3:00. 4 &rarr; 8 &rarr; 16 &rarr; <b>32</b>. The trap is doubling only twice, or multiplying 4 by 3.</div>
+  </div>
+  <div class="ans"><b>4. Both dots: 12 and 24. No dot: 12 vials.</b>
+    <div class="steps">Both dots means a multiple of <b>12</b>. Green (multiples of 3) = 8 vials; yellow (multiples of 4) = 6 vials; 2 of them are counted twice, so 8 + 6 &minus; 2 = <b>12</b> vials get at least one dot, leaving 24 &minus; 12 = <b>12</b> with none.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> #3 — counting the 2:00 start as a doubling gives 16. #4 — adding 8 + 6 = 14 without removing the two vials that get <i>both</i> dots is the classic double-count; the answer to the first half is exactly the number he has to subtract.</div>
+
+  <div class="section-title">4th Grade — Yusuf</div>
+  <div class="ans"><b>1. Bilal — measles; Amina — tetanus; Hafsa — flu; Idris — cholera.</b>
+    <div class="steps">Bilal is given (measles). Amina is not flu, not cholera, and measles is taken, so Amina is <b>tetanus</b>. Hafsa is not cholera and the other two are gone, so Hafsa is <b>flu</b>. Idris takes what is left, <b>cholera</b>. A grid with rows for people and columns for germs makes this fall out.</div>
+  </div>
+  <div class="ans"><b>2. Two weighings.</b>
+    <div class="steps">Split into <b>three groups of three</b>. Weigh group A against group B: if one side sinks, that group holds it; if they balance, it is group C. That is one weighing to find the group of three. Then weigh <b>one vial against another</b> from that group: if one sinks it is the heavy one, if they balance it is the third. Guaranteed, not lucky — every outcome is covered. One weighing cannot do it: a single weighing has only three outcomes and there are nine possible vials.</div>
+  </div>
+  <div class="ans"><b>3. 95. Rule: double, then add 1.</b>
+    <div class="steps">5 &times; 2 + 1 = 11; 11 &times; 2 + 1 = 23; 23 &times; 2 + 1 = 47; 47 &times; 2 + 1 = <b>95</b>. The gaps (6, 12, 24) double too, which is the other way to see it.</div>
+  </div>
+  <div class="ans"><b>4. 11 checks.</b>
+    <div class="steps">9:00 to 11:00 is <b>120</b> minutes; 120 &divide; 12 = <b>10</b> gaps. Checks happen at both ends, so it is gaps <b>+ 1</b> = <b>11</b>. Fenceposts: 10 gaps need 11 posts.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> #2 — "three weighings" (checking one vial at a time) is a common answer and is not wrong so much as not <i>fewest</i>; push him to justify why two always works, since the explanation is the actual assignment here. #4 — answering <b>10</b> is the fencepost error, and it is the same error as counting doublings in Musa's #3.</div>
+
+</div>
+
+</body>
+</html>
