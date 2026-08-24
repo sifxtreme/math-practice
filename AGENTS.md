@@ -213,6 +213,21 @@ want the kids to use the grid."* He is right, and the reason matters:
 | **`grid`** | A kid is skipping steps or jumping to answers. The boxes make the method non-optional — this is the layout the show-your-work rule was built for. |
 | **`plain`** | The method is solid. A test will not hand them boxes, and reproducing the layout unaided is part of the skill. |
 
+**Where the layout stands per kid — Asif has moved this twice, so read it, don't assume the default:**
+
+| Kid | Layout | Set |
+|---|---|---|
+| Yusuf | `plain` | 2026-08-22 — *"remove the grid lines for Yusuf"* |
+| Musa | `plain` | 2026-08-24 — *"Remove grid lines for Musa too in the drills"* |
+
+Both kids are on `plain` as of 2026-08-24, so a normal day is **one** `--layout plain` run and one
+file: `worksheet-<skill>-drill-plain.html`. `--layout` is a **whole-file flag**, not per-kid — when
+the two disagreed (Aug 22) it took *two* generator runs and two prints, filtered with `--kid`. If
+Asif puts one kid back on the grid, that is the shape again; don't reach for a per-kid flag that
+does not exist. ⚠️ A **facts** sheet is boxed in both layouts by construction (`shape == "facts"`
+forces it in `render_problem`) — `--layout plain` will not strip Musa's boxes there, and that is
+deliberate: the box is the only place to write an answer on a facts sheet.
+
 ⚠️ **`plain` removes the `−` signs and the `R` too, not just the boxes.** Leaving them
 would tell the kid how many subtraction steps there are — i.e. how many digits the
 quotient has — which is most of what the problem is asking. That was the first cut of
@@ -383,9 +398,9 @@ Straight to 5 compound word problems, no example box. This is the original forma
 ## How to make a new set
 
 1. Copy the closest existing sheet — `worksheet.html` for PRACTICE, `worksheet-teach-remainders-fractions.html` for TEACH. The layout/CSS is already dialed in.
-2. Pick a new **theme** (and matching "Did you know?" facts). **Themes already used — do not repeat:** space · World Cup (×3) · ocean · dinosaur · Ancient Egypt · astronomy · human body · national parks · trains · volcano · Silk Road · bridges · weather · Mars rovers · honeybees · sailing ships · mountains & climbing · lighthouses · falconry · deserts & caravans · clocks & timekeeping · kites & flight · rainforest · castles · **immune system** *(set by Asif 2026-08-17 for the whole Aug 17–23 week — both the word sheet and the logic sheet, so it does not burn two themes)*. Sub-topics spent inside that week so far: white cells · lab bench · **vaccines** · **outbreak tracing** (Aug 19) · **defender cells** · **germ patrol** (Aug 20). **Append yours here when you add a sheet.**
+2. Pick a new **theme** (and matching "Did you know?" facts). **Themes already used — do not repeat:** space · World Cup (×3) · ocean · dinosaur · Ancient Egypt · astronomy · human body · national parks · trains · volcano · Silk Road · bridges · weather · Mars rovers · honeybees · sailing ships · mountains & climbing · lighthouses · falconry · deserts & caravans · clocks & timekeeping · kites & flight · rainforest · castles · **immune system** *(set by Asif 2026-08-17 for the whole Aug 17–23 week — both the word sheet and the logic sheet, so it does not burn two themes)*. Sub-topics spent inside that week so far: white cells · lab bench · **vaccines** · **outbreak tracing** (Aug 19) · **defender cells** · **germ patrol** (Aug 20) · **lymph nodes** · **fever ward** (Aug 21) · **bone marrow** · **marrow lab** (Aug 22) · **memory cells** · **antibodies** (Aug 23 — last immune day). **animal migration** *(Aug 24 — one theme across BOTH the word sheet and the logic sheet, the same trick the immune week used: it costs one theme, not two)*. **Append yours here when you add a sheet.**
 
-⚠️ **Theme supply is the binding constraint now**, not build time — three sheets a day burns two themes a day. Unspent ideas: rainforest · the Olympics · castles · animal migration · rivers · caves · bridges of the world *(distinct from `bridges`)* · printing & books · glass & mirrors · wells and water · silk & dye · maps and mapmaking.
+⚠️ **Theme supply is the binding constraint now**, not build time — three sheets a day burns two themes a day. Unspent ideas: the Olympics · rivers · caves · bridges of the world *(distinct from `bridges`)* · printing & books · glass & mirrors · wells and water · silk & dye · maps and mapmaking. *(Pruned 2026-08-24: `rainforest`, `castles` and `animal migration` were on this list while `worksheet-rainforest-logic.html`, `worksheet-castles.html` and now `worksheet-migration.html` sat in the directory. An idea list that keeps spent themes is worse than no list — it hands you a repeat and calls it fresh. Move an entry across when you build it, in the same commit.)*
 3. Write 5 fresh compound problems per grade, using the skill spread in **Difficulty pin** below (that section is the live setting — read it, don't use the baseline unless it says to).
 4. Regenerate the **answer key** page with worked steps, then **verify every answer programmatically** — a throwaway Python block asserting each expected value (`fractions.Fraction` for the fraction problems). Hand-checking is exactly where a tired adult repeats the very error the key exists to catch. Print the pass/fail table before you print paper.
 5. Pre-fill each sheet's `Name:` field (kid1 / kid2). For the `Date:` field, **prefer `./print-worksheet.sh <file> --date "July 28, 2026"`** (or `--date today`) — it stamps the render only, leaves your source alone, and overrides a stale baked-in date, so **reprinting an old sheet never needs a hand-edit**. A blank date makes the sheet unfilable the moment it leaves the printer: you can't tell later which day it was for or whether it was done. The answer key has no `Date:` field and stays undated — don't add one. Baking the date into the HTML still works for a sheet written for one specific day.

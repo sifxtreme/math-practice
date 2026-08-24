@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Great Migrations</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #1e3a8a; }
+  .header .sub { font-size: 12px; color: #7d8bb0; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #1e3a8a;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #1e3a8a; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #eef2ff; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #1e3a8a;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #c7d2fe;
+  }
+  .teach .step b { color: #1e3a8a; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #eef2ff; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #1e3a8a; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #1e3a8a; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #1e3a8a; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #1e3a8a; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #7d8bb0; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #c7d2fe;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #eef2ff;
+    border-left: 3px solid #4f46e5;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #1e3a8a; }
+
+  .key h1 { color: #1e3a8a; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #d5dcf7; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #1e3a8a; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #1e3a8a; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🦅 Great Migrations</h1>
+      <div class="sub">Cumulative — all five skills</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Musa</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A ranger counts <b>7</b> flocks of snow geese with <b>128</b> birds in each flock. Later, <b>215</b> of those birds land on the lake. How many are <b>still flying</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Snow geese fly in a V. The bird at the point does the hardest work, so they take turns swapping places.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext"><b>154</b> tagged sandpipers must be moved to the coast. Each carrying crate holds <b>9</b> birds. How many crates are needed so that <b>no bird is left behind</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Some sandpipers fly from Alaska to New Zealand without landing once — over a week in the air.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A ranger counts <b>168</b> monarch butterflies in the morning and <b>264</b> in the afternoon. She writes them all onto <b>8</b> record pages, the same number on each page. How many go on <b>each page</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> No single monarch makes the whole round trip. It takes several generations, and the great-grandchildren still find the same forest.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">One tag box is <b>2/3</b> full. Another tag box is <b>5/8</b> full. Which box holds <b>more</b> tags?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A bird tag can weigh less than a paperclip. Anything heavier would change how the bird flies.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A rectangular nesting plot has an <b>area of 132 square metres</b>. One side is <b>12 m</b> long. How long is the <b>other side</b>, and what is the <b>perimeter</b> of the plot?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Arctic terns see two summers every year. They chase daylight from the Arctic to Antarctica and back.</div>
+  </div>
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🦅 Great Migrations</h1>
+      <div class="sub">Cumulative — all five skills</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Yusuf</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A tagging team fits <b>47</b> birds with trackers every day for <b>26</b> days. How many birds get a tracker <b>altogether</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A tracker the size of a pea can record a bird's whole route and send it up to a satellite.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A tagged whale swam <b>3,461</b> km in <b>7</b> days, the same distance each day. How far did it swim <b>per day</b>, and <b>how many km are left over</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Grey whales make one of the longest migrations of any mammal — up to 20,000 km in a year.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A boat starts with <b>5/6</b> of a tank of fuel. Following a herd uses <b>2/5</b> of a tank. What fraction of a tank is <b>left</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Wildebeest cross the same rivers every year. Over a million of them move together in one great loop.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Bilal weighs one tracker at <b>3.6 g</b> and a second at <b>1.85 g</b>. What is their <b>total</b> weight, and how much <b>heavier</b> is the first than the second?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Scientists keep a tracker under 3% of a bird's body weight — about the same rule as a backpack for you.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A satellite logged <b>2,184</b> pings in <b>8</b> hours. At that same rate, how many pings does it log in <b>5</b> hours? If those pings are stored in files of <b>9</b>, how many <b>full files</b> is that, and <b>how many pings are left over</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Migration maps are built from millions of pings like these, stitched together into one line across the world.</div>
+  </div>
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — Musa</div>
+  <div class="ans"><b>1. 681 birds still flying.</b>
+    <div class="steps">128 &times; 7 = <b>896</b>, then 896 &minus; 215 = <b>681</b>. Multiply first, subtract second — 128 &minus; 215 is the give-away that the order slipped.</div>
+  </div>
+  <div class="ans"><b>2. 18 crates.</b>
+    <div class="steps">154 &divide; 9 = <b>17 remainder 1</b>. That 1 leftover bird still needs a crate, so round <b>up</b> to 18. “17” is the answer that ignores the question.</div>
+  </div>
+  <div class="ans"><b>3. 54 butterflies per page.</b>
+    <div class="steps">168 + 264 = <b>432</b>, then 432 &divide; 8 = <b>54</b>. Add both halves of the day <i>before</i> splitting. Dividing 168 by 8 alone forgets the afternoon.</div>
+  </div>
+  <div class="ans"><b>4. The 2/3 box.</b>
+    <div class="steps">Twenty-fourths: 2/3 = <b>16/24</b> and 5/8 = <b>15/24</b>, so <b>2/3</b> is more. They are close on purpose — this one cannot be eyeballed.</div>
+  </div>
+  <div class="ans"><b>5. Other side 11 m; perimeter 46 m.</b>
+    <div class="steps">132 &divide; 12 = <b>11 m</b> (the missing side). Perimeter = 2 &times; (12 + 11) = <b>46 m</b>. Given area, asked perimeter: divide for the side, don't halve.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> <b>Cumulative — five different skills on one sheet, no scaffolds.</b> #2 is the remainder-interpretation one: expect “17” and ask what happens to the last bird. #4 is deliberately close (16/24 vs 15/24) so the bigger bottom number can't be read as “more”. #5: halving 132 to get 66 is the classic slip — it must be a <i>divide</i> by the known side.</div>
+
+  <div class="section-title">4th Grade — Yusuf</div>
+  <div class="ans"><b>1. 1,222 birds.</b>
+    <div class="steps">47 &times; 26 = (47 &times; 20) + (47 &times; 6) = 940 + 282 = <b>1,222</b>. Two-digit by two-digit: the second partial row shifts one column left.</div>
+  </div>
+  <div class="ans"><b>2. 494 km per day, 3 km left over.</b>
+    <div class="steps">3,461 &divide; 7 = <b>494 remainder 3</b>. Check: 494 &times; 7 + 3 = 3,461. &check; The question asks for <b>both</b> numbers.</div>
+  </div>
+  <div class="ans"><b>3. 13/30 of a tank left.</b>
+    <div class="steps">Thirtieths: 5/6 = 25/30 and 2/5 = 12/30. 25/30 &minus; 12/30 = <b>13/30</b>. Unlike denominators — straight across gives 3/1, which is more than a full tank and fails its own sense check.</div>
+  </div>
+  <div class="ans"><b>4. Total 5.45 g; the first is heavier by 1.75 g.</b>
+    <div class="steps">Write 3.6 as <b>3.60</b> and line the points up. 3.60 + 1.85 = <b>5.45</b>; 3.60 &minus; 1.85 = <b>1.75</b>. The padding has to be <i>written</i>, not just thought.</div>
+  </div>
+  <div class="ans"><b>5. 1,365 pings — 151 full files, 6 left over.</b>
+    <div class="steps">Rate first: 2,184 &divide; 8 = <b>273</b> per hour. Then 273 &times; 5 = <b>1,365</b>. Then 1,365 &divide; 9 = <b>151 r 6</b>. Check: 151 &times; 9 + 6 = 1,365. &check;</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> <b>Cumulative, no scaffolds anywhere.</b> #4 is the decimal-padding check — an answer of 5.45 with no 3.60 written down is not a pass on these sheets. #5: jumping straight to 2,184 &times; 5 skips the per-hour rate and is the most likely wrong turn. #2 and #5 both want the remainder <i>reported</i>, not dropped.</div>
+
+</div>
+
+</body>
+</html>
