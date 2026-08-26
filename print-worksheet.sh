@@ -14,6 +14,8 @@
 #   ./print-worksheet.sh <file.html> --printer <NAME>           # print to a different printer
 #   ./print-worksheet.sh <file.html> --no-key                   # kids' sheets only, skip the answer key
 #   ./print-worksheet.sh <file.html> --key-only                 # print ONLY the answer key page (no kid sheets)
+#   ./print-worksheet.sh <file.html> --kid Musa                 # print ONLY that child's page(s) + the key
+#   ./print-worksheet.sh <file.html> --kid Musa --no-key        # that child's page and nothing else
 #   ./print-worksheet.sh <file.html> --date "July 28, 2026"     # stamp the Date: field at print time
 #   ./print-worksheet.sh <file.html> --date today               # same, using today's date
 #   ./print-worksheet.sh <file.html> --override-day-guard       # break the one-day-at-a-time rule (loud)
@@ -45,6 +47,7 @@ INCLUDE_KEY=1   # default ON since 2026-07-26 — Asif wants the key every time
 KEY_ONLY=0
 STAMP_DATE=""
 OVERRIDE_GUARD=0
+KID=""          # --kid Musa  => print only that child's page(s), plus the key
 SRC=""
 
 while [ $# -gt 0 ]; do
@@ -56,6 +59,7 @@ while [ $# -gt 0 ]; do
     --both)     INCLUDE_KEY=1; shift ;;   # kept for compatibility; now the default
     --no-key)   INCLUDE_KEY=0; shift ;;   # kids' sheets only
     --key-only) KEY_ONLY=1; shift ;;
+    --kid)      KID="$2"; shift 2 ;;
     -h|--help) grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *)         SRC="$1"; shift ;;
   esac
@@ -171,7 +175,38 @@ fi
 # 4) Choose page range. Default prints EVERYTHING including the answer key (changed 2026-07-26).
 #    --no-key drops the last page; --key-only prints just it.
 RANGE_ARGS=()
-if [ "$KEY_ONLY" = "1" ] && [ "$pages" -ge 1 ]; then
+if [ -n "$KID" ]; then
+  # --kid: print only that child's sheet(s), plus the key unless --no-key.
+  # Sheets are matched by the `Name: <span> …` field, in document order, so the
+  # page number is the sheet's index. A sheet with no Name field is a key page.
+  # ⚠️ Added 2026-08-16 after a request for "a new set for Musa" printed BOTH
+  # kids. The generator has no per-kid mode and never will — one file holds both
+  # children plus the key — so the filter has to live at print time.
+  KID_RANGE="$(python3 - "$SRC" "$KID" "$INCLUDE_KEY" <<'PY'
+import re, sys
+src, kid, include_key = sys.argv[1], sys.argv[2], sys.argv[3] == "1"
+html = open(src).read()
+blocks = re.split(r'(?=class="sheet)', html)[1:]
+kid_pages, key_pages = [], []
+for i, b in enumerate(blocks, start=1):
+    m = re.search(r'Name:\s*<span>(?:&nbsp;|\s)*([^<]+?)\s*</span>', b)
+    if m:
+        if m.group(1).strip().lower() == kid.strip().lower():
+            kid_pages.append(i)
+    else:
+        key_pages.append(i)
+if not kid_pages:
+    names = sorted({m.group(1).strip() for b in blocks
+                    for m in [re.search(r'Name:\s*<span>(?:&nbsp;|\s)*([^<]+?)\s*</span>', b)] if m})
+    sys.stderr.write(f"ERROR: no sheet for '{kid}'. Names on this worksheet: {names or 'none found'}\n")
+    sys.exit(3)
+pages = kid_pages + (key_pages if include_key else [])
+print(",".join(str(p) for p in sorted(pages)))
+PY
+)" || exit 3
+  RANGE_ARGS=(-P "$KID_RANGE")
+  echo "Printing pages $KID_RANGE only (--kid $KID$([ "$INCLUDE_KEY" = "1" ] && echo " + answer key"))."
+elif [ "$KEY_ONLY" = "1" ] && [ "$pages" -ge 1 ]; then
   RANGE_ARGS=(-P "$pages")
   echo "Printing page $pages only (the answer key)."
 elif [ "$INCLUDE_KEY" = "0" ] && [ "$pages" -ge 2 ]; then
