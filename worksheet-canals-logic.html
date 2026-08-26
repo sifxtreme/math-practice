@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Canals Logic</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #1e3a8a; }
+  .header .sub { font-size: 12px; color: #7d8bb0; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #1e3a8a;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #1e3a8a; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #eef2ff; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #1e3a8a;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #c7d2fe;
+  }
+  .teach .step b { color: #1e3a8a; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #eef2ff; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #1e3a8a; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #1e3a8a; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #1e3a8a; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #1e3a8a; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #7d8bb0; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #c7d2fe;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #eef2ff;
+    border-left: 3px solid #4f46e5;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #1e3a8a; }
+
+  .key h1 { color: #1e3a8a; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #d5dcf7; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #1e3a8a; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #1e3a8a; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>⚓ Canals Logic</h1>
+      <div class="sub">Reasoning puzzles — think it through, then write why</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Musa</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">Four locks — <b>A, B, C,</b> and <b>D</b> — were measured for depth. <b>A</b> is deeper than <b>B</b>. <b>C</b> is shallower than <b>B</b>. <b>D</b> is deeper than <b>A</b>. List all four from <b>deepest</b> to <b>shallowest</b>.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">Three keepers — <b>Idris, Salma,</b> and <b>Bilal</b> — each mind one lock: the <b>Top Lock</b>, the <b>Middle Lock</b>, or the <b>Bottom Lock</b>. Idris does <b>not</b> mind the Bottom Lock. Bilal minds the <b>Top Lock</b>. Who minds each lock?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">At <b>9:00</b> a canal gauge reads <b>4 cm</b>. Rain makes the reading <b>double every 20 minutes</b>. What does the gauge read at <b>10:00</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Mooring posts are numbered <b>1 to 24</b>. Every <b>4th</b> post is painted <b>red</b>. Every <b>6th</b> post has a <b>bollard</b>. Which posts are <b>both</b> red and a bollard? And how many posts have <b>neither</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>⚓ Canals Logic</h1>
+      <div class="sub">Reasoning puzzles — think it through, then write why</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Yusuf</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">Five canals were ranked by how much traffic they carry. The <b>Delta</b> carries more than the <b>Reach</b>. The <b>Cut</b> carries less than the <b>Reach</b>. The <b>Grand</b> carries more than the <b>Delta</b>. The <b>Mill</b> carries somewhere <b>between the Cut and the Reach</b>. List all five from <b>most</b> to <b>least</b>.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A lockkeeper says: "<b>Every boat that passed through on Monday paid the toll.</b>" On Tuesday a boat passes and pays the toll. Does that <b>prove</b> her statement was right? Explain what her statement does and does <b>not</b> tell you.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A barge leaves a lock at <b>8:40 in the morning</b> and travels for <b>5 hours and 45 minutes</b>. It arrives where the clocks are <b>1 hour behind</b> the start. What time is it <b>on the local clock</b> when the barge arrives?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Lock gates stand along a <b>180 km</b> canal, one every <b>20 km</b>, with a gate at the <b>very start</b> and one at the <b>very end</b>. How many gates are there <b>in total</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext"><b>6</b> survey crews meet at a canal junction. Every crew shakes hands with every other crew <b>exactly once</b>. How many handshakes happen <b>altogether</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — Musa</div>
+  <div class="ans"><b>1. D, A, B, C.</b>
+    <div class="steps">A &gt; B and C &lt; B puts them <b>A, B, C</b>. D &gt; A goes on the front: <b>D, A, B, C</b>. Build the chain one clue at a time instead of guessing.</div>
+  </div>
+  <div class="ans"><b>2. Bilal — Top Lock. Idris — Middle Lock. Salma — Bottom Lock.</b>
+    <div class="steps">Bilal is given. Idris is <b>not</b> the Bottom and the Top is taken, so Idris has the Middle. Salma gets what is left. The "not" clue does the work.</div>
+  </div>
+  <div class="ans"><b>3. 32 cm.</b>
+    <div class="steps">9:00 &rarr; 10:00 is 60 minutes = <b>three</b> 20-minute steps. 4 &rarr; 8 &rarr; 16 &rarr; <b>32</b>. Counting the doublings is the puzzle; 4 &times; 3 = 12 is the trap.</div>
+  </div>
+  <div class="ans"><b>Both: posts 12 and 24. Neither: 16 posts.</b>
+    <div class="steps">Both = multiples of <b>12</b> &rarr; 12 and 24. Red (4, 8, 12…) = 6 posts, bollards (6, 12, 18, 24) = 4, minus the 2 counted twice = 8 tagged, so <b>24 &minus; 8 = 16</b> with neither.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> #3 is the one that gets missed — the trap is multiplying by 3 instead of doubling three <i>times</i>. On #4, expect 6 + 4 = 10 tagged; posts 12 and 24 get counted twice and must come back out. On #2, the "not" clue is easy to skip straight past.</div>
+
+  <div class="section-title">4th Grade — Yusuf</div>
+  <div class="ans"><b>1. Grand, Delta, Reach, Mill, Cut.</b>
+    <div class="steps">Grand &gt; Delta &gt; Reach from the first and third clues; the Cut is below the Reach; the Mill sits <b>between</b> the Cut and the Reach. The "between" clue only makes sense once the others are placed.</div>
+  </div>
+  <div class="ans"><b>2. No — it proves nothing about Tuesday.</b>
+    <div class="steps">Her statement is only about <b>Monday's</b> boats. A toll paid on Tuesday is neither proof nor disproof. The one thing that <i>would</i> disprove her: a Monday boat that did <b>not</b> pay. Accept any answer that separates "all Monday's boats paid" from "every boat that pays is a Monday boat".</div>
+  </div>
+  <div class="ans"><b>3. 1:25 in the afternoon (13:25) local time.</b>
+    <div class="steps">8:40 + 5 h = 1:40 pm, + 45 min = <b>2:25 pm</b> start time. Local clocks are <b>1 hour behind</b>, so <b>1:25 pm</b>. Do the elapsed time first, adjust the zone second.</div>
+  </div>
+  <div class="ans"><b>4. 10 gates.</b>
+    <div class="steps">180 &divide; 20 = <b>9</b> gaps, and gates at both ends means <b>9 + 1 = 10</b>. The classic fencepost error: 9 is the number of <i>gaps</i>, not gates.</div>
+  </div>
+  <div class="ans"><b>5. 15 handshakes.</b>
+    <div class="steps">Each of the 6 crews shakes 5 others = 30, but every handshake was counted from <b>both</b> sides, so 30 &divide; 2 = <b>15</b>. Or add 5 + 4 + 3 + 2 + 1.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> #4 and #5 are both counting traps in opposite directions — #4 needs a <i>plus one</i>, #5 needs a <i>divide by two</i>. Expect 9 and 30. #2 has no number in it and is the most valuable one on the sheet: the reasoning written down <i>is</i> the answer, so a bare "no" is not finished.</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rivers Logic</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #1e3a8a; }
+  .header .sub { font-size: 12px; color: #7d8bb0; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #1e3a8a;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #1e3a8a; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #eef2ff; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #1e3a8a;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #c7d2fe;
+  }
+  .teach .step b { color: #1e3a8a; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #eef2ff; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #1e3a8a; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #1e3a8a; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #1e3a8a; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #1e3a8a; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #7d8bb0; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #c7d2fe;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #eef2ff;
+    border-left: 3px solid #4f46e5;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #1e3a8a; }
+
+  .key h1 { color: #1e3a8a; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #d5dcf7; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #1e3a8a; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #1e3a8a; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🛶 Rivers Logic</h1>
+      <div class="sub">Reasoning puzzles — think it through, then write why</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Musa</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">Four rivers — <b>W, X, Y,</b> and <b>Z</b> — were measured. <b>W</b> is longer than <b>X</b>. <b>Y</b> is shorter than <b>X</b>. <b>Z</b> is longer than <b>W</b>. List all four from <b>longest</b> to <b>shortest</b>.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">Three captains — <b>Nadia, Yusra,</b> and <b>Tariq</b> — each pilot one boat: a <b>ferry</b>, a <b>barge</b>, or a <b>canoe</b>. Nadia does <b>not</b> pilot the canoe. Tariq pilots the <b>barge</b>. Who pilots each boat?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">At <b>1:00</b> a river gauge reads <b>5 cm</b>. Rain makes the reading <b>double every 15 minutes</b>. What does the gauge read at <b>2:00</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Stepping stones are numbered <b>1 to 30</b>. Every <b>3rd</b> stone is <b>mossy</b>. Every <b>5th</b> stone is <b>painted</b>. Which stones are <b>both</b> mossy and painted? And how many stones have <b>neither</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🛶 Rivers Logic</h1>
+      <div class="sub">Reasoning puzzles — think it through, then write why</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Yusuf</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">Five rivers were ranked by how fast they flow. The <b>Blue</b> flows faster than the <b>Grey</b>. The <b>Green</b> flows slower than the <b>Grey</b>. The <b>Silver</b> flows faster than the <b>Blue</b>. The <b>Amber</b> flows somewhere <b>between the Green and the Grey</b>. List all five from <b>fastest</b> to <b>slowest</b>.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A guide says: “<b>Every boat we launched on Friday was a kayak.</b>” On Saturday she launches a kayak. Does that <b>prove</b> her statement was right? Explain what her statement does and does <b>not</b> tell you.</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A barge leaves a dock at <b>7:20 in the morning</b> and travels for <b>6 hours and 50 minutes</b>. It arrives where the clocks are <b>1 hour ahead</b> of the dock. What time is it <b>on the local clock</b> when the barge arrives?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Buoys stand along a <b>240 km</b> river channel, one every <b>40 km</b>, with a buoy at the <b>very start</b> and one at the <b>very end</b>. How many buoys are there <b>in total</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext"><b>5</b> river-survey teams meet at a landing. Every team shakes hands with every other team <b>exactly once</b>. How many handshakes happen <b>altogether</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+  </div>
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — Musa</div>
+  <div class="ans"><b>1. Z, W, X, Y.</b>
+    <div class="steps">W &gt; X and Y &lt; X puts them <b>W, X, Y</b>. Z &gt; W goes on the front: <b>Z, W, X, Y</b>. Build the chain one clue at a time instead of guessing.</div>
+  </div>
+  <div class="ans"><b>2. Tariq — barge. Nadia — ferry. Yusra — canoe.</b>
+    <div class="steps">Tariq is given. Nadia is <b>not</b> the canoe and the barge is taken, so Nadia has the ferry. Yusra gets what is left. The “not” clue does the work.</div>
+  </div>
+  <div class="ans"><b>3. 80 cm.</b>
+    <div class="steps">1:00 &rarr; 2:00 is 60 minutes = <b>four</b> 15-minute steps. 5 &rarr; 10 &rarr; 20 &rarr; 40 &rarr; <b>80</b>. Counting the doublings is the puzzle; 5 &times; 4 = 20 is the trap.</div>
+  </div>
+  <div class="ans"><b>Both: stones 15 and 30. Neither: 16 stones.</b>
+    <div class="steps">Both = multiples of <b>15</b> &rarr; 15 and 30. Mossy (3, 6, 9…) = 10 stones, painted (5, 10, 15…) = 6, minus the 2 counted twice = 14 tagged, so <b>30 &minus; 14 = 16</b> with neither.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> #3 is the one that gets missed — the trap is multiplying by 4 instead of doubling four <i>times</i>. On #4, expect 10 + 6 = 16 tagged; stones 15 and 30 get counted twice and must come back out. On #2, the “not” clue is easy to skip straight past.</div>
+
+  <div class="section-title">4th Grade — Yusuf</div>
+  <div class="ans"><b>1. Silver, Blue, Grey, Amber, Green.</b>
+    <div class="steps">Silver &gt; Blue &gt; Grey from the first and third clues; Green is below the Grey; the Amber sits <b>between</b> Green and Grey. The “between” clue only makes sense once the others are placed.</div>
+  </div>
+  <div class="ans"><b>2. No — it proves nothing about Saturday.</b>
+    <div class="steps">Her statement is only about <b>Friday's</b> boats. A kayak on Saturday is neither proof nor disproof. The one thing that <i>would</i> disprove her: a Friday boat that was not a kayak. Accept any answer that separates “all Friday's were kayaks” from “every kayak is launched on Friday”.</div>
+  </div>
+  <div class="ans"><b>3. 3:10 in the afternoon (15:10) local time.</b>
+    <div class="steps">7:20 + 6 h = 1:20 pm, + 50 min = <b>2:10 pm</b> dock time. Local clocks are <b>1 hour ahead</b>, so <b>3:10 pm</b>. Do the elapsed time first, adjust the zone second.</div>
+  </div>
+  <div class="ans"><b>4. 7 buoys.</b>
+    <div class="steps">240 &divide; 40 = <b>6</b> gaps, and buoys at both ends means <b>6 + 1 = 7</b>. The classic fencepost error: 6 is the number of <i>gaps</i>, not buoys.</div>
+  </div>
+  <div class="ans"><b>5. 10 handshakes.</b>
+    <div class="steps">Each of the 5 teams shakes 4 others = 20, but every handshake was counted from <b>both</b> sides, so 20 &divide; 2 = <b>10</b>. Or add 4 + 3 + 2 + 1.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> #4 and #5 are both counting traps in opposite directions — #4 needs a <i>plus one</i>, #5 needs a <i>divide by two</i>. Expect 6 and 20. #2 has no number in it and is the most valuable one on the sheet: the reasoning written down <i>is</i> the answer, so a bare “no” is not finished.</div>
+
+</div>
+
+</body>
+</html>

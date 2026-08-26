@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>New Skill — Comparing &amp; Unlike Denominators (Rivers)</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet {
+    page-break-after: always;
+    padding: 6px 4px;
+  }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 3px solid #6d28d9;
+    padding-bottom: 8px;
+    margin-bottom: 6px;
+  }
+  .header h1 {
+    font-size: 22px;
+    margin: 0;
+    color: #6d28d9;
+  }
+  .header .sub { font-size: 12px; color: #8b7aa8; font-style: italic; }
+  .grade {
+    font-size: 13px;
+    font-weight: bold;
+    background: #6d28d9;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+  .meta {
+    display: flex;
+    gap: 30px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    color: #444;
+  }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* --- TEACH: the worked example box ---
+     NOTE: padding/margin below deliberately use the exact literal strings that
+     print-worksheet.sh rewrites (`padding: 9px 12px;` / `margin-bottom: 4px;`),
+     so this box shrinks along with everything else and the sheet still fits 3
+     pages. Don't "tidy" them into different values. */
+  .teach {
+    border: 2px solid #6d28d9;
+    border-radius: 6px;
+    padding: 9px 12px;
+    margin-bottom: 4px;
+    background: #faf7ff;
+    page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #6d28d9;
+    display: inline-block; padding: 2px 9px; border-radius: 3px;
+    margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px;
+    margin: 3px 0 3px 4px;
+    padding-left: 8px;
+    border-left: 3px solid #c4b5fd;
+  }
+  .teach .step b { color: #6d28d9; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #ede9fe; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #5b21b6; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #ddd6fe;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #6d28d9; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #6d28d9; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #6d28d9; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work {
+    height: 78px;
+    border-top: 1px dashed #bbb;
+    position: relative;
+  }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999;
+    font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided problem: the pre-labeled steps ARE the work area — no separate
+     .work box. Keeps it in normal flow so it can never overlap the answer
+     line once print-worksheet.sh shrinks .work to 40px. */
+  .scaffold {
+    font-size: 12.5px; color: #7c6f9c;
+    border-top: 1px dashed #bbb;
+    padding-top: 4px;
+  }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #a99bc4;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px;
+    color: #444;
+    background: #f5f3ff;
+    border-left: 3px solid #8b5cf6;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #6d28d9; }
+
+  /* Answer key */
+  .key h1 { color: #6d28d9; }
+  .key .ans {
+    margin-bottom: 11px;
+    padding: 8px 12px;
+    border: 1px solid #ddd6fe;
+    border-radius: 5px;
+    page-break-inside: avoid;
+    font-size: 13.5px;
+  }
+  .key .ans b { color: #6d28d9; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #6d28d9; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<!-- ============ SHEET 1: MUSA — COMPARING / EQUIVALENT FRACTIONS ============ -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🚣 Which Boat Is Farther Down the River?</h1>
+      <div class="sub">New skill — comparing fractions with different bottoms</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Musa</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="teach">
+    <div class="teach-title">HOW IT WORKS</div>
+    <div class="prompt">Two boats race down the Nile. Boat A has finished 2/3 of the trip. Boat B has finished 3/5 of the trip. Which boat is farther along?</div>
+    <div class="step"><b>Step 1 — Notice the problem.</b> Thirds and fifths are different-sized pieces. You can't just compare the tops.</div>
+    <div class="step"><b>Step 2 — Make the bottoms the same.</b> Multiply the bottoms: 3 × 5 = 15.</div>
+    <div class="step"><b>Step 3 — Rewrite each one.</b> 2/3 = 10/15 (× 5 top and bottom). 3/5 = 9/15 (× 3 top and bottom).</div>
+    <div class="step"><b>Step 4 — Compare the tops.</b> 10/15 &gt; 9/15, so <b>Boat A</b> (2/3) is farther along.</div>
+    <div class="punch"><b>The trap:</b> a bigger <b>bottom</b> number does <b>not</b> mean a bigger fraction. 1/8 is smaller than 1/3 — more pieces means each piece is smaller.</div>
+  </div>
+
+  <div class="problem guided">
+    <span class="qnum">1.</span><span class="tag">GUIDED</span>
+    <div class="qtext">In a rowing race, Amir has rowed 3/4 of the way across the river and Sana has rowed 5/8 of the way. Who is farther across?</div>
+    <div class="scaffold">
+      <div>Same bottom number for both: 8 works, because 4 goes into 8.</div>
+      <div>Rewrite 3/4 into eighths: 3/4 = <span class="blank"></span>/8 &nbsp;&nbsp; (5/8 already has an 8)</div>
+      <div>Compare the tops: <span class="blank"></span> vs 5</div>
+      <div>Who is farther across? <span class="blank"></span></div>
+    </div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The Nile flows <i>north</i> — it starts in the mountains and empties into the sea at the top of the map.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A river lock has two gauges. One says the lock is 1/2 full. The other says 3/6 full. Are they showing the <b>same</b> amount of water, or different?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A lock is a water elevator — it fills and empties to lift boats between two river heights.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">Two streams feed a river. The first stream carries 2/5 of the river's water. The second carries 1/2 of it. Which stream carries <b>more</b> water?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Small streams that join a bigger river are called <i>tributaries</i> — the Amazon has over 1,000 of them.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">Sana says 1/3 of the pond is frozen. Bilal says 1/4 is frozen. Whose fraction is the <b>bigger</b> amount? (Look at the pieces, not the bottom number.)</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Ice floats because water gets <i>lighter</i> when it freezes, so the ice stays on top.</div>
+  </div>
+</div>
+
+<!-- ============ SHEET 2: YUSUF — UNLIKE DENOMINATORS (ADD/SUBTRACT) ============ -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🌊 Adding River Distances That Don't Match</h1>
+      <div class="sub">New skill — unlike denominators</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Yusuf</span></div>
+    <div>Date: <span></span></div>
+  </div>
+
+  <div class="teach">
+    <div class="teach-title">HOW IT WORKS</div>
+    <div class="prompt">A riverboat covers 1/2 of its journey on the first day and 1/3 more on the second day. How much of the journey is done?</div>
+    <div class="step"><b>Step 1 — Notice the problem.</b> Halves and thirds are different-sized pieces. You cannot add 1 + 1, because the pieces aren't the same size.</div>
+    <div class="step"><b>Step 2 — Find a size they can both become.</b> Multiply the bottoms: 2 × 3 = 6. Cut everything into sixths.</div>
+    <div class="step"><b>Step 3 — Rewrite each fraction.</b> 1/2 = 3/6 (multiply top and bottom by 3). 1/3 = 2/6 (multiply top and bottom by 2).</div>
+    <div class="step"><b>Step 4 — Now add.</b> 3/6 + 2/6 = <b>5/6</b>. The bottom number does <b>not</b> change — you're just counting sixths.</div>
+    <div class="punch"><b>The trap:</b> 1/2 + 1/3 is <b>not</b> 2/5. Never add the bottoms. Multiplying the two bottoms together always gives a size they share, even if it isn't the smallest one.</div>
+  </div>
+
+  <div class="problem guided">
+    <span class="qnum">1.</span><span class="tag">GUIDED</span>
+    <div class="qtext">Amir paddles 1/4 of a river in the morning and 2/5 of it in the afternoon. What fraction of the river has he paddled in all?</div>
+    <div class="scaffold">
+      <div>Common bottom number: 4 × 5 = <span class="blank"></span></div>
+      <div>Rewrite: 1/4 = <span class="blank"></span> &nbsp;&nbsp; and &nbsp;&nbsp; 2/5 = <span class="blank"></span></div>
+      <div>Add the tops, keep the bottom: <span class="blank"></span></div>
+    </div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The Amazon carries more water than the next seven biggest rivers on Earth combined.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A dam releases 3/8 of its water in the morning and 1/4 of its water in the evening. What fraction of the dam's water was released that day?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The water held back by a big dam can be so heavy it slightly changes the speed the Earth spins.</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A boat travels 3/4 of a mile up one river, then 3/5 of a mile up another. How far did it go in total? Is that <b>more</b> or <b>less</b> than 1 mile?</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A mile was originally 1,000 paces of a Roman soldier — <i>mille passus</i> means "a thousand steps."</div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A reservoir is 5/6 full. During a dry week, a town uses 1/4 of the reservoir. What fraction of the reservoir is left? (Same steps — but subtract this time.)</div>
+    <div class="work"><span class="work-label">SHOW YOUR WORK</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A reservoir is just a man-made lake behind a dam, kept as a backup supply of drinking water.</div>
+  </div>
+</div>
+
+<!-- ============ SHEET 3: ANSWER KEY ============ -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps + what to watch for</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — Musa (comparing fractions)</div>
+
+  <div class="watch"><b>Watch for:</b> deciding a fraction is bigger because its <b>bottom</b> number is bigger. That's the whole misconception this sheet targets (#4 is built to catch it). If it shows up, draw two identical rivers and cut one into 3 pieces and one into 4 — the pieces of the one cut into 4 are visibly smaller.</div>
+
+  <div class="ans"><b>1. Amir is farther across.</b>
+    <div class="steps">Bottom 8 (4 goes into 8). 3/4 = 6/8. Compare tops: 6 vs 5 → 6/8 &gt; 5/8, so <b>Amir</b> (3/4).</div>
+  </div>
+  <div class="ans"><b>2. The same amount.</b>
+    <div class="steps">1/2 = 3/6 (multiply top and bottom by 3). Both gauges show <b>the same</b> water — 3/6 is just 1/2 written in sixths.</div>
+  </div>
+  <div class="ans"><b>3. The second stream (1/2) carries more.</b>
+    <div class="steps">Bottom 10. 2/5 = 4/10 and 1/2 = 5/10. 5/10 &gt; 4/10, so the <b>1/2</b> stream carries more.</div>
+  </div>
+  <div class="ans"><b>4. Sana (1/3) is the bigger fraction.</b>
+    <div class="steps">Bottom 12. 1/3 = 4/12 and 1/4 = 3/12. 4/12 &gt; 3/12, so <b>1/3 &gt; 1/4</b>. The bottom got bigger but the fraction got smaller — that's the trap.</div>
+  </div>
+
+  <div class="section-title">4th Grade — Yusuf (unlike denominators)</div>
+
+  <div class="watch"><b>Watch for:</b> adding the bottom numbers (1/4 + 2/5 = 3/9). If that happens, go back to the two-day boat picture — you can't count pieces of different sizes. Also watch for converting one fraction and forgetting to convert the other.</div>
+
+  <div class="ans"><b>1. 13/20 of the river.</b>
+    <div class="steps">Common bottom 4 × 5 = 20. 1/4 = 5/20, 2/5 = 8/20. 5/20 + 8/20 = <b>13/20</b>.</div>
+  </div>
+  <div class="ans"><b>2. 5/8 of the dam's water.</b>
+    <div class="steps">8 already works (4 divides into 8). 1/4 = 2/8. 3/8 + 2/8 = <b>5/8</b>. Good one to point out you don't always have to multiply the bottoms.</div>
+  </div>
+  <div class="ans"><b>3. 27/20 miles = 1 7/20 miles — more than 1 mile.</b>
+    <div class="steps">Common bottom 4 × 5 = 20. 3/4 = 15/20, 3/5 = 12/20. 15/20 + 12/20 = <b>27/20</b> = 1 whole and 7/20. Since 27 &gt; 20, it's <b>more</b> than a mile.</div>
+  </div>
+  <div class="ans"><b>4. 7/12 of the reservoir.</b>
+    <div class="steps">Common bottom 12. 5/6 = 10/12, 1/4 = 3/12. 10/12 − 3/12 = <b>7/12</b>. Same procedure as adding — only the last step changes.</div>
+  </div>
+</div>
+
+</body>
+</html>

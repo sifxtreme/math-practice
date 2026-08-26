@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Canals & Locks</title>
+<style>
+  @page { margin: 0.55in; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    color: #14142b;
+    margin: 0;
+    line-height: 1.4;
+  }
+  .sheet { page-break-after: always; padding: 6px 4px; }
+  .sheet:last-child { page-break-after: auto; }
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 3px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 6px;
+  }
+  .header h1 { font-size: 22px; margin: 0; color: #1e3a8a; }
+  .header .sub { font-size: 12px; color: #7d8bb0; font-style: italic; }
+  .grade {
+    font-size: 13px; font-weight: bold; background: #1e3a8a;
+    color: #fff; padding: 3px 10px; border-radius: 4px;
+  }
+  .meta { display: flex; gap: 30px; font-size: 13px; margin-bottom: 12px; color: #444; }
+  .meta span { border-bottom: 1px solid #999; min-width: 140px; display: inline-block; }
+
+  /* TEACH box — padding/margin MUST stay these literals so print-worksheet.sh
+     shrinks them along with everything else. Don't "tidy" them. */
+  .teach {
+    border: 2px solid #1e3a8a; border-radius: 6px;
+    padding: 9px 12px; margin-bottom: 4px;
+    background: #eef2ff; page-break-inside: avoid;
+  }
+  .teach .teach-title {
+    font-size: 12px; font-weight: bold; letter-spacing: 1px;
+    color: #fff; background: #1e3a8a;
+    display: inline-block; padding: 2px 9px; border-radius: 3px; margin-bottom: 5px;
+  }
+  .teach .prompt { font-size: 13.5px; font-style: italic; margin-bottom: 5px; }
+  .teach .step {
+    font-size: 13.5px; margin: 3px 0 3px 4px;
+    padding-left: 8px; border-left: 3px solid #c7d2fe;
+  }
+  .teach .step b { color: #1e3a8a; }
+  .teach .punch {
+    margin-top: 6px; font-size: 13px;
+    background: #eef2ff; border-radius: 4px; padding: 5px 9px;
+  }
+  .teach .punch b { color: #1e3a8a; }
+
+  .problem {
+    margin-bottom: 4px;
+    padding: 9px 12px;
+    border: 1.5px solid #c7d2fe;
+    border-radius: 6px;
+    page-break-inside: avoid;
+  }
+  .problem.guided { border-color: #1e3a8a; border-style: dashed; }
+  .qnum { font-weight: bold; font-size: 15px; color: #1e3a8a; }
+  .tag {
+    font-size: 9.5px; font-weight: bold; letter-spacing: 0.5px;
+    background: #1e3a8a; color: #fff; padding: 1px 6px;
+    border-radius: 3px; margin-left: 5px; vertical-align: 2px;
+  }
+  .qtext { font-size: 14.5px; margin: 4px 0 7px 0; }
+  .work { height: 78px; border-top: 1px dashed #bbb; position: relative; }
+  .work-label {
+    position: absolute; top: 3px; left: 0;
+    font-size: 10px; color: #999; font-style: italic; letter-spacing: 0.5px;
+  }
+  /* Guided steps sit in normal flow and ARE the work area — a .work box shrinks
+     to 40px on print, which an absolute scaffold would overflow onto the answer line. */
+  .scaffold { font-size: 12.5px; color: #7d8bb0; border-top: 1px dashed #bbb; padding-top: 4px; }
+  .scaffold div { margin-bottom: 3px; }
+  .scaffold .blank {
+    display: inline-block; border-bottom: 1px solid #c7d2fe;
+    width: 90px; margin: 0 3px;
+  }
+  .answer { margin-top: 5px; font-size: 13px; }
+  .answer .line {
+    display: inline-block; border-bottom: 2px solid #14142b;
+    width: 150px; margin-left: 6px;
+  }
+  .fact {
+    margin-top: 7px;
+    font-size: 11.5px; color: #444;
+    background: #eef2ff;
+    border-left: 3px solid #4f46e5;
+    padding: 4px 8px;
+    border-radius: 0 4px 4px 0;
+  }
+  .fact b { color: #1e3a8a; }
+
+  .key h1 { color: #1e3a8a; }
+  .key .ans {
+    margin-bottom: 11px; padding: 8px 12px;
+    border: 1px solid #d5dcf7; border-radius: 5px;
+    page-break-inside: avoid; font-size: 13.5px;
+  }
+  .key .ans b { color: #1e3a8a; }
+  .key .ans .steps { color: #555; font-size: 12.5px; margin-top: 2px; }
+  .key .section-title {
+    font-size: 15px; font-weight: bold; color: #fff;
+    background: #1e3a8a; padding: 4px 10px; border-radius: 4px;
+    margin: 14px 0 8px 0;
+  }
+  .key .watch {
+    font-size: 12.5px; background: #fef3c7; border-left: 3px solid #d97706;
+    padding: 5px 9px; border-radius: 0 4px 4px 0; margin: 8px 0 4px 0;
+  }
+  .key .watch b { color: #92400e; }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🚤 Canals &amp; Locks</h1>
+      <div class="sub">Cumulative — all five skills</div>
+    </div>
+    <div class="grade">3rd Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Musa</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">A canal boat carries <b>116</b> sacks of grain. A convoy has <b>8</b> boats. At the first town, <b>214</b> sacks are unloaded. How many sacks are <b>still on the water</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> One canal barge could carry as much grain as dozens of horse-drawn wagons. That is why old canals were called the highways of their day.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A lock chamber holds <b>9</b> boats at a time. <b>150</b> boats are waiting to pass through. How many times must the lock <b>fill</b> so that <b>every boat gets through</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A lock is a water elevator. It fills or empties to lift a boat between two water levels, using only gravity — no engine.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A keeper counts <b>172</b> boats through the north lock and <b>236</b> boats through the south lock. She writes them all evenly onto <b>6</b> log pages, the same number on each. How many boats go on <b>each page</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Some canals cross straight over a river on a bridge made to carry water, called an aqueduct — a boat sails above a boat.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">One lock's water tank is <b>3/4</b> full. Another lock's tank is <b>5/7</b> full. Which tank holds <b>more</b> water?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A single big lock can hold millions of litres of water, yet it can fill in under ten minutes.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A rectangular lock chamber has an <b>area of 84 square metres</b>. It is <b>6 m</b> wide. How <b>long</b> is it, and what is the <b>perimeter</b> of the chamber?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The locks on the Panama Canal are long enough to hold a ship as long as three football fields end to end.</div>
+  </div>
+</div>
+
+<!-- ==== YUSUF ==== -->
+<div class="sheet">
+  <div class="header">
+    <div>
+      <h1>🚤 Canals &amp; Locks</h1>
+      <div class="sub">Cumulative — all five skills</div>
+    </div>
+    <div class="grade">4th Grade</div>
+  </div>
+  <div class="meta">
+    <div>Name: <span>&nbsp;Yusuf</span></div>
+    <div>Date: <span>&nbsp;</span></div>
+  </div>
+
+  <div class="problem">
+    <span class="qnum">1.</span>
+    <div class="qtext">Each barge in a convoy carries <b>64</b> crates. The convoy has <b>27</b> barges. How many crates are there <b>altogether</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> Canal barges and giant container ships both stack cargo in standard boxes, so any crane can lift any box. That one idea changed world trade.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">2.</span>
+    <div class="qtext">A new canal is <b>2,615</b> m long and is dug in <b>8</b> equal shifts. How many metres are dug <b>per shift</b>, and <b>how many metres are left over</b> for a short final shift?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The Suez Canal, opened in 1869, links two seas and lets ships skip the long sail all the way around Africa.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">3.</span>
+    <div class="qtext">A reservoir behind a dam starts <b>7/8</b> full. Opening the lock gates drains <b>1/3</b> of a full reservoir. What fraction is <b>left</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The water a dam holds back can be let out to spin turbines and make electricity for a whole city.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">4.</span>
+    <div class="qtext">A gauge reads the upstream water level at <b>4.7 m</b> and the downstream level at <b>2.85 m</b>. What is the <b>total</b> of the two readings, and <b>how much higher</b> is the upstream level than the downstream one?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> A keeper watches the upstream and downstream gauges closely. Open the gates with too big a gap and the rush of water can throw the boats around.</div>
+  </div>
+  <div class="problem">
+    <span class="qnum">5.</span>
+    <div class="qtext">A lock passes <b>156</b> boats in <b>6</b> hours at a steady rate. At that same rate, how many boats pass in <b>9</b> hours? If those boats travel in groups of <b>7</b>, how many <b>full groups</b> is that, and <b>how many boats are left over</b>?</div>
+    <div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>
+    <div class="answer">Answer:<span class="line"></span></div>
+    <div class="fact"><b>Did you know?</b> The world's busiest lock passes tens of thousands of boats a year, running day and night without stopping.</div>
+  </div>
+</div>
+
+<!-- ==== ANSWER KEY ==== -->
+<div class="sheet key">
+  <div class="header">
+    <div>
+      <h1>🔑 Answer Key</h1>
+      <div class="sub">For the grown-ups — worked steps included</div>
+    </div>
+    <div class="grade">Coach</div>
+  </div>
+
+  <div class="section-title">3rd Grade — Musa</div>
+  <div class="ans"><b>1. 714 sacks still on the water.</b>
+    <div class="steps">116 &times; 8 = <b>928</b>, then 928 &minus; 214 = <b>714</b>. Multiply first, subtract second — 116 &minus; 214 going negative is the give-away that the order slipped.</div>
+  </div>
+  <div class="ans"><b>2. 17 fills.</b>
+    <div class="steps">150 &divide; 9 = <b>16 remainder 6</b>. Those 6 leftover boats still need a fill, so round <b>up</b> to 17. "16" is the answer that ignores the question.</div>
+  </div>
+  <div class="ans"><b>3. 68 boats per page.</b>
+    <div class="steps">172 + 236 = <b>408</b>, then 408 &divide; 6 = <b>68</b>. Add both locks <i>before</i> splitting. Dividing 172 by 6 alone forgets the south lock.</div>
+  </div>
+  <div class="ans"><b>4. The 3/4 tank.</b>
+    <div class="steps">Twenty-eighths: 3/4 = <b>21/28</b> and 5/7 = <b>20/28</b>, so <b>3/4</b> is more. They are close on purpose — this one cannot be eyeballed.</div>
+  </div>
+  <div class="ans"><b>5. Length 14 m; perimeter 40 m.</b>
+    <div class="steps">84 &divide; 6 = <b>14 m</b> (the missing length). Perimeter = 2 &times; (6 + 14) = <b>40 m</b>. Given area, asked perimeter: divide for the side, don't halve.</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> <b>Cumulative — five different skills on one sheet, no scaffolds.</b> #2 is the remainder-interpretation one: expect "16" and ask what happens to the last 6 boats. #4 is deliberately close (21/28 vs 20/28) so the bigger bottom number can't be read as "more". #5: halving 84 to get 42 is the classic slip — it must be a <i>divide</i> by the known side.</div>
+
+  <div class="section-title">4th Grade — Yusuf</div>
+  <div class="ans"><b>1. 1,728 crates.</b>
+    <div class="steps">64 &times; 27 = (64 &times; 20) + (64 &times; 7) = 1,280 + 448 = <b>1,728</b>. Two-digit by two-digit: the second partial row shifts one column left.</div>
+  </div>
+  <div class="ans"><b>2. 326 m per shift, 7 m left over.</b>
+    <div class="steps">2,615 &divide; 8 = <b>326 remainder 7</b>. Check: 326 &times; 8 + 7 = 2,615. &check; The question asks for <b>both</b> numbers.</div>
+  </div>
+  <div class="ans"><b>3. 13/24 of the reservoir left.</b>
+    <div class="steps">Twenty-fourths: 7/8 = 21/24 and 1/3 = 8/24. 21/24 &minus; 8/24 = <b>13/24</b>. Unlike denominators — a common bottom number first, then subtract the tops.</div>
+  </div>
+  <div class="ans"><b>4. Total 7.55 m; upstream is higher by 1.85 m.</b>
+    <div class="steps">Write 4.7 as <b>4.70</b> and line the points up. 4.70 + 2.85 = <b>7.55</b>; 4.70 &minus; 2.85 = <b>1.85</b>. The padding has to be <i>written</i>, not just thought.</div>
+  </div>
+  <div class="ans"><b>5. 234 boats — 33 full groups, 3 left over.</b>
+    <div class="steps">Rate first: 156 &divide; 6 = <b>26</b> per hour. Then 26 &times; 9 = <b>234</b>. Then 234 &divide; 7 = <b>33 r 3</b>. Check: 33 &times; 7 + 3 = 234. &check;</div>
+  </div>
+  <div class="watch"><b>Watch for:</b> <b>Cumulative, no scaffolds anywhere.</b> #4 is the decimal-padding check — an answer of 7.55 with no 4.70 written down is not a pass on these sheets. #5: jumping straight to 156 &times; 9 skips the per-hour rate and is the most likely wrong turn. #2 and #5 both want the remainder <i>reported</i>, not dropped.</div>
+
+</div>
+
+</body>
+</html>
