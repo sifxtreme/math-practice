@@ -49,6 +49,8 @@ worksheet-lymph-nodes.html
 worksheet-fever-logic.html
 worksheet-bone-marrow.html
 worksheet-marrow-lab-logic.html
+worksheet-mapmakers.html
+worksheet-maps-logic.html
 # ^ ADD EVERY NEW SPEC'S FILE HERE, in the same commit as the spec. This list is
 # explicit rather than a worksheet-*.html glob because the hand-written sheets
 # above ARE tracked. A generated sheet left off this list sits untracked with a

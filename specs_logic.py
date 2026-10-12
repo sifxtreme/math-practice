@@ -471,4 +471,60 @@ AUG18L = {
     "kid2_watch": "#2 is the one worth sitting with. Nearly everyone answers <b>20 minutes</b>, because they finish one slide before starting the next; the whole idea is taking B off half-done. If he stalls, give him the three rounds on paper, then ask why the scanner is never idle. #3 is yesterday's pigeonhole made harder &mdash; 3 of a kind from 4 kinds &mdash; so <b>5</b> is the expected wrong answer. On #1 watch whether he writes a table. #4 goes wrong when done in his head.",
 }
 
-ALL = [JUL29L, JUL30L, JUL31L, AUG1L, AUG2L, AUG16L, AUG17L, AUG18L]
+# ---------------------------------------------------------------- Oct 12
+# Maps theme, one theme across the word sheet and this one. New shapes for both
+# kids: compass walking, route counting, map colouring, shortest paths. One
+# labels puzzle for kid2 (exactly one label TRUE) — the first in two months.
+p_north, p_east = 3 - 1, 5 - 2          # walk N3 E5 S1 W2
+p_scale = 8 * 5
+p_half = p_scale // 2
+p_routes = 3 * 2
+q_colors = 3
+q_paths = 10                            # 3 east + 2 north = C(5,2)
+
+OCT12L = {
+    "file": "worksheet-maps-logic.html",
+    "title_plain": "Map Room Logic",
+    "title": "🧭 Map Room Logic",
+    "sub": "Puzzles from the map room — draw it before you answer",
+    "kid1": [
+        {"q": "You start at the old well. You walk <b>3 squares north</b>, then <b>5 squares east</b>, then <b>1 square south</b>, then <b>2 squares west</b>. Where are you now, compared with the well? (How many squares north or south, and how many east or west?)",
+         "fact": "A compass needle points north because the Earth itself acts like a giant, weak magnet.",
+         "a": "%d squares north and %d squares east of the well." % (p_north, p_east),
+         "steps": "North and south cancel each other: 3 north &minus; 1 south = <b>%d north</b>. East and west cancel: 5 east &minus; 2 west = <b>%d east</b>. Drawing it on squared paper settles it." % (p_north, p_east)},
+        {"q": "Three friends, <b>Idris, Maryam, and Bilal</b>, each drew a different map (river, mountain, city) with a different colour pen (red, blue, green). Who drew what, and in which colour?<br><b>1.</b> The river map was drawn in <b>blue</b>. &nbsp;<b>2.</b> Maryam drew the <b>city</b>. &nbsp;<b>3.</b> Idris did not use blue. &nbsp;<b>4.</b> The city map is <b>not red</b>.",
+         "fact": "The brightest blue on old maps and books was made from a crushed stone called lapis lazuli, and it could cost as much as gold.",
+         "a": "Bilal: river, blue · Maryam: city, green · Idris: mountain, red.",
+         "steps": "Clue 2 gives <b>Maryam the city</b>. Clue 4 says the city is not red, and clue 1 makes blue the river, so the city is <b>green</b>. Clue 3 keeps Idris off blue, so Idris is not the river: <b>Idris has the mountain</b>, and it must be <b>red</b>. <b>Bilal has the river, in blue</b>."},
+        {"q": "On a map, <b>1 cm</b> stands for <b>5 km</b>. Two towns are <b>8 cm</b> apart on the map. A rest stop sits exactly <b>halfway</b> between them. How many <b>km</b> is the rest stop from the first town?",
+         "fact": "The scale bar on a map lets you measure real distances with just a ruler or a piece of string.",
+         "a": "%d km." % p_half,
+         "steps": "8 cm &times; 5 = <b>%d km</b> between the towns. Halfway: %d &divide; 2 = <b>%d km</b>. Answering 4 means the scale was never used." % (p_scale, p_scale, p_half)},
+        {"q": "From the <b>mosque</b> to the <b>market</b> there are <b>3 different roads</b>. From the <b>market</b> to the <b>harbour</b> there are <b>2 different roads</b>. How many different ways can you walk from the mosque to the harbour, going through the market?",
+         "fact": "Old city maps of Cairo show hundreds of mosques, markets and water fountains, all linked by narrow lanes.",
+         "a": "%d different ways." % p_routes,
+         "steps": "Call the first roads A, B, C and the second ones 1, 2. List them: A1, A2, B1, B2, C1, C2 = <b>%d</b>. Each of the 3 first roads can join each of the 2 second roads: 3 &times; 2. Answering 5 means he added instead of pairing them." % p_routes},
+    ],
+    "kid2": [
+        {"q": "A map has <b>five countries</b>, A to E. Countries that share a border must be different colours. <br>A borders B, C and D. &nbsp;B borders A and C. &nbsp;C borders A, B, D and E. &nbsp;D borders A, C and E. &nbsp;E borders C and D.<br>What is the <b>fewest</b> colours you need? Show one way to colour it. <b>Then write why fewer will not work.</b>",
+         "fact": "Mathematicians proved that any flat map can be coloured with just four colours so no neighbours match. The proof needed a computer.",
+         "a": "%d colours. One way: A red, B blue, C green, D blue, E red." % q_colors,
+         "steps": "A, B and C all touch each other, so those three need three different colours. That proves <b>2 is not enough</b>. Three is enough: A red, B blue, C green; D touches A and C, so D blue; E touches C and D, so E red. <b>%d</b>. Check every border pair once." % q_colors},
+        {"q": "Three treasure chests sit in a cave: <b>gold, silver and bronze</b>. The treasure is in <b>exactly one</b> of them. Each chest has a label:<br><b>Gold:</b> \"The treasure is in here.\" &nbsp;<b>Silver:</b> \"The treasure is not in here.\" &nbsp;<b>Bronze:</b> \"The treasure is not in the gold chest.\"<br><b>Exactly one</b> label is true. Which chest has the treasure?",
+         "fact": "Real pirate treasure maps with an X are almost all made up. Pirates usually spent their treasure quickly.",
+         "a": "The silver chest.",
+         "steps": "Try each chest and count the true labels. <b>Gold</b>: gold true, silver true, bronze false = 2 true. &cross; <b>Silver</b>: gold false, silver false, bronze true = <b>1 true</b>. &check; <b>Bronze</b>: gold false, silver true, bronze true = 2 true. &cross; Only <b>silver</b> fits."},
+        {"q": "A town is laid out in square blocks. You must walk from the <b>school</b> to the <b>library</b>, which is <b>3 blocks east</b> and <b>2 blocks north</b>. You only walk <b>east</b> or <b>north</b> (never back). How many <b>different</b> shortest routes are there? <i>Draw the grid and write a number on every corner.</i>",
+         "fact": "Many cities, like New York, have grid streets, so you can give directions by counting blocks.",
+         "a": "%d routes." % q_paths,
+         "steps": "On each corner, write how many ways reach it. The bottom row and left column are all 1s. Every other corner = the number to its left + the number below it. Row 1: 1, 2, 3, 4. Row 2: 1, 3, 6, <b>%d</b>. Or list them as words of 3 E's and 2 N's: EEENN, EENEN, ... there are %d." % (q_paths, q_paths)},
+        {"q": "Four mapmakers, <b>Zaid, Huda, Anas and Safiya</b>, stand in a line for a photo.<br><b>1.</b> Huda is somewhere to the <b>left</b> of Zaid. &nbsp;<b>2.</b> Anas and Safiya stand at the <b>two ends</b>. &nbsp;<b>3.</b> Safiya stands <b>right next to</b> Zaid.<br>What is the order from left to right? <b>Write which clue ruled out the other way round.</b>",
+         "fact": "In the earliest photographs, almost 200 years ago, people had to hold still for minutes, so streets looked empty.",
+         "a": "Anas, Huda, Zaid, Safiya.",
+         "steps": "Clue 2 puts Huda and Zaid in the middle two places, and clue 1 makes it <b>Huda, Zaid</b>. That leaves two ways: Anas&nbsp;H&nbsp;Z&nbsp;Safiya, or Safiya&nbsp;H&nbsp;Z&nbsp;Anas. In the second, Safiya stands next to Huda, not Zaid, so <b>clue 3 rules it out</b>. Answer: <b>Anas, Huda, Zaid, Safiya</b>."},
+    ],
+    "kid1_watch": "#2 has four clues and needs all of them; watch whether he writes a table. On #4 expect <b>5</b> (added, not paired). Ask him to say every route out loud. #3 hides the scale step; 4 km means he halved the centimetres and stopped.",
+    "kid2_watch": "Each puzzle asks for a reason, on purpose: his school packets lose half marks every time the \"why\" is blank. On #1 the WHY is the triangle A-B-C; a correct \"3\" with no reason is half done. #2 has exactly one TRUE label (not one lie). #3: expect a guess like 6 or 5; the corner-numbering method is the lesson.",
+}
+
+ALL = [JUL29L, JUL30L, JUL31L, AUG1L, AUG2L, AUG16L, AUG17L, AUG18L, OCT12L]

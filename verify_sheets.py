@@ -781,6 +781,115 @@ _n -= 3                                          # set aside
 _n -= _n // 2                                    # half to South
 check("L-Aug18 Y4 replay forwards", _n, 7)
 
+# --- Oct 12 mapmakers (word). Repeated addition / subtraction as above; the
+#     kid2 fraction answers are rebuilt by break-apart (the method the sheet
+#     teaches), not by the improper-fraction product the spec uses.
+check("W-Oct12 M1 good maps", sum([128] * 6) - 95, 673)
+q, r = divmod_by_repeated_subtraction(75, 8)
+check("W-Oct12 M2 full/left", (q, r), (9, 3))
+check("W-Oct12 M2 boats for all", boxes_needed(75, 8), 10)
+_e, _er = divmod_by_repeated_subtraction(sum([12] * 4) - 18, 5)
+check("W-Oct12 M3 pencils each, exact", (_e, _er), (6, 0))
+check("W-Oct12 M4 two-thirds is bigger", F(2, 3) > F(5, 8), True)
+check("W-Oct12 M4 and it is close", F(2, 3) - F(5, 8), F(1, 24))
+check("W-Oct12 M5 side from area", next(s for s in range(1, 200) if 8 * s == 96), 12)
+check("W-Oct12 M5 perimeter", 8 + 12 + 8 + 12, 40)
+check("W-Oct12 Y1 break-apart", 6 * 3 + 6 * F(2, 5), F(102, 5))
+check("W-Oct12 Y1 renders 20 2/5", specs_word.mixed(6 * 3 + 6 * F(2, 5)), "20 2/5")
+check("W-Oct12 Y1 dropped-whole trap differs", 6 * F(2, 5) != F(102, 5), True)
+check("W-Oct12 Y2 small map rivers",
+      next(s for s in range(1, 100) if sum([s] * 6) == 54), 9)
+check("W-Oct12 Y2 mountains", sum([9] * 3), 27)
+check("W-Oct12 Y3 people = Khadijah + 4", 1 + 4, 5)
+check("W-Oct12 Y3 share", F(8, 1 + 4), F(8, 5))
+check("W-Oct12 Y3 renders 1 3/5", specs_word.mixed(F(8, 5)), "1 3/5")
+_third = F(130, 3)
+check("W-Oct12 Y4 two-thirds", _third + _third, F(260, 3))
+check("W-Oct12 Y4 renders 86 2/3", specs_word.mixed(_third + _third), "86 2/3")
+check("W-Oct12 Y4 less than 90", _third + _third < 90, True)
+check("W-Oct12 Y4 2/3 of 135 is 90", F(2, 3) * 135, 90)
+check("W-Oct12 Y4 remainder-as-whole trap differs", 2 * 43 + 1 != F(260, 3), True)
+check("W-Oct12 Y5 area by break-apart", 2 * F(3, 4) + F(1, 2) * F(3, 4), F(15, 8))
+check("W-Oct12 Y5 renders 1 7/8", specs_word.mixed(F(15, 8)), "1 7/8")
+
+# --- Oct 12 map room logic
+_pos = [0, 0]
+for _dx, _dy, _n in ((0, 1, 3), (1, 0, 5), (0, -1, 1), (-1, 0, 2)):
+    for _ in range(_n):
+        _pos[0] += _dx
+        _pos[1] += _dy
+check("L-Oct12 M1 walk (east, north)", tuple(_pos), (3, 2))
+
+
+def map_pens():
+    """Every assignment of (map, pen) to Idris, Maryam, Bilal that fits clues 1-4."""
+    people = ("Idris", "Maryam", "Bilal")
+    out = []
+    for maps in permutations(("river", "mountain", "city")):
+        for pens in permutations(("red", "blue", "green")):
+            m, p = dict(zip(people, maps)), dict(zip(people, pens))
+            who = {v: k for k, v in m.items()}
+            if (p[who["river"]] == "blue" and m["Maryam"] == "city"
+                    and p["Idris"] != "blue" and p[who["city"]] != "red"):
+                out.append(tuple((x, m[x], p[x]) for x in people))
+    return out
+
+
+check("L-Oct12 M2 unique grid", map_pens(),
+      [(("Idris", "mountain", "red"), ("Maryam", "city", "green"), ("Bilal", "river", "blue"))])
+check("L-Oct12 M3 halfway km", sum([5] * 8) // 2, 20)
+check("L-Oct12 M4 routes by listing",
+      len([(a, b) for a in "ABC" for b in "12"]), 6)
+
+_borders = {("A", "B"), ("A", "C"), ("A", "D"), ("B", "C"), ("C", "D"), ("C", "E"), ("D", "E")}
+
+
+def min_colours(nodes, edges):
+    for k in range(1, len(nodes) + 1):
+        for combo in __import__("itertools").product(range(k), repeat=len(nodes)):
+            col = dict(zip(nodes, combo))
+            if all(col[a] != col[b] for a, b in edges):
+                return k
+    return None
+
+
+check("L-Oct12 Y1 fewest colours", min_colours("ABCDE", _borders), 3)
+_shown = {"A": 0, "B": 1, "C": 2, "D": 1, "E": 0}
+check("L-Oct12 Y1 key's colouring is legal", all(_shown[a] != _shown[b] for a, b in _borders), True)
+# The prose borders list must match the edge set, from both sides.
+_prose = {"A": "BCD", "B": "AC", "C": "ABDE", "D": "ACE", "E": "CD"}
+check("L-Oct12 Y1 prose borders symmetric and equal to edges",
+      {tuple(sorted((a, b))) for a, bs in _prose.items() for b in bs}, _borders)
+
+
+def chest_labels(treasure):
+    return [treasure == "gold", treasure != "silver", treasure != "gold"]
+
+
+check("L-Oct12 Y2 exactly one true label",
+      [c for c in ("gold", "silver", "bronze") if sum(chest_labels(c)) == 1], ["silver"])
+
+
+def grid_paths(east, north):
+    """Enumerate every E/N word rather than use n-choose-k."""
+    return len({w for w in permutations("E" * east + "N" * north)})
+
+
+check("L-Oct12 Y3 shortest routes", grid_paths(3, 2), 10)
+
+
+def photo_orders():
+    out = []
+    for o in permutations(("Zaid", "Huda", "Anas", "Safiya")):
+        i = {n: k for k, n in enumerate(o)}
+        if (i["Huda"] < i["Zaid"] and {o[0], o[3]} == {"Anas", "Safiya"}
+                and abs(i["Safiya"] - i["Zaid"]) == 1):
+            out.append(o)
+    return out
+
+
+check("L-Oct12 Y4 unique order", photo_orders(), [("Anas", "Huda", "Zaid", "Safiya")])
+
 # ============================== RENDERED HTML ==============================
 import build_sheets
 

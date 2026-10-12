@@ -608,4 +608,79 @@ AUG18 = {
     "kid2_watch": "He is back on unlike denominators after only <b>one</b> guided day on it. #1 prints the common-denominator step; <b>#2 does not</b>, and #2 is the real read &mdash; 6/11 there means he added straight across. Ask whether 6/11 can be right when the store started nearly full. #4 is yesterday's decimals unscaffolded: watch the padding. On #5, jumping to 1,455 &times; 9 means \"find one day first\" did not arrive.",
 }
 
-ALL = [JUL29, JUL30, JUL31, AUG1, AUG2, AUG16, AUG17, AUG18]
+# ---------------------------------------------------------------- Oct 12
+# First school-year set, maps theme. kid1 runs the STEP UP pin unchanged. kid2
+# is on IM Grade 5 Unit 2 at school; each kid2 problem targets one error from his
+# marked school packet (logged in private/RESULTS.md, 2026-10-12, not here: per-
+# child mistakes stay out of git). Every unguided kid2 problem asks for one
+# written sentence of WHY, because blank explanations cost him the most points.
+o_good = 128 * 6 - 95
+o_boats = ceil(75 / 8)
+o_full, o_left = divmod(75, 8)
+o_each = (4 * 12 - 18) // 5
+o_side = 96 // 8
+o_per = 2 * (8 + o_side)
+z_strip = 6 * F(17, 5)                  # 6 x 3 2/5
+z_small = 54 // 6
+z_mtn = 3 * z_small
+z_bread = F(8, 5)                       # Khadijah + 4 crew = 5 people
+z_route = F(2, 3) * 130
+z_area = F(5, 2) * F(3, 4)
+
+OCT12 = {
+    "file": "worksheet-mapmakers.html",
+    "title_plain": "The Mapmakers",
+    "title": "🗺️ The Mapmakers",
+    "sub": "Word problems from the map room — write one line of <b>why</b>, not just the number",
+    "kid1": [
+        {"q": "A map workshop prints <b>128 maps a day</b> for <b>6 days</b>. Then <b>95</b> maps are found smudged and thrown away. How many good maps are left?",
+         "fact": "Before printing, every map was copied by hand. One mistake by a tired copier could move a town for hundreds of years.",
+         "a": "%d good maps." % o_good,
+         "steps": "128 &times; 6 = <b>768</b>, then 768 &minus; 95 = <b>%d</b>." % o_good},
+        {"q": "<b>75 explorers</b> must cross a lake. Each boat carries <b>8</b>. How many boats are <b>completely full</b>, and how many explorers are left over? Then: how many boats do they need so <b>nobody</b> is left behind?",
+         "fact": "Old maps of unknown seas sometimes showed sea monsters in the empty parts, as a warning that nobody knew what was there.",
+         "a": "%d full boats, %d left over — but %d boats so nobody is left." % (o_full, o_left, o_boats),
+         "steps": "75 &divide; 8 = <b>%d remainder %d</b>. Those %d explorers still need a boat, so one more: <b>%d</b>." % (o_full, o_left, o_left, o_boats)},
+        {"q": "Amina has <b>4 packs</b> of coloured pencils with <b>12</b> in each pack. She gives <b>18</b> to her brother Hamza. She shares the rest <b>equally</b> among <b>5</b> map-colouring friends. How many pencils does each friend get?",
+         "fact": "Mapmakers colour seas blue and land green or brown, but there is no rule that says they must. It is a habit that stuck.",
+         "a": "%d pencils each." % o_each,
+         "steps": "4 &times; 12 = <b>48</b>. 48 &minus; 18 = <b>30</b>. 30 &divide; 5 = <b>%d</b>." % o_each},
+        {"q": "Yusra has coloured <b>5/8</b> of her map. Hamza has coloured <b>2/3</b> of his map, which is the same size. Who has coloured more? How do you know?",
+         "fact": "Al-Idrisi made a famous world map in the year 1154. It put south at the top, so it looks upside down to us today.",
+         "a": "Hamza (2/3).",
+         "steps": "Twenty-fourths: 5/8 = <b>15/24</b>, 2/3 = <b>16/24</b>. <b>Hamza</b> wins, by one twenty-fourth. Bigger numbers on the bottom do not mean more."},
+        {"q": "A rectangular wall map covers <b>96 square inches</b>. One side is <b>8 inches</b>. How long is the other side? What is the <b>perimeter</b> of the map?",
+         "fact": "A globe is the only map with no stretching. Every flat map squashes or stretches some part of the round Earth.",
+         "a": "Other side %d in; perimeter %d in." % (o_side, o_per),
+         "steps": "Area = side &times; side, so 96 &divide; 8 = <b>%d in</b>. Perimeter goes all the way round: 8 + %d + 8 + %d = <b>%d in</b>." % (o_side, o_side, o_side, o_per)},
+    ],
+    "kid2": [
+        {"guided": ["Whole part: 6 &times; 3 = <span class='blank'></span>",
+                    "Fraction part: 6 &times; 2/5 = <span class='blank'></span>/5 = <span class='blank'></span> (as a mixed number)",
+                    "Add both parts: <span class='blank'></span> + <span class='blank'></span> = <span class='blank'></span> feet"],
+         "q": "Each strip of a long map scroll is <b>3 2/5 feet</b> long. Nuh glues <b>6 strips</b> end to end. How long is the whole scroll?",
+         "fact": "Ibn Battuta travelled about 75,000 miles in the 1300s, from Morocco to China, and his travel book was used like a map.",
+         "a": "%s feet." % mixed(z_strip),
+         "steps": "Break it apart. 6 &times; 3 = <b>18</b>. 6 &times; 2/5 = 12/5 = <b>2 2/5</b>. 18 + 2 2/5 = <b>%s feet</b>. Answering 2 2/5 or 18 2/5 means one part was dropped." % mixed(z_strip)},
+        {"q": "The big map shows <b>6 times as many</b> rivers as the small map. The big map shows <b>54 rivers</b>. How many rivers are on the small map? The small map shows <b>3 times as many</b> mountains as rivers. How many mountains is that? <b>Write one sentence: why did you divide first, then multiply?</b>",
+         "fact": "The Nile flows north, so on a normal map its water runs up the page, not down.",
+         "a": "%d rivers on the small map; %d mountains." % (z_small, z_mtn),
+         "steps": "The big map has the <i>bigger</i> number, so the small map is found by dividing: 54 &divide; 6 = <b>%d</b>. Then the mountains are the bigger amount, so multiply: 3 &times; %d = <b>%d</b>. 324 means he multiplied 54 &times; 6." % (z_small, z_small, z_mtn)},
+        {"q": "Khadijah and her <b>4</b> crew mates share <b>8 loaves</b> of bread equally on a long voyage. How much bread does each person get? Write it as a fraction and as a mixed number. <b>Write one sentence: how many people are sharing, and how do you know?</b>",
+         "fact": "Sailors found their way across open sea by measuring how high the Pole Star sat above the horizon.",
+         "a": "%s = %s loaves each." % ("8/5", mixed(z_bread)),
+         "steps": "Count everyone: Khadijah + 4 = <b>5 people</b>. 8 &divide; 5 = <b>8/5 = %s</b> loaves. Answering 2 means he divided by 4 and forgot Khadijah." % mixed(z_bread)},
+        {"q": "A trade route is <b>130 miles</b> long. A caravan has travelled <b>2/3</b> of the way. How far has it gone? Give the <b>exact</b> answer as a mixed number. Is that more or less than <b>90 miles</b>? <b>Write one sentence: why?</b>",
+         "fact": "Caravans stopped at inns called caravanserais, built about one day's walk apart along the Silk Road.",
+         "a": "%s miles — less than 90." % mixed(z_route),
+         "steps": "130 &divide; 3 = <b>43 1/3</b> (not 43 remainder 1). Two thirds is double that: 86 + 2/3 = <b>%s miles</b>. Less than 90 because 2/3 of 135 is 90, and 130 is less than 135. " % mixed(z_route)},
+        {"q": "A map is <b>2 1/2 feet</b> wide and <b>3/4 foot</b> tall. What is its area? Draw and shade a model, or write the multiplication.",
+         "fact": "Many maps are drawn so north is at the top, but medieval Christian maps often put east at the top, toward the sunrise.",
+         "a": "%s square feet." % mixed(z_area),
+         "steps": "2 1/2 = 5/2. 5/2 &times; 3/4 = <b>15/8 = %s square feet</b>. Or break it apart: 2 &times; 3/4 = 6/4 = 1 1/2, and 1/2 &times; 3/4 = 3/8. 1 1/2 + 3/8 = %s. &check;" % (mixed(z_area), mixed(z_area))},
+    ],
+    "kid1_watch": "The first sheet since August, so read it as a check-in, not a test. On #2 expect \"9 boats\": the right division, one step short. On #4 the numbers are deliberately close (15/24 vs 16/24); \"5/8, because 8 is bigger\" means he compared the bottoms. #5 is area &rarr; side &rarr; perimeter; expect <b>20</b> if he adds one length and one width and stops.",
+    "kid2_watch": "Each problem is built from a point he lost on his Lesson 11/14 packets. #1 prints the break-apart steps (he twice <b>dropped the whole part</b>); #5 is the unscaffolded read. Expect <b>324</b> on #2, <b>2</b> on #3 (forgot Khadijah), <b>87</b> on #4 (remainder kept as a whole mile). <b>Grade the WHY sentences</b>: a right number with no sentence is half done.",
+}
+
+ALL = [JUL29, JUL30, JUL31, AUG1, AUG2, AUG16, AUG17, AUG18, OCT12]
