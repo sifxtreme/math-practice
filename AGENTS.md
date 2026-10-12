@@ -414,7 +414,7 @@ Straight to 5 compound word problems, no example box. This is the original forma
 
 | # | Skill | Khan unit |
 |---|-------|-----------|
-| 1 | 2-digit and 3-digit **× 1-digit**, then subtract/add (no more single-digit multipliers) | [4th: Multiplication and division](https://www.khanacademy.org/math/cc-fourth-grade-math/cc-4th-mult-div-topic) |
+| 1 | 2-digit and 3-digit **× 1-digit**, then subtract/add (no more single-digit multipliers) | [4th: Multiply by 1-digit numbers](https://www.khanacademy.org/math/cc-fourth-grade-math/imp-multiplication-and-division-2) |
 | 2 | **2-digit ÷ 1-digit with a remainder** — and the problem must force him to *interpret* the remainder ("how many vans do they actually need?") | [4th: Division → remainders](https://www.khanacademy.org/math/cc-fourth-grade-math/division) |
 | 3 | **Two-step word problems mixing all four operations** (the operation choice is the test) | [3rd: Arithmetic patterns and problem solving](https://www.khanacademy.org/math/cc-third-grade-math/arithmetic-patterns-and-problem-solving) |
 | 4 | **Equivalent / comparing fractions** (½ vs 3/6, which is bigger) — new territory for him | [3rd: Equivalent fractions and comparing fractions](https://www.khanacademy.org/math/cc-third-grade-math/equivalent-fractions-and-comparing-fractions) |
@@ -429,6 +429,30 @@ Straight to 5 compound word problems, no example box. This is the original forma
 | 3 | **Add/subtract fractions with UNLIKE denominators** — the real jump; needs a common denominator | [5th: Add and subtract fractions](https://www.khanacademy.org/math/cc-fifth-grade-math/imp-fractions-3) |
 | 4 | **Decimals** — compare, and add/subtract tenths & hundredths (money is the natural story) | [4th: Decimals](https://www.khanacademy.org/math/cc-fourth-grade-math/imp-decimals) → [5th: Decimal place value](https://www.khanacademy.org/math/cc-fifth-grade-math/imp-place-value-and-decimals) |
 | 5 | **Multi-step with a rate**: unit price or per-day rate → total → remainder/leftover | [5th: Multi-digit multiplication and division](https://www.khanacademy.org/math/cc-fifth-grade-math/multi-digit-multiplication-and-division) |
+
+### kid2 — SCHOOL-YEAR PIN, set 2026-10-12: Khan 5th grade, tracking IM Grade 5 at school
+
+kid2 is in a 4th-grade homeroom but does **IM Grade 5** math at school (confirmed from
+his Unit 2 packet). His pin now follows the school unit, not the summer list above.
+Unit 2 of IM Grade 5 maps onto Khan 5th grade **Multiply fractions** and the first
+lesson of **Divide fractions**, plus one 4th-grade review. Each row is one problem
+type from `worksheet-mapmakers.html` (Oct 12):
+
+| # | Skill | Khan lesson |
+|---|-------|-------------|
+| 1 | **Whole × mixed number**, break apart (whole part × n, fraction part × n, add) | [5th: Multiply mixed numbers](https://www.khanacademy.org/math/cc-fifth-grade-math/5th-multiply-fractions/imp-multiplying-mixed-numbers) · [Multiply fractions and whole numbers](https://www.khanacademy.org/math/cc-fifth-grade-math/5th-multiply-fractions/imp-multiplying-fractions-and-whole-numbers) |
+| 2 | **"Times as many"**: which amount is bigger, so multiply or divide | [4th: Compare with multiplication](https://www.khanacademy.org/math/cc-fourth-grade-math/imp-multiplication-and-division-2/imp-comparing-with-multiplication) (review) |
+| 3 | **Fractions as division**: a ÷ b = a/b, counting every sharer | [5th: Fractions as division](https://www.khanacademy.org/math/cc-fifth-grade-math/divide-fractions/imp-fractions-as-division) |
+| 4 | **Fraction of a whole number** with a non-even result (2/3 of 130 = 86 2/3) | [5th: Multiply fractions and whole numbers](https://www.khanacademy.org/math/cc-fifth-grade-math/5th-multiply-fractions/imp-multiplying-fractions-and-whole-numbers) · [Multiply fractions word problems](https://www.khanacademy.org/math/cc-fifth-grade-math/5th-multiply-fractions/imp-multiplying-fractions-word-problems) |
+| 5 | **Area with fraction side lengths** (incl. mixed) | [5th: Area of rectangles with fraction side lengths](https://www.khanacademy.org/math/cc-fifth-grade-math/5th-multiply-fractions/area-of-rectangles-with-fraction-side-lengths) |
+
+**Next rung** when he clears these (rule below): [Multiplication as scaling](https://www.khanacademy.org/math/cc-fifth-grade-math/5th-multiply-fractions/imp-multiplication-as-scaling), then the rest of [Divide fractions](https://www.khanacademy.org/math/cc-fifth-grade-math/divide-fractions) (unit fraction ÷ whole, whole ÷ unit fraction).
+
+> All links were checked 2026-10-12 by reading the rendered page title in headless
+> Chromium. **Do not check a Khan link with curl.** Khan returns HTTP 200 for every path,
+> including made-up ones, and plain requests get a bot-challenge page. The old kid1 #1
+> link (`cc-4th-mult-div-topic`) had been "Page not found" for an unknown time, and a
+> status-code check would never have shown it.
 
 ### When to move the pin again
 
