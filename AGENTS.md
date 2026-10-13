@@ -432,6 +432,12 @@ Straight to 5 compound word problems, no example box. This is the original forma
 
 ### kid2 — SCHOOL-YEAR PIN, set 2026-10-12: Khan 5th grade, tracking IM Grade 5 at school
 
+> **School curriculum, grades 4–8 (and placement):** bifrost
+> `family/school/pegasus-middle-school-math-curriculum.md` (Instinct, 2026-10-12). Read it
+> before re-levelling either kid. Useful line from it: the school's fact-fluency bar is
+> **100 facts in 5 minutes** (3rd grade: +, −, ×; 4th grade: × and ÷ by year end), which is
+> the target to time a `--skill facts` sheet against. The grade 6–8 textbook is UNVERIFIED.
+
 kid2 is in a 4th-grade homeroom but does **IM Grade 5** math at school (confirmed from
 his Unit 2 packet). His pin now follows the school unit, not the summer list above.
 Unit 2 of IM Grade 5 maps onto Khan 5th grade **Multiply fractions** and the first
