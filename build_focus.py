@@ -1,4 +1,7 @@
-"""build_focus.py -- render the Musa focus-track word sheets (kid1 only).
+"""build_focus.py -- render the Noetic-prep focus-track word sheets (one kid per spec).
+
+A spec names its child with spec["kid"] (default kid1) and its method with
+spec["kind"] ("undo", default, or "trade"). kid1 = "undo the steps"; kid2 = "trade it".
 
     python3 build_focus.py            # writes worksheet-focus-<date>-<topic>.html + -key.html
     python3 verify_focus.py           # MUST exit 0 before anything is rendered or printed
@@ -23,7 +26,7 @@ import build_sheets
 import specs_focus
 from kids_config import kids_by_id, kid_name, grade_label
 
-KID = "kid1"
+KID = "kid1"   # default when a spec names no kid
 
 
 def _example_html(ex):
@@ -52,6 +55,41 @@ def _example_html(ex):
         '  </div>', ''])
 
 
+def _chip(text, fill):
+    return ('<span style="display:inline-block;border:1.5px solid #1e3a8a;'
+            'border-radius:4px;padding:0 6px;margin:0 1px;background:%s;'
+            'font-size:12px">%s</span>' % (fill, text))
+
+
+def _trade_example_html(ex):
+    """Worked example, every number computed from the same (a,b,k,T,c,d) the problems use."""
+    a, b, k, T, c, d = (ex[x] for x in "abkTcd")
+    n = a * k + b
+    pb = T // n
+    pa = k * pb
+    assert T % n == 0 and a * pa + b * pb == T
+    jar, quill = _chip("jar", "#fff"), _chip("quill", "#fde68a")
+    row = lambda items: " ".join(items)
+    return "\n".join([
+        '  <div class="teach">',
+        '    <div class="teach-title">HOW IT WORKS</div>',
+        '    <div class="prompt">Sana buys %d jars of ink and %d quills for $%d. One jar costs '
+        'the same as %d quills. How much do %d jars and %d quill cost?</div>' % (a, b, T, k, c, d),
+        '    <div class="step"><b>Step 1 &mdash; Draw it.</b> %s &nbsp;%s &nbsp;= $%d</div>'
+        % (row([jar] * a), row([quill] * b), T),
+        '    <div class="step"><b>Step 2 &mdash; Trade.</b> Every jar is worth %d quills: '
+        '%s = %s. Swap them all.</div>' % (k, jar, row([quill] * k)),
+        '    <div class="step"><b>Step 3 &mdash; One kind left.</b> %s &nbsp;= $%d. '
+        '<b>One quill = $%d &divide; %d = $%d.</b></div>'
+        % (_chip("%d quills" % n, "#fde68a"), T, T, n, pb),
+        '    <div class="step"><b>Step 4 &mdash; Answer the question the same way.</b> '
+        '%d jars + %d quill = %s &nbsp;= %d quills. %d &times; $%d = $%d.</div>'
+        % (c, d, row([jar] * c + [quill] * d), c * k + d, c * k + d, pb, (c * k + d) * pb),
+        '    <div class="punch"><b>The trap:</b> do not divide $%d by the %d items you can '
+        'see. A jar is <b>not</b> one quill. Trade first, then count quills.</div>' % (T, a + b),
+        '  </div>', ''])
+
+
 def build_student(spec, name, grade):
     h = ['<!DOCTYPE html>', '<html lang="en">', "<head>", '<meta charset="UTF-8">',
          "<title>%s</title>" % spec["title_plain"], "<style>", build_sheets.CSS,
@@ -64,7 +102,9 @@ def build_student(spec, name, grade):
          '  <div class="meta">',
          "    <div>Name: <span>&nbsp;%s</span></div>" % name,
          "    <div>Date: <span>&nbsp;%s</span></div>" % spec["date"],
-         "  </div>", "", _example_html(spec["example"])]
+         "  </div>", "",
+         (_trade_example_html if spec.get("kind") == "trade" else _example_html)(
+             spec["example"])]
     for i, p in enumerate(spec["problems"], 1):
         h.append(build_sheets._problem(i, p))
         h.append("")
@@ -93,9 +133,10 @@ def build_key(spec, name, grade):
 
 def main():
     kids = kids_by_id()
-    name = kid_name(kids, KID)
-    grade = grade_label(kids[KID])
     for spec in specs_focus.ALL:
+        kid = spec.get("kid", KID)
+        name = kid_name(kids, kid)
+        grade = grade_label(kids[kid])
         for fname, text in ((spec["file"], build_student(spec, name, grade)),
                             (spec["key_file"], build_key(spec, name, grade))):
             with open(fname, "w") as f:
