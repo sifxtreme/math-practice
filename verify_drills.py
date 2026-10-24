@@ -82,6 +82,7 @@ TARGETS = [(p, sh) for p, sh in [
     ("worksheet-multiplication-drill.html", "mul"),
     ("worksheet-multiplication-drill-plain.html", "mul"),
     ("worksheet-facts-drill.html", "facts"),
+    ("worksheet-zeros-drill.html", "zeros"),
 ] if _os.path.exists(p)]
 
 for path, shape in TARGETS:
@@ -96,7 +97,42 @@ for path, shape in TARGETS:
                 check(not fill, f"{tag}: BLANK SHEET LEAKS {len(fill)} digits")
                 continue
 
-            if shape == "facts":
+            if shape == "zeros":
+                # One row: a OP b = c with exactly one number hidden in open boxes.
+                # Split the row at the OPERATOR/= cells, rebuild each number (a hidden
+                # one from the KEY's fill digits) and re-derive the equation here with
+                # plain arithmetic -- never by importing drill_gen.
+                row = sorted([c for c in cs if c["t"]], key=lambda c: c["c"])
+                toks, cur = [], []
+                for c in row:
+                    if c["t"] in ("×", "÷", "="):
+                        toks += [cur, c["t"]]
+                        cur = []
+                    else:
+                        cur.append(c)
+                toks.append(cur)
+                check(len(toks) == 5 and toks[1] in ("×", "÷") and toks[3] == "=",
+                      f"{tag}: row is not 'a OP b = c' ({[t if isinstance(t, str) else '..' for t in toks]})")
+                if len(toks) != 5:
+                    continue
+                hidden = [i for i in (0, 2, 4) if any("f" in c["cls"] for c in toks[i])]
+                check(len(hidden) == 1, f"{tag}: {len(hidden)} hidden numbers, want exactly 1")
+                vals = [int("".join(c["t"] for c in toks[i])) if toks[i] else None
+                        for i in (0, 2, 4)]
+                check(None not in vals, f"{tag}: a number is missing from the key")
+                if None in vals:
+                    continue
+                a, b, cc = vals
+                if toks[1] == "×":
+                    check(a * b == cc, f"{tag}: {a}×{b} != {cc}")
+                else:
+                    check(b != 0 and a == b * cc, f"{tag}: {a}÷{b} != {cc} (or not exact)")
+                for n in vals:
+                    check(n % 10 == 0 or 2 <= n <= 9,
+                          f"{tag}: {n} is neither a multiple of 10 nor a digit 2-9")
+                # the skill under test: at least one number carries a trailing zero
+                check(any(n % 10 == 0 for n in vals), f"{tag}: no trailing zero in {vals}")
+            elif shape == "facts":
                 # One row: [x] [op] [y] [=] [ans...]. Operands are the 'g' cells,
                 # the answer is whatever is in the fill boxes. Re-derived here with
                 # plain arithmetic, never by importing drill_gen.
@@ -224,7 +260,12 @@ for path, shape in TARGETS:
         sigs = []
         for prob in probs:
             cs = cells(prob)
-            if shape == "facts":
+            if shape == "zeros":
+                # givens + WHERE the hole is, so '40 x ? = 240' and '? x 6 = 240' differ
+                g = sorted([c for c in cs if "g" in c["cls"] and c["t"]],
+                           key=lambda c: c["c"])
+                sigs.append(tuple((c["c"], c["t"]) for c in g))
+            elif shape == "facts":
                 g = sorted([c for c in cs if "g" in c["cls"] and c["t"]],
                            key=lambda c: c["c"])
                 sigs.append(tuple(c["t"] for c in g) if len(g) == 4 else ("?",))

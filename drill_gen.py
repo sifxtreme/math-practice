@@ -246,6 +246,183 @@ def trace_fact(op, x, y):
     return 1, 4 + width, marks, set(), boxes
 
 
+# --- TRAILING-ZERO products and quotients ---------------------------------
+# Added 2026-10-24 for kid1's Noetic prep (a graded practice test missed
+# "multiply/divide when there is a zero at the end"). Asif: "he should be able to do
+# that really easily" -- so this is a fluency PROBE, not a method drill:
+#
+#   * Same shape as --skill facts: a fixed count sized to OVERFLOW the window, a
+#     "Stopped at #" field, the score is how far the kid GOT and how many were right.
+#   * There is no written method to force (the whole skill is "do the fact, then
+#     move the zeros"), so there is no grid/plain split -- an answer box, like facts.
+#   * One equation per problem: a OP b = c, with exactly one of the three numbers
+#     missing. Stages 1-2 hide c. Stage 3 hides a or b (missing-factor forms).
+#
+# STAGES (one per school day; see private/PRACTICE-PLAN-2026.md "Musa focus track"):
+#   1  ONE zero:  40 x 6 = 240   120 / 3 = 40   800 / 4 = 200   300 x 2 = 600
+#   2  TWO zeros: 30 x 20 = 600  600 / 30 = 20  300 x 4 = 1200  2400 / 6 = 400
+#   3  MISSING:   ? x 3 = 120    240 / ? = 60   ? / 4 = 80      (pool of stages 1-2)
+#   mix           all three, for review
+#
+# Every operand is a single digit 2-9 or a multiple of 10 -- the same "no x0 / x1
+# row" rule as make_multiplication(): x1 and x0 teach nothing here.
+
+ZERO_STAGES = {
+    # stage: (problems on sheet, answer-box width, seconds each at target)
+    "1": (48, 3, 3),
+    "2": (40, 4, 4),
+    "3": (40, 4, 4),
+    "mix": (40, 4, 4),
+}
+ZERO_PROBE_SEC = 120          # a 2-minute probe, like the CBM computation probe in SPEED.md
+# Kept short: the sheet header is one flex row (title, Name, Date, Stopped at #).
+ZERO_LABEL = {"1": "one zero", "2": "two zeros", "3": "missing number", "mix": "review"}
+
+
+def _z_forms(stage):
+    """[(weight, fn)] where fn(rng) -> (op, a, b, c): an equation a OP b = c."""
+    D = range(2, 10)
+
+    def f1a(r):                       # 40 x 6 = 240   (or 6 x 40)
+        x, b = r.choice(D), r.choice(D)
+        a = 10 * x
+        return ("mul", *((a, b) if r.random() < .5 else (b, a)), a * b)
+
+    def f1b(r):                       # 120 / 3 = 40
+        x, b = r.choice(D), r.choice(D)
+        return ("div", 10 * x * b, b, 10 * x)
+
+    def f1c(r):                       # 800 / 4 = 200
+        b = r.choice([2, 3, 4])
+        q = r.choice(range(2, 9 // b + 1))
+        return ("div", b * q * 100, b, q * 100)
+
+    def f1d(r):                       # 300 x 2 = 600   (product stays under 1000)
+        x, b = r.choice([(2, 2), (2, 3), (2, 4), (3, 2), (3, 3), (4, 2)])
+        a = 100 * x
+        return ("mul", *((a, b) if r.random() < .5 else (b, a)), a * b)
+
+    def f2a(r):                       # 30 x 20 = 600  (zeros on BOTH factors)
+        x, y = r.choice(D), r.choice(D)
+        return ("mul", 10 * x, 10 * y, 100 * x * y)
+
+    def f2b(r):                       # 300 x 4 = 1200
+        while True:
+            x, b = r.choice(D), r.choice(D)
+            if x * b >= 10:
+                a = 100 * x
+                return ("mul", *((a, b) if r.random() < .5 else (b, a)), a * b)
+
+    def f2c(r):                       # 600 / 30 = 20
+        x, y = r.choice(D), r.choice(D)
+        return ("div", 100 * x * y, 10 * y, 10 * x)
+
+    def f2d(r):                       # 2400 / 6 = 400
+        while True:
+            x, b = r.choice(D), r.choice(D)
+            if x * b >= 10:
+                return ("div", 100 * x * b, b, 100 * x)
+
+    s1 = [(.40, f1a), (.35, f1b), (.12, f1c), (.13, f1d)]
+    s2 = [(.30, f2a), (.25, f2b), (.30, f2c), (.15, f2d)]
+    return {"1": s1, "2": s2, "3": s1 + s2, "mix": s1 + s2}[stage]
+
+
+def make_zero(rng, stage):
+    """One trailing-zero equation: (op, a, b, c, hole), exactly one number hidden.
+
+    Stage 3 hides a or b, never c: the missing-factor form is the new act. `mix`
+    hides c two times in three and a/b one time in three.
+    """
+    forms = _z_forms(stage)
+    fn = rng.choices([f for _, f in forms], weights=[w for w, _ in forms])[0]
+    op, a, b, c = fn(rng)
+    if stage == "3" or (stage == "mix" and rng.random() < 1 / 3):
+        hole = rng.choice(["a", "b"])
+    else:
+        hole = "c"
+    return (op, a, b, c, hole)
+
+
+def problem_set_zeros(rng, stage, count):
+    """`count` distinct equations. Commuted pairs (40 x 6, 6 x 40) are distinct."""
+    seen, out, guard = set(), [], 0
+    while len(out) < count:
+        guard += 1
+        if guard > count * 400:
+            raise RuntimeError(f"could not build {count} distinct zeros problems "
+                               f"for stage {stage}")
+        p = make_zero(rng, stage)
+        if p in seen:
+            continue
+        seen.add(p)
+        out.append(p)
+    return out
+
+
+def trace_zeros(op, a, b, c, hole, width):
+    """One row: a OP b = c, the hidden number as `width` open boxes.
+
+    Same (rows, cols, marks, rules, boxes) contract as the other tracers. The hidden
+    number is right-aligned in a FIXED number of boxes, so the box count never tells
+    the kid how many digits the answer has (same reason trace_fact uses 2 cells).
+    """
+    sym = "×" if op == "mul" else "÷"
+    marks, boxes, col = [], set(), 0
+
+    def number(val, hidden):
+        nonlocal col
+        if hidden:
+            txt = str(val).rjust(width)
+            for i, ch in enumerate(txt):
+                if ch != " ":
+                    marks.append((0, col + i, ch, "ans"))
+                boxes.add((0, col + i))
+            col += width
+        else:
+            for ch in str(val):
+                marks.append((0, col, ch, "given"))
+                col += 1
+
+    def symbol(t):
+        nonlocal col
+        marks.append((0, col, t, "given"))
+        col += 1
+
+    number(a, hole == "a")
+    symbol(sym)
+    number(b, hole == "b")
+    symbol("=")
+    number(c, hole == "c")
+    return 1, col, marks, set(), boxes
+
+
+def verify_zeros(op, a, b, c, hole, marks):
+    """Rebuild the equation from the MARKS (not from a/b/c) and check it."""
+    toks, cur = [], []
+    for (_r, _c, t, kind) in sorted(marks, key=lambda m: m[1]):
+        if t in ("×", "÷", "="):
+            toks.append(cur)
+            toks.append(t)
+            cur = []
+        else:
+            cur.append(t)
+    toks.append(cur)
+    if len(toks) != 5:
+        return False, f"{len(toks)} tokens, want 5"
+    na, sym, nb, eq, nc = ("".join(x) if isinstance(x, list) else x for x in toks)
+    if not (na and nb and nc):
+        return False, "an operand is empty"
+    na, nb, nc = int(na), int(nb), int(nc)
+    ok = (na * nb == nc) if sym == "×" else (nb != 0 and na == nb * nc)
+    if not ok:
+        return False, f"{na} {sym} {nb} != {nc}"
+    for n in (na, nb, nc):
+        if not (n % 10 == 0 or 2 <= n <= 9):
+            return False, f"{n} is neither a multiple of 10 nor a digit 2-9"
+    return True, f"{na} {sym} {nb} = {nc}"
+
+
 # --------------------------------------------------------------------------
 # the algorithm, simulated one written mark at a time
 # --------------------------------------------------------------------------
@@ -494,6 +671,9 @@ body { font-family: Georgia, 'Times New Roman', serif; margin: 0; color: #111; }
 .foot { margin-top:14px; border:1.5px solid #111; padding:5px; text-align:center;
         font-size:11px; }
 .note { font-size:11px; color:#555; margin-top:8px; }
+/* zeros probe: 40-48 one-row equations, two per row -- tighter than the grid sheets */
+.grid-wrap.z { gap: 7px 30px; }
+.z .prob { margin-bottom: 0; }
 """
 
 
@@ -502,6 +682,8 @@ def render_problem(idx, x, y, show_answers, shape="div", layout="grid", op=None)
         rows, cols, marks, rules, boxes = trace_division(x, y)
     elif shape == "facts":
         rows, cols, marks, rules, boxes = trace_fact(op, x, y)
+    elif shape == "zeros":
+        rows, cols, marks, rules, boxes = trace_zeros(*x)    # x = (op,a,b,c,hole,width)
     else:
         rows, cols, marks, rules, boxes = trace_multiplication(x, y)
 
@@ -512,7 +694,7 @@ def render_problem(idx, x, y, show_answers, shape="div", layout="grid", op=None)
     # Facts opt out: there is no written method to force or withhold, and the
     # answer box is the only place to write. `--layout plain` on a fact sheet
     # would produce a row of naked equals signs.
-    boxed = (layout == "grid") or show_answers or shape == "facts"
+    boxed = (layout == "grid") or show_answers or shape in ("facts", "zeros")
 
     grid = {}
     for (r, c, t, kind) in marks:
@@ -575,7 +757,8 @@ def render_sheet(name, skill_label, probs, show_answers, budget_note, shape="div
     cls = "sheet key" if show_answers else "sheet"
     # Kept short for facts: the header is one flex row with a Name, a Date AND a
     # "Stopped at #" field, and a long title wraps it onto two lines.
-    head = {"div": "Long Division", "mul": "Multiplication", "facts": "Facts"}[shape]
+    head = {"div": "Long Division", "mul": "Multiplication", "facts": "Facts",
+            "zeros": "Zeros"}[shape]
     title = f"{head} — {skill_label}" + (" — ANSWERS" if show_answers else "")
     h = [f'<div class="{cls}">']
     h.append('<div class="head">')
@@ -585,13 +768,16 @@ def render_sheet(name, skill_label, probs, show_answers, budget_note, shape="div
     else:
         meta = (f'Name: <span>&nbsp;{html.escape(name)}</span>'
                 f'&nbsp;&nbsp;Date: <span>&nbsp;</span>')
-        if shape == "facts":
+        if shape in ("facts", "zeros"):
             # A probe is scored on how far they GOT, so the sheet has to carry the
             # stop point. Without it the number is unrecoverable an hour later.
             meta += '&nbsp;&nbsp;Stopped at #: <span>&nbsp;</span>'
         h.append(f'<div class="meta">{meta}</div>')
     h.append("</div>")
-    if shape == "facts":
+    if shape == "zeros":
+        instr = ('<b>Two minutes. Work in order, left to right.</b> Write only the answer '
+                 'in the boxes. Skip any you can\'t do fast; come back only if time is left.')
+    elif shape == "facts":
         # "in order, left to right" and not "down the columns": the layout is
         # row-major and so is the numbering, and the score is HOW FAR THEY GOT —
         # which is only meaningful if they went in the printed order.
@@ -603,9 +789,11 @@ def render_sheet(name, skill_label, probs, show_answers, budget_note, shape="div
     else:
         instr = '<b>Show every step.</b> No boxes this time — line the columns up yourself.'
     h.append(f'<p class="instr">{instr}</p>')
-    h.append('<div class="grid-wrap">')
+    h.append('<div class="grid-wrap z">' if shape == "zeros" else '<div class="grid-wrap">')
     for i, p in enumerate(probs, 1):
-        if shape == "facts":
+        if shape == "zeros":
+            h.append(render_problem(i, p, None, show_answers, shape, layout))
+        elif shape == "facts":
             op, n, d = p
             h.append(render_problem(i, n, d, show_answers, shape, layout, op=op))
         else:
@@ -616,7 +804,9 @@ def render_sheet(name, skill_label, probs, show_answers, budget_note, shape="div
     foot = {"div": "Divide → Multiply → Subtract → Bring down",
             "mul": "One row per digit · shift each row one column left · then add",
             "facts": ("Not meant to be finished — how far you get IS the measurement · "
-                      f"target {FACT_TARGET_PER_MIN}/min")}[shape]
+                      f"target {FACT_TARGET_PER_MIN}/min"),
+            "zeros": ("Not meant to be finished — how far you get IS the measurement · "
+                      "do the fact, then move the zeros")}[shape]
     h.append(f'<div class="foot">{foot}</div>')
     h.append("</div>")
     return "".join(h)
@@ -629,11 +819,17 @@ def main():
     ap.add_argument("--seed", type=int, default=20260801)
     ap.add_argument("--budget", type=int, default=drill_cost.DEFAULT_BUDGET_SEC,
                     help="seconds per sheet (default 300 = five minutes)")
-    ap.add_argument("--skill", choices=["div", "mul", "facts"], default="div",
+    ap.add_argument("--skill", choices=["div", "mul", "facts", "zeros"], default="div",
                     help="which drill to build. One skill per kid per day — the "
                          "budget is five minutes TOTAL, not five minutes each. "
                          "'facts' is a 1-minute single-digit PROBE, not a drill: "
-                         "fixed count, sized to overflow, --budget ignored.")
+                         "fixed count, sized to overflow, --budget ignored. "
+                         "'zeros' is the same kind of probe (2 minutes) for products and "
+                         "quotients with trailing zeros; kid1 only; pick --stage.")
+    ap.add_argument("--stage", choices=list(ZERO_STAGES), default="1",
+                    help="zeros only: 1 = one zero (40 x 6, 120 / 3), 2 = two zeros "
+                         "(30 x 20, 600 / 30), 3 = missing number (? x 3 = 120), "
+                         "mix = all of them.")
     ap.add_argument("--count", type=int, default=None,
                     help="facts only: how many problems (default "
                          f"{FACT_PROBE_COUNT}). Must exceed what the kid can "
@@ -646,10 +842,11 @@ def main():
     args = ap.parse_args()
 
     suffix = "" if args.layout == "grid" else "-plain"
-    base = {"div": "division", "mul": "multiplication", "facts": "facts"}[args.skill]
-    # A facts sheet has no layout variants, so it never takes the -plain suffix.
+    base = {"div": "division", "mul": "multiplication", "facts": "facts",
+            "zeros": "zeros"}[args.skill]
+    # A facts/zeros sheet has no layout variants, so it never takes the -plain suffix.
     out = args.out or (f"worksheet-{base}-drill"
-                       f"{'' if args.skill == 'facts' else suffix}.html")
+                       f"{'' if args.skill in ('facts', 'zeros') else suffix}.html")
     rng = random.Random(args.seed)
 
     kids = kids_by_id()
@@ -674,15 +871,41 @@ def main():
         # plus three fields wraps if the label runs long.
         "facts": [("kid1", ("mul",), "×, 2–9", None),
                   ("kid2", ("mul", "div"), "× and ÷, 2–9", None)],
+        # Zeros: kid1 ONLY (Noetic prep, 2026-10-24). kid2 is deliberately absent --
+        # his plan is untouched. The label carries the stage.
+        "zeros": [("kid1", None, ZERO_LABEL[args.stage], None)],
     }
 
-    if args.count is not None and args.skill != "facts":
-        raise SystemExit("--count applies to --skill facts only; the other skills "
+    if args.count is not None and args.skill not in ("facts", "zeros"):
+        raise SystemExit("--count applies to --skill facts/zeros only; the other skills "
                          "derive their count from --budget via drill_cost.py")
 
     sheets, keys, report = [], [], []
     for kid_id, shape_digits, label, cost_key in PLANS[args.skill]:
         name = kid_name(kids, kid_id)
+
+        if args.skill == "zeros":
+            n_default, width, sec_each = ZERO_STAGES[args.stage]
+            count = args.count or n_default
+            target = ZERO_PROBE_SEC // sec_each
+            probs = [p + (width,) for p in problem_set_zeros(rng, args.stage, count)]
+            for p in probs:                  # verify BEFORE anything is rendered
+                _, _, marks, _, _ = trace_zeros(*p)
+                ok, msg = verify_zeros(*p[:5], marks)
+                if not ok:
+                    raise SystemExit(f"VERIFY FAILED {name} {p[:5]}: {msg}")
+            # Why 3 s: the grade 3 facts bar is 30/min (2 s, speed_check.py FACTS_PPM) plus
+            # about a second to move the zeros. drill_cost's mark model would say
+            # SEC_PER_MARK*3 + SEC_SETUP = 11 s for a 3-digit answer; SPEED.md shows that
+            # model runs about 3x high for recall, so it is NOT used for this probe.
+            note = (f"{count} problems, {ZERO_PROBE_SEC // 60} minutes. Target {target} "
+                    f"correct ({sec_each}s each). Pass = target met with at most 2 wrong, "
+                    f"twice in a row. Score: speed_check.py --facts --problems <correct> "
+                    f"--minutes 2 --grade 3")
+            report.append((name, label, count, float(sec_each), ZERO_PROBE_SEC, None))
+            sheets.append(render_sheet(name, label, probs, False, note, "zeros", args.layout))
+            keys.append((name, label, probs, note))
+            continue
 
         if args.skill == "facts":
             count = args.count or FACT_PROBE_COUNT
@@ -754,19 +977,22 @@ def main():
     # bearing — kept because a sheet per line diffs and greps far better than a 50KB
     # single line.
     title = {"div": "Long Division", "mul": "Multiplication",
-             "facts": "Fact fluency probe"}[args.skill]
+             "facts": "Fact fluency probe", "zeros": "Zeros probe"}[args.skill]
     # A real <head>: the sheets are served on the web as well as printed, and a
     # page with no <title> shows as a bare URL in a tab and in search results.
     doc = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
            '<meta name="viewport" content="width=device-width,initial-scale=1">\n'
            f'<title>{title} — '
-           f'{"1 minute" if args.skill == "facts" else "5 minutes"}</title>\n'
+           f'{ {"facts": "1 minute", "zeros": "2 minutes"}.get(args.skill, "5 minutes") }</title>\n'
            f"<style>{CSS}</style>\n</head>\n<body>\n"
            + "\n".join(sheets) + "\n" + key_html + "\n</body>\n</html>\n")
     with open(out, "w") as f:
         f.write(doc)
 
-    if args.skill == "facts":
+    if args.skill == "zeros":
+        print(f"seed {args.seed}   skill zeros   stage {args.stage}   probe "
+              f"{ZERO_PROBE_SEC}s   (--budget and --layout do not apply)   -> {out}")
+    elif args.skill == "facts":
         print(f"seed {args.seed}   skill facts   probe {FACT_PROBE_SEC}s   "
               f"(--budget and --layout do not apply)   -> {out}")
     else:
@@ -778,7 +1004,11 @@ def main():
         print(f"{nm:<8}{lbl:<34}{n:>4}{per:>8.1f}{est/60:>7.1f}m"
               f"{(str(md) if md else 'n/a'):>13}")
     print(f"\nsheets: {len(sheets)} kid + {len(keys)} key = {len(sheets)+len(keys)} pages")
-    if args.skill == "facts":
+    if args.skill == "zeros":
+        print("every equation rebuilt from its own marks and checked; every operand "
+              "is a digit 2-9 or a multiple of 10")
+        print("'est' is the PROBE WINDOW, not a prediction; 'sec/ea' is the TARGET")
+    elif args.skill == "facts":
         print(f"every fact checked in range {FACT_MIN}-{FACT_MAX}; every division "
               f"fact checked exact")
         print(f"'est' is the PROBE WINDOW, not a prediction — the sheet is sized to "

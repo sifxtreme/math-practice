@@ -23,6 +23,7 @@ worksheet-multiplication-drill.html
 worksheet-division-drill-plain.html
 worksheet-multiplication-drill-plain.html
 worksheet-facts-drill.html
+worksheet-zeros-drill.html
 
 # Build output of build_site.py. Regenerable; not tracked.
 site/
@@ -51,6 +52,8 @@ worksheet-bone-marrow.html
 worksheet-marrow-lab-logic.html
 worksheet-mapmakers.html
 worksheet-maps-logic.html
+# Musa focus track (build_focus.py): one kid, real name in Name:, so ignored by glob.
+worksheet-focus-*.html
 # ^ ADD EVERY NEW SPEC'S FILE HERE, in the same commit as the spec. This list is
 # explicit rather than a worksheet-*.html glob because the hand-written sheets
 # above ARE tracked. A generated sheet left off this list sits untracked with a
