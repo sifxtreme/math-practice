@@ -454,6 +454,8 @@ type from `worksheet-mapmakers.html` (Oct 12):
 
 **Next rung** when he clears these (rule below): [Multiplication as scaling](https://www.khanacademy.org/math/cc-fifth-grade-math/5th-multiply-fractions/imp-multiplication-as-scaling), then the rest of [Divide fractions](https://www.khanacademy.org/math/cc-fifth-grade-math/divide-fractions) (unit fraction ÷ whole, whole ÷ unit fraction).
 
+Khan reference for algebraic-thinking skills: [KHAN-MAP.md](KHAN-MAP.md) (verified 2026-10-25)
+
 > All links were checked 2026-10-12 by reading the rendered page title in headless
 > Chromium. **Do not check a Khan link with curl.** Khan returns HTTP 200 for every path,
 > including made-up ones, and plain requests get a bot-challenge page. The old kid1 #1
