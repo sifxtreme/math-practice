@@ -1,6 +1,6 @@
 """specs_fracmul.py -- raw numbers for the simple-fraction MULTIPLICATION practice set (kid2).
 
-Asif, 2026-10-25: "can we add a fraction set for Yusuf? He needs to practice multiplying
+Asif, 2026-10-25: "can we add a fraction set for kid2? He needs to practice multiplying
 simple fractions." Khan 5th "Multiply fractions" / IM Grade 5.
 
 This file holds ONLY raw numbers and prose templates. build_fracmul.py renders them;
