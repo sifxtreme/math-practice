@@ -96,6 +96,30 @@ plus the key is the right artifact. **The filter belongs at print time:**
 | kid1 | 3rd |
 | kid2 | 4th (IM **Grade 5** math at school, as of 2026-10) |
 
+### kid2 format direction: equations with substitution, every step shown (Asif, 2026-10-25)
+
+**Source:** Asif's voice note, 13:53 PT on Oct 25, relayed by Instinct (bus `instinct-yusuf-math-future-teaching-f-135454`).
+He praised the step-by-step format, so keep it. He also sent a photo of how he worked a "Trade It" problem himself:
+bifrost `family/school/yusuf/math-2026-10-25/asif-worked-example-trade-it.jpg` (commit cfb33298). The problem was
+2 notebooks + 3 pens = $21, and 1 notebook = 2 pens:
+
+```
+2n + 3p = 21,  1n = 2p
+4p + 3p = 21      (substitute)
+7p = 21
+p = 3
+1n + 4p = 2p + 4p = 6p;  6 x 3 = 18
+```
+
+**Direction for FUTURE kid2 sets:** move from picture and fill-in-the-blank scaffolding toward explicit
+variable equations with substitution. Write them line by line, as in the photo.
+- **Do not compress steps or skip working.** His known pattern is the right idea with dropped steps
+  (see "Showing the work IS the assignment"). So give more explicit working, not less.
+- **This is not a fraction-procedure instruction.** The example is a trade/substitution word problem. Do not
+  rework the fraction format on a guess.
+- Asif may send more detail. Until then, this is a direction for new worksheets only. Do not change or
+  reprint existing sheets.
+
 ## Hard requirements (Asif's preferences — don't re-derive)
 
 1. **Word problems**, not bare arithmetic. Every problem must be **compound / multi-step** (2+ operations) so it tests understanding.
