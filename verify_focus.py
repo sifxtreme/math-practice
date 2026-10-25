@@ -99,7 +99,7 @@ for spec in specs_focus.ALL:
 
     student = open(spec["file"]).read()
     key = open(spec["key_file"]).read()
-    check(tag + " student: 1 sheet block", student.count('class="sheet'), 1)
+    check(tag + " student: 2 sheet blocks (pages)", student.count('class="sheet'), 2)
     check(tag + " key: 1 sheet block", key.count('class="sheet'), 1)
     check(tag + " student is not a key", 'class="sheet key"' in student, False)
     check(tag + " key is a key", 'class="sheet key"' in key, True)
@@ -108,11 +108,11 @@ for spec in specs_focus.ALL:
     check(tag + " key: no Name/Date field", "Name:" in key or "Date:" in key, False)
     check(tag + " student: no answers leaked",
           any(("<b>%d</b>" % a) in student for a in key_answers), False)
-    check(tag + " student: 4 problems, 4 work/scaffold areas",
-          (student.count('class="problem'), student.count('class="work"')
-           + student.count('class="scaffold"')), (4, 4))
-    check(tag + " student: 4 Did-you-know facts", student.count("Did you know?"), 4)
-    check(tag + " student: 4 answer lines", student.count('class="answer"'), 4)
+    check(tag + " student: 5 problems, 5 work/scaffold areas",
+          (student.count('class="problem'), student.count('class="space"')
+           + student.count('class="scaffold')), (5, 5))
+    check(tag + " student: 5 Did-you-know facts", student.count("Did you know?"), 5)
+    check(tag + " student: 5 answer lines", student.count('class="answer"'), 5)
     missing = [l for l in LITERALS if l not in student or l not in key]
     check(tag + " CSS literals intact", missing, [])
     kid = spec.get("kid", "kid1")

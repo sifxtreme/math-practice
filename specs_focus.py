@@ -90,10 +90,12 @@ DAY1 = {
             "secret number?",
             "A deep cave stays almost the same temperature all year, close to the "
             "average yearly temperature of the land above it.",
-            guided=["Arrows: ? &rarr; &times;4 &rarr; " + BLANK + " &rarr; &minus;7 &rarr; 29",
-                    "Undo the LAST arrow first. 29 <b>+ 7</b> = " + BLANK,
-                    "Now undo the first arrow. " + BLANK + " <b>&divide; 4</b> = " + BLANK,
-                    "Check it forward: " + BLANK + " &times; 4 &minus; 7 = 29 ?"],
+            guided=["<b>Line 1</b> (the whole story): ? &rarr; &times;4 &rarr; &minus;7 &rarr; 29",
+                    "<b>Line 2</b> (undo &minus;7): ? &rarr; &times;4 &rarr; " + BLANK
+                    + " &nbsp; <i>work: 29 + 7 = " + BLANK + "</i>",
+                    "<b>Line 3</b> (undo &times;4): ? = " + BLANK
+                    + " &nbsp; <i>work: " + BLANK + " &divide; 4 = " + BLANK + "</i>",
+                    "<b>Check:</b> " + BLANK + " &times; 4 = " + BLANK + ", then &minus; 7 = 29 ?"],
             watch="Expect 36. He undoes the last arrow, then stops (the same slip as "
                   "42 on practice-test #12). Ask: is 36 the start, or only the middle?"),
         problem(
@@ -124,6 +126,14 @@ DAY1 = {
             watch="No arrows are given: he must draw them. Expect 24 (stopped early) or "
                   "9 (24 &minus; 15, the wrong way). Ask him to draw the two arrows "
                   "before any arithmetic."),
+        problem(
+            8, [("*", 6), ("-", 9)],
+            "Yusra collects crystals in a cave. She multiplies her number of crystals by "
+            "6, then gives away 9. She has 39 left. How many crystals did she start with?",
+            "Some caves hold giant crystals: the Cave of the Crystals in Mexico has "
+            "crystals longer than a school bus.",
+            watch="Expect 48 (one undo, then stopped) or 5 (39 &divide; 6 first, which "
+                  "leaves a remainder: the clue the order is wrong)."),
     ],
 }
 
@@ -173,7 +183,7 @@ def trade_problem(names, tmpl, a, b, k, price_b, c, d, fact, guided=None, who=""
         "as if every item cost the same): that is the sign he skipped the trade. "
         "Ask for the trade line first: '%d %s = ___ %s'."
     ) % (ans, slip_untraded, am, c + d, pb, T, a + b, T, a + b, 1, a1, bm)
-    d_ = {"a_n": a, "b_n": b, "k": k, "T": T, "c_n": c, "d_n": d,
+    d_ = {"names": names, "a_n": a, "b_n": b, "k": k, "T": T, "c_n": c, "d_n": d,
           "q": q, "fact": fact, "answer": ans, "a": "$%d" % ans,
           "steps": steps, "watch": watch, "who": who}
     if guided:
@@ -202,11 +212,14 @@ TRADE_DAY1 = {
             2, 3, 2, 3, 1, 4,
             "Johannes Gutenberg's printing press (about 1450) let one shop make "
             "hundreds of identical books, when each one had been copied by hand.",
-            guided=["The trade: 1 notebook = [pen][pen]. So 2 notebooks = " + BLANK + " pens.",
-                    "All pens now: " + BLANK + " + 3 = " + BLANK + " pens cost $21. One pen: $21 &divide; "
-                    + BLANK + " = $" + BLANK,
-                    "Asked: 1 notebook + 4 pens = " + BLANK + " pens = " + BLANK
-                    + " &times; $" + BLANK + " = $" + BLANK]),
+            guided=["<b>Line 1:</b> 2 notebooks + 3 pens = $21",
+                    "<b>Asked:</b> 1 notebook + 4 pens",
+                    "<b>Line 2</b> (trade): " + BLANK + " pens + 3 pens = $21",
+                    "<b>Line 2</b> (trade): = " + BLANK + " pens + 4 pens",
+                    "<b>Line 3:</b> " + BLANK + " pens = $21",
+                    "<b>Line 3:</b> = " + BLANK + " pens",
+                    "<b>Line 4:</b> 1 pen = $" + BLANK,
+                    "<b>Line 4:</b> = $" + BLANK]),
         trade_problem(
             ("bookmark", "bookmarks", "sticker", "stickers"),
             "Zainab helps at the paper stall. {a} bookmarks and {b} stickers cost "
@@ -231,6 +244,13 @@ TRADE_DAY1 = {
             7, 4, 3, 2, 4, 9,
             "Printers fold big sheets into groups of pages called signatures, "
             "usually 8, 16 or 32 pages, then sew the signatures into a book."),
+        trade_problem(
+            ("dictionary", "dictionaries", "comic", "comics"),
+            "Hasan buys {a} dictionaries and {b} comics for ${T}. One dictionary costs "
+            "the same as {k} comics. How much do {c} dictionaries and {d} comics cost?",
+            3, 5, 3, 2, 2, 3,
+            "The first big English dictionary by one author, Samuel Johnson's, came out "
+            "in 1755 and took him about nine years to write."),
     ],
 }
 

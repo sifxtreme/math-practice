@@ -29,29 +29,80 @@ from kids_config import kids_by_id, kid_name, grade_label
 KID = "kid1"   # default when a spec names no kid
 
 
+# ONE STEP PER LINE (Asif, 2026-10-25): "we want to see one step simplified at each
+# expression ... they're thinking too much in their head because they don't like
+# writing." Every worked example, guided problem, work area and key line is a LADDER:
+# each line copies the one above with exactly ONE thing changed, and the arithmetic
+# that made the change sits beside it as "work". The ladder lines are the deliverable.
+LADDER_CSS = """
+  .space { height: 150px; border-top: 1px dashed #bbb; position: relative; }
+  .ladder-cols { display: flex; gap: 14px; }
+  .ladder-cols > div { flex: 1; }
+  .scaffold.two { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; }
+  .teach .rungs { font-size: 12.5px; margin: 1px 0 2px 6px; line-height: 1.3; }
+  .teach .rungs i { color: #6b7280; font-size: 12px; }
+"""
+
+
+def _plural(n, one, many):
+    return "%d %s" % (n, one if n == 1 else many)
+
+
+def _arrows(ops, value):
+    """'? -> x4 -> -7 -> 29'; with no ops left it is '? = value'."""
+    if not ops:
+        return "? = <b>%d</b>" % value
+    return " &rarr; ".join(["?"] + ["%s%d" % (specs_focus.OPS[s][3], n) for s, n in ops]
+                           + [str(value)])
+
+
+def undo_ladder(secret, ops):
+    """Rungs for 'undo the steps': drop the LAST arrow each line, one undo per line."""
+    result = specs_focus.run_forward(secret, ops)
+    rungs = [(_arrows(ops, result), "the whole story")]
+    for i, (a, s, n, b) in enumerate(specs_focus.undo_trail(result, ops)):
+        left = ops[:len(ops) - 1 - i]
+        rungs.append((_arrows(left, b), "undo %s%d: %d %s %d = %d"
+                      % (specs_focus.OPS[ops[len(ops) - 1 - i][0]][3],
+                         ops[len(ops) - 1 - i][1], a, s, n, b)))
+    return rungs
+
+
+def trade_ladders(names, a, b, k, T, c, d):
+    """Two ladders: find ONE unit, then answer the question. One change per line."""
+    a1, am, b1, bm = names
+    n, m = a * k + b, c * k + d
+    pb = T // n
+    unit = [("%s + %s = $%d" % (_plural(a, a1, am), _plural(b, b1, bm), T), "the story"),
+            ("%s + %s = $%d" % (_plural(a * k, b1, bm), _plural(b, b1, bm), T),
+             "trade: 1 %s = %s" % (a1, _plural(k, b1, bm))),
+            ("%s = $%d" % (_plural(n, b1, bm), T), "%d + %d = %d" % (a * k, b, n)),
+            ("1 %s = $%d" % (b1, pb), "$%d &divide; %d = $%d" % (T, n, pb))]
+    asked = [("%s + %s" % (_plural(c, a1, am), _plural(d, b1, bm)), "the question"),
+             ("= %s + %s" % (_plural(c * k, b1, bm), _plural(d, b1, bm)), "trade"),
+             ("= %s" % _plural(m, b1, bm), "%d + %d = %d" % (c * k, d, m)),
+             ("= $%d" % (m * pb), "%d &times; $%d = $%d" % (m, pb, m * pb))]
+    return unit, asked
+
+
+def _rungs_html(rungs):
+    return "<br>".join("%s &nbsp; <i>(%s)</i>" % (line, why) for line, why in rungs)
+
+
 def _example_html(ex):
     secret, ops = ex["secret"], ex["ops"]
     result = specs_focus.run_forward(secret, ops)
-    trail = specs_focus.undo_trail(result, ops)
-    fwd = " &rarr; ".join(["?"] + ["%s%d" % (specs_focus.OPS[s][3], n) for s, n in ops]
-                          + [str(result)])
-    (a1, s1, n1, b1), (a2, s2, n2, b2) = trail
+    rungs = undo_ladder(secret, ops)
+    a2 = specs_focus.undo_trail(result, ops)[0][3]
     return "\n".join([
         '  <div class="teach">',
-        '    <div class="teach-title">HOW IT WORKS</div>',
+        '    <div class="teach-title">HOW IT WORKS &mdash; ONE STEP PER LINE</div>',
         '    <div class="prompt">%s thinks of a number. He multiplies it by 5, then adds 8. '
         'He gets %d. What was his number?</div>' % (ex["who"], result),
-        '    <div class="step"><b>Step 1 &mdash; Draw the arrows, forward.</b> %s</div>' % fwd,
-        '    <div class="step"><b>Step 2 &mdash; Undo them, LAST arrow first.</b> '
-        'Each undo is the opposite: add 8 becomes <b>subtract 8</b>; multiply by 5 '
-        'becomes <b>divide by 5</b>.</div>',
-        '    <div class="step"><b>Step 3 &mdash; Do the undos.</b> %d %s %d = %d, then '
-        '%d %s %d = <b>%d</b>.</div>' % (a1, s1, n1, b1, a2, s2, n2, b2),
-        '    <div class="step"><b>Step 4 &mdash; Check forward.</b> %d &times; 5 = %d, '
-        '%d + 8 = %d. It lands on %d.</div>' % (b2, a2, a2, result, result),
-        '    <div class="punch"><b>The trap:</b> after the first undo you are '
-        '<b>not at the start yet</b>. %d is only the middle. Keep undoing until every '
-        'arrow is used up.</div>' % a2,
+        '    <div class="rungs">%s</div>' % _rungs_html(rungs),
+        '    <div class="punch"><b>The rule:</b> copy the line, undo <b>ONE</b> arrow (the last one). '
+        'Stop only when no arrows are left: %d is the middle, not the answer. '
+        'Check: %d &times; 5 + 8 = %d.</div>' % (a2, secret, result),
         '  </div>', ''])
 
 
@@ -66,47 +117,75 @@ def _trade_example_html(ex):
     a, b, k, T, c, d = (ex[x] for x in "abkTcd")
     n = a * k + b
     pb = T // n
-    pa = k * pb
-    assert T % n == 0 and a * pa + b * pb == T
+    assert T % n == 0 and a * k * pb + b * pb == T
     jar, quill = _chip("jar", "#fff"), _chip("quill", "#fde68a")
-    row = lambda items: " ".join(items)
+    unit, asked = trade_ladders(("jar", "jars", "quill", "quills"), a, b, k, T, c, d)
     return "\n".join([
         '  <div class="teach">',
-        '    <div class="teach-title">HOW IT WORKS</div>',
+        '    <div class="teach-title">HOW IT WORKS &mdash; ONE STEP PER LINE</div>',
         '    <div class="prompt">Sana buys %d jars of ink and %d quills for $%d. One jar costs '
         'the same as %d quills. How much do %d jars and %d quill cost?</div>' % (a, b, T, k, c, d),
-        '    <div class="step"><b>Step 1 &mdash; Draw it.</b> %s &nbsp;%s &nbsp;= $%d</div>'
-        % (row([jar] * a), row([quill] * b), T),
-        '    <div class="step"><b>Step 2 &mdash; Trade.</b> Every jar is worth %d quills: '
-        '%s = %s. Swap them all.</div>' % (k, jar, row([quill] * k)),
-        '    <div class="step"><b>Step 3 &mdash; One kind left.</b> %s &nbsp;= $%d. '
-        '<b>One quill = $%d &divide; %d = $%d.</b></div>'
-        % (_chip("%d quills" % n, "#fde68a"), T, T, n, pb),
-        '    <div class="step"><b>Step 4 &mdash; Answer the question the same way.</b> '
-        '%d jars + %d quill = %s &nbsp;= %d quills. %d &times; $%d = $%d.</div>'
-        % (c, d, row([jar] * c + [quill] * d), c * k + d, c * k + d, pb, (c * k + d) * pb),
-        '    <div class="punch"><b>The trap:</b> do not divide $%d by the %d items you can '
-        'see. A jar is <b>not</b> one quill. Trade first, then count quills.</div>' % (T, a + b),
+        '    <div class="step">The trade: %s = %s</div>' % (jar, " ".join([quill] * k)),
+        '    <div class="ladder-cols"><div class="rungs"><b>Find one quill</b><br>%s</div>'
+        '<div class="rungs"><b>Answer the question</b><br>%s</div></div>'
+        % (_rungs_html(unit), _rungs_html(asked)),
+        '    <div class="punch"><b>The rule:</b> copy the line and change <b>ONE</b> thing. '
+        'Do not divide $%d by the %d items you can see: a jar is not one quill.</div>' % (T, a + b),
         '  </div>', ''])
 
 
+def _problem(i, p, kind):
+    """build_sheets._problem, with the work box swapped for a big OPEN space (no ruled lines:
+    Asif 2026-10-25, lines make them write too small or too big). The step count is
+    enforced in the key's rubric, not by the page."""
+    html = build_sheets._problem(i, p)
+    if p.get("guided"):
+        if kind == "trade":
+            html = html.replace('<div class="scaffold">', '<div class="scaffold two">')
+        return html
+    label = ("Find ONE first, then answer the question. One step per line."
+             if kind == "trade" else "Line 1: the story as arrows. Then ONE undo per line.")
+    old = '<div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>'
+    assert old in html
+    return html.replace(old, '<div class="space"><span class="work-label">%s</span></div>' % label)
+
+
+def _key_steps(p, kind):
+    if kind == "trade":
+        unit, asked = trade_ladders(p["names"], p["a_n"], p["b_n"], p["k"], p["T"],
+                                    p["c_n"], p["d_n"])
+        flat = lambda rungs: " &nbsp;|&nbsp; ".join(line for line, _ in rungs)
+        return "<b>Find one:</b> %s<br><b>Question:</b> %s" % (flat(unit), flat(asked))
+    return _rungs_html(undo_ladder(p["secret"], p["ops"]))
+
+
+def _sheet_head(spec, name, grade, cont=False):
+    title = spec["title"] + (" &mdash; page 2" if cont else "")
+    return ['<div class="sheet">',
+            '  <div class="header">', "    <div>",
+            "      <h1>%s</h1>" % title,
+            '      <div class="sub">%s</div>' % spec["sub"],
+            "    </div>", '    <div class="grade">%s</div>' % grade, "  </div>",
+            '  <div class="meta">',
+            "    <div>Name: <span>&nbsp;%s</span></div>" % name,
+            "    <div>Date: <span>&nbsp;%s</span></div>" % spec["date"],
+            "  </div>", ""]
+
+
 def build_student(spec, name, grade):
+    """TWO pages, one .sheet each (both carry the Name, so print-worksheet.sh --kid and its
+    page-count check work): page 1 = worked example + problems 1-2, page 2 = problems 3-4.
+    One page could not hold four ladders at a height a child can write on (2026-10-25)."""
     h = ['<!DOCTYPE html>', '<html lang="en">', "<head>", '<meta charset="UTF-8">',
-         "<title>%s</title>" % spec["title_plain"], "<style>", build_sheets.CSS,
-         "</style>", "</head>", "<body>", "",
-         '<div class="sheet">',
-         '  <div class="header">', "    <div>",
-         "      <h1>%s</h1>" % spec["title"],
-         '      <div class="sub">%s</div>' % spec["sub"],
-         "    </div>", '    <div class="grade">%s</div>' % grade, "  </div>",
-         '  <div class="meta">',
-         "    <div>Name: <span>&nbsp;%s</span></div>" % name,
-         "    <div>Date: <span>&nbsp;%s</span></div>" % spec["date"],
-         "  </div>", "",
-         (_trade_example_html if spec.get("kind") == "trade" else _example_html)(
-             spec["example"])]
+         "<title>%s</title>" % spec["title_plain"], "<style>", build_sheets.CSS, LADDER_CSS,
+         "</style>", "</head>", "<body>", ""]
+    h += _sheet_head(spec, name, grade)
+    h.append((_trade_example_html if spec.get("kind") == "trade" else _example_html)(
+        spec["example"]))
     for i, p in enumerate(spec["problems"], 1):
-        h.append(build_sheets._problem(i, p))
+        if i == 3:  # page 1: example + 1-2; page 2: 3-5
+            h += ["</div>", ""] + _sheet_head(spec, name, grade, cont=True)
+        h.append(_problem(i, p, spec.get("kind")))
         h.append("")
     h += ["</div>", "", "</body>", "</html>", ""]
     return "\n".join(h)
@@ -114,7 +193,7 @@ def build_student(spec, name, grade):
 
 def build_key(spec, name, grade):
     h = ['<!DOCTYPE html>', '<html lang="en">', "<head>", '<meta charset="UTF-8">',
-         "<title>%s - key</title>" % spec["title_plain"], "<style>", build_sheets.CSS,
+         "<title>%s - key</title>" % spec["title_plain"], "<style>", build_sheets.CSS, LADDER_CSS,
          "</style>", "</head>", "<body>", "",
          '<div class="sheet key">',
          '  <div class="header">', "    <div>", "      <h1>&#128273; Answer Key</h1>",
@@ -124,7 +203,16 @@ def build_key(spec, name, grade):
     h.append('  <div class="section-title">%s &mdash; %s</div>' % (grade, name))
     for i, p in enumerate(spec["problems"], 1):
         h += ['  <div class="ans"><b>%d. %s</b>' % (i, p["a"]),
-              '    <div class="steps">%s</div>' % p["steps"], "  </div>"]
+              '    <div class="steps">%s</div>' % _key_steps(p, spec.get("kind")), "  </div>"]
+    rows = []
+    for i, p in enumerate(spec["problems"], 1):
+        n = 8 if spec.get("kind") == "trade" else len(p["ops"]) + 1
+        rows.append("<tr><td>#%d</td><td>%d lines</td><td>&#9744;</td><td>&#9744;</td></tr>" % (i, n))
+    h.append('  <div class="watch"><b>Grade the LINES first, the answer second.</b> One step per line: '
+             'each line copies the one above with ONE thing changed. A right answer without its lines '
+             'is <b>UNSHOWN</b>, not a pass; send it back to write the lines.'
+             '<table class="rubric"><tr><th>Problem</th><th>Lines expected</th><th>Lines there</th>'
+             '<th>Answer right</th></tr>%s</table></div>' % "".join(rows))
     h.append('  <div class="watch"><b>Watch for:</b><br>%s</div>' % "<br>".join(
         "<b>#%d</b> %s" % (i, p["watch"]) for i, p in enumerate(spec["problems"], 1)))
     h += ["", "</div>", "", "</body>", "</html>", ""]
