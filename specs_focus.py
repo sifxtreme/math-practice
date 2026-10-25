@@ -90,12 +90,7 @@ DAY1 = {
             "secret number?",
             "A deep cave stays almost the same temperature all year, close to the "
             "average yearly temperature of the land above it.",
-            guided=["<b>Line 1</b> (the whole story): ? &rarr; &times;4 &rarr; &minus;7 &rarr; 29",
-                    "<b>Line 2</b> (undo &minus;7): ? &rarr; &times;4 &rarr; " + BLANK
-                    + " &nbsp; <i>work: 29 + 7 = " + BLANK + "</i>",
-                    "<b>Line 3</b> (undo &times;4): ? = " + BLANK
-                    + " &nbsp; <i>work: " + BLANK + " &divide; 4 = " + BLANK + "</i>",
-                    "<b>Check:</b> " + BLANK + " &times; 4 = " + BLANK + ", then &minus; 7 = 29 ?"],
+            guided=True,
             watch="Expect 36. He undoes the last arrow, then stops (the same slip as "
                   "42 on practice-test #12). Ask: is 36 the start, or only the middle?"),
         problem(
@@ -212,14 +207,7 @@ TRADE_DAY1 = {
             2, 3, 2, 3, 1, 4,
             "Johannes Gutenberg's printing press (about 1450) let one shop make "
             "hundreds of identical books, when each one had been copied by hand.",
-            guided=["<b>Line 1:</b> 2 notebooks + 3 pens = $21",
-                    "<b>Asked:</b> 1 notebook + 4 pens",
-                    "<b>Line 2</b> (trade): " + BLANK + " pens + 3 pens = $21",
-                    "<b>Line 2</b> (trade): = " + BLANK + " pens + 4 pens",
-                    "<b>Line 3:</b> " + BLANK + " pens = $21",
-                    "<b>Line 3:</b> = " + BLANK + " pens",
-                    "<b>Line 4:</b> 1 pen = $" + BLANK,
-                    "<b>Line 4:</b> = $" + BLANK]),
+            guided=True),
         trade_problem(
             ("bookmark", "bookmarks", "sticker", "stickers"),
             "Zainab helps at the paper stall. {a} bookmarks and {b} stickers cost "
@@ -271,4 +259,103 @@ SAMPLES_KID2 = [
      "q": "? &times; 4 &minus; 6 = 3 &times; 6. What number goes in the box?"},
 ]
 
-ALL = [DAY1, TRADE_DAY1]
+# ---------------------------------------------------------------------------
+# BATCH B (Asif 2026-10-25: "have a second batch ready in case the first batch doesn't
+# go well, and I want them to practice more"). Same method, same layout, new numbers
+# and theme. Built now, printed only when he asks (one day's paper rule still holds:
+# it is the same target day).
+# ---------------------------------------------------------------------------
+DAY1_B = {
+    "file": "worksheet-focus-2026-10-25-undo-b.html",
+    "key_file": "worksheet-focus-2026-10-25-undo-b-key.html",
+    "date": "October 25, 2026",
+    "title_plain": "Undo the Steps (B)",
+    "title": "&#127793; Undo the Steps (B)",
+    "sub": "In the garden: start at the answer and undo the arrows, one per line",
+    "example": {"who": "Hamza", "secret": 11, "ops": [("*", 5), ("+", 8)]},
+    "problems": [
+        problem(
+            7, [("*", 3), ("+", 5)],
+            "Bilal plants seeds. He thinks of a secret number, multiplies it by 3, then "
+            "adds 5. He gets 26. What was his secret number?",
+            "Young sunflowers turn to follow the sun across the sky during the day.",
+            guided=True,
+            watch="Expect 21 (one undo, then stopped). Ask: are there arrows left?"),
+        problem(
+            6, [("*", 5), ("-", 8)],
+            "Sara picks a number of flower pots. She multiplies it by 5, then subtracts "
+            "8. She ends with 22. How many pots did she pick?",
+            "A strawberry carries its seeds on the outside, about 200 of them.",
+            watch="Expect 30 (stopped after one undo) or 14 (subtracted instead of adding back)."),
+        problem(
+            32, [("/", 4), ("+", 9)],
+            "Yahya has a secret number of carrots. He divides it by 4, then adds 9. He "
+            "gets 17. How many carrots did he start with?",
+            "Pumpkins are a fruit, because they grow from a flower and hold seeds.",
+            watch="Expect 8 (stopped after one undo) or 2 (divided by 4 again instead of multiplying)."),
+        problem(
+            4, [("+", 5), ("*", 4), ("-", 6)],
+            "Noor picks a number. She adds 5, multiplies by 4, then subtracts 6. She "
+            "gets 30. What number did she pick?",
+            "Earthworms help a garden: their tunnels let air and water reach the roots.",
+            watch="Three arrows, three undos. Expect 36 or 9 (stopped early)."),
+        problem(
+            50, [("-", 14), ("/", 6)],
+            "Musa's family picks tomatoes. They eat 14 of them. The rest are split into "
+            "6 baskets with 6 tomatoes in each. How many tomatoes did they pick?",
+            "Some kinds of bamboo can grow more than 2 feet in a single day.",
+            watch="No arrows given: he draws them. Expect 36 (stopped early) or 22 (36 &minus; 14)."),
+    ],
+}
+
+TRADE_DAY1_B = {
+    "kid": "kid2",
+    "kind": "trade",
+    "file": "worksheet-focus-2026-10-25-trade-b.html",
+    "key_file": "worksheet-focus-2026-10-25-trade-b-key.html",
+    "pdf_stem": "focus-2026-10-25-trade-b-word",
+    "date": "October 25, 2026",
+    "title_plain": "Trade It (B)",
+    "title": "&#129473; Trade It (B)",
+    "sub": "The bakery: swap one thing for what it is worth, one step per line.",
+    "example": {"a": 2, "b": 2, "k": 2, "T": 18, "c": 3, "d": 1},
+    "problems": [
+        trade_problem(
+            ("muffin", "muffins", "cookie", "cookies"),
+            "Amina buys {a} muffins and {b} cookies for ${T}. One muffin costs the same "
+            "as {k} cookies. How much do {c} muffins and {d} cookies cost?",
+            3, 2, 3, 2, 2, 4,
+            "Baking soda makes bubbles when it meets something sour, like buttermilk. "
+            "The bubbles make muffins rise.",
+            guided=True),
+        trade_problem(
+            ("croissant", "croissants", "bagel", "bagels"),
+            "Ilyas buys {a} croissants and {b} bagels for ${T}. One croissant costs the "
+            "same as {k} bagels. How much do {c} croissants and {d} bagel cost?",
+            2, 5, 2, 3, 3, 1,
+            "Bagels are boiled in water before they are baked. That gives them their "
+            "chewy crust."),
+        trade_problem(
+            ("cake", "cakes", "cupcake", "cupcakes"),
+            "Fatima buys {a} cake and {b} cupcakes for ${T}. One cake costs the same as "
+            "{k} cupcakes. How much do {c} cakes and {d} cupcakes cost?",
+            1, 6, 5, 2, 2, 3,
+            "Bread rises because yeast eats sugar and lets out a gas that makes "
+            "bubbles in the dough."),
+        trade_problem(
+            ("pie", "pies", "tart", "tarts"),
+            "Khalid buys {a} pies and {b} tarts for ${T}. One pie costs the same as {k} "
+            "tarts. How much do {c} pies and {d} tarts cost?",
+            3, 4, 4, 1, 2, 5,
+            "Bakers often weigh flour instead of measuring it in cups, because a cup "
+            "of flour can hold more or less depending on how it is packed."),
+        trade_problem(
+            ("loaf", "loaves", "roll", "rolls"),
+            "Hana buys {a} loaves and {b} rolls for ${T}. One loaf costs the same as {k} "
+            "rolls. How much do {c} loaves and {d} rolls cost?",
+            2, 7, 6, 1, 3, 2,
+            "Most bread needs only four things: flour, water, salt and yeast."),
+    ],
+}
+
+ALL = [DAY1, TRADE_DAY1, DAY1_B, TRADE_DAY1_B]

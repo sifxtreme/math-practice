@@ -99,7 +99,7 @@ for spec in specs_focus.ALL:
 
     student = open(spec["file"]).read()
     key = open(spec["key_file"]).read()
-    check(tag + " student: 2 sheet blocks (pages)", student.count('class="sheet'), 2)
+    check(tag + " student: 4 sheet blocks (pages)", student.count('class="sheet'), 4)
     check(tag + " key: 1 sheet block", key.count('class="sheet'), 1)
     check(tag + " student is not a key", 'class="sheet key"' in student, False)
     check(tag + " key is a key", 'class="sheet key"' in key, True)

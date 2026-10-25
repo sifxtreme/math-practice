@@ -35,12 +35,34 @@ KID = "kid1"   # default when a spec names no kid
 # each line copies the one above with exactly ONE thing changed, and the arithmetic
 # that made the change sits beside it as "work". The ladder lines are the deliverable.
 LADDER_CSS = """
-  .space { height: 150px; border-top: 1px dashed #bbb; position: relative; }
+  .space { height: 285px; border-top: 1px dashed #bbb; position: relative; }
   .ladder-cols { display: flex; gap: 14px; }
   .ladder-cols > div { flex: 1; }
   .scaffold.two { display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; }
   .teach .rungs { font-size: 12.5px; margin: 1px 0 2px 6px; line-height: 1.3; }
   .teach .rungs i { color: #6b7280; font-size: 12px; }
+  .walk { border: 2px solid #1e3a8a; border-radius: 8px; padding: 10px 14px; background: #f8faff; }
+  .walk h2 { font-size: 19px; color: #1e3a8a; margin: 0 0 4px 0; }
+  .wstep { margin: 14px 0 0 0; font-size: 15.5px; }
+  .scaffold.walk-g { color: #14142b; font-size: 15px; }
+  .wstep .n { display: inline-block; background: #1e3a8a; color: #fff; border-radius: 50%;
+              width: 22px; height: 22px; text-align: center; line-height: 22px;
+              font-weight: bold; margin-right: 6px; }
+  .wpic { margin: 8px 0 0 30px; font-size: 15px; }
+  .mbox { display: inline-block; min-width: 54px; height: 38px; border: 2px solid #1e3a8a;
+          border-radius: 6px; text-align: center; line-height: 38px; font-weight: bold;
+          font-size: 18px; background: #fff; vertical-align: middle; padding: 0 4px; }
+  .arr { display: inline-block; text-align: center; margin: 0 5px; color: #1e3a8a;
+         vertical-align: middle; font-size: 13px; line-height: 1.1; }
+  .arr .op { display: inline-block; min-width: 34px; border-bottom: 1px solid #c7d2fe; font-weight: bold; }
+  .back .mbox { border-color: #b45309; }
+  .back .arr { color: #b45309; }
+  .wmath { margin: 6px 0 0 30px; font-size: 15.5px; line-height: 2.0; }
+  .wmath i { color: #6b7280; font-size: 12.5px; }
+  .wtrap { margin-top: 10px; background: #fff7ed; border-left: 4px solid #b45309; padding: 6px 10px; font-size: 13.5px; }
+  .drawbox { height: 90px; border: 1.5px dashed #c7d2fe; border-radius: 6px; margin: 4px 0 0 30px; }
+  .bl { display: inline-block; min-width: 58px; border-bottom: 1.5px solid #1e3a8a; margin: 0 3px; }
+  .grp { display: inline-block; border: 1.5px dashed #b45309; border-radius: 6px; padding: 1px 2px; margin: 0 2px; }
 """
 
 
@@ -89,60 +111,171 @@ def _rungs_html(rungs):
     return "<br>".join("%s &nbsp; <i>(%s)</i>" % (line, why) for line, why in rungs)
 
 
+BL = '<span class="bl">&nbsp;</span>'
+
+
+def _box(v):
+    return '<span class="mbox">%s</span>' % v
+
+
+def _arr(op):
+    return '<span class="arr"><span class="op">%s</span><br>&#10230;</span>' % op
+
+
+def _op(sym, n):
+    return "%s%d" % (specs_focus.OPS[sym][3], n)
+
+
+def _undo_op(sym, n):
+    return "%s%d" % (specs_focus.UNDO_SYM[sym], n)
+
+
+def _step(n, text):
+    return '<div class="wstep"><span class="n">%d</span>%s</div>' % (n, text)
+
+
+def _undo_walk(secret, ops, solved):
+    """The 'undo the steps' method as five child-sized steps, picture AND math.
+    solved=True fills every box (the worked example); False leaves blanks (guided #1)."""
+    result = specs_focus.run_forward(secret, ops)
+    mids, x = [], secret
+    for sym, n in ops:
+        x = specs_focus.OPS[sym][0](x, n)
+        mids.append(x)
+    trail = specs_focus.undo_trail(result, ops)
+    v = (lambda val: str(val)) if solved else (lambda val: "&nbsp;")
+    fwd = _box("?") + "".join(_arr(_op(sym, n)) + _box(result if i == len(ops) - 1 else v(mids[i]))
+                              for i, (sym, n) in enumerate(ops))
+    back = _box(result) + "".join(
+        _arr(s if solved else "&nbsp;") + _box(v(b)) for (a, s, n, b) in
+        [(a, "%s%d" % (s, n), n, b) for a, s, n, b in trail])
+    out = [
+        _step(1, "<b>Draw the number machine.</b> The secret number goes in. Each thing that "
+                 "happens to it is an arrow."),
+        '<div class="wpic">%s</div>' % fwd,
+        _step(2, "<b>Turn around and walk back from the end.</b> Every arrow flips to its "
+                 "opposite: <b>+ becomes &minus;</b>, <b>&minus; becomes +</b>, "
+                 "<b>&times; becomes &divide;</b>, <b>&divide; becomes &times;</b>."),
+        '<div class="wpic back">%s</div>' % back,
+        _step(3, "<b>Write the math, ONE undo per line.</b> Copy the line, take off the LAST arrow."),
+    ]
+    lines = []
+    for i, (line, why) in enumerate(undo_ladder(secret, ops)):
+        if solved or i == 0:
+            lines.append("%s &nbsp; <i>(%s)</i>" % (line, why))
+        else:
+            left = ops[:len(ops) - i]
+            sym, n = ops[len(ops) - i]
+            shown = (" &rarr; ".join(["?"] + [_op(s_, n_) for s_, n_ in left] + [BL])
+                     if left else "? = " + BL)
+            lines.append("%s &nbsp; <i>(undo %s: %s %s %d = %s)</i>"
+                         % (shown, _op(sym, n), BL, specs_focus.UNDO_SYM[sym], n, BL))
+    out.append('<div class="wmath">%s</div>' % "<br>".join(lines))
+    chk = []
+    x = secret
+    for sym, n in ops:
+        y = specs_focus.OPS[sym][0](x, n)
+        chk.append("%s %s %d = %s" % (x if solved else BL, specs_focus.OPS[sym][3], n,
+                                      y if solved else BL))
+        x = y
+    out += [_step(4, "<b>Check: put your answer in the machine, going forward.</b> Do you land "
+                     "on %d?" % result),
+            '<div class="wmath">%s %s</div>' % (", then ".join(chk), "&#10004;" if solved else "")]
+    return "\n".join(out)
+
+
 def _example_html(ex):
     secret, ops = ex["secret"], ex["ops"]
     result = specs_focus.run_forward(secret, ops)
-    rungs = undo_ladder(secret, ops)
-    a2 = specs_focus.undo_trail(result, ops)[0][3]
+    middle = specs_focus.undo_trail(result, ops)[0][3]
     return "\n".join([
-        '  <div class="teach">',
-        '    <div class="teach-title">HOW IT WORKS &mdash; ONE STEP PER LINE</div>',
-        '    <div class="prompt">%s thinks of a number. He multiplies it by 5, then adds 8. '
-        'He gets %d. What was his number?</div>' % (ex["who"], result),
-        '    <div class="rungs">%s</div>' % _rungs_html(rungs),
-        '    <div class="punch"><b>The rule:</b> copy the line, undo <b>ONE</b> arrow (the last one). '
-        'Stop only when no arrows are left: %d is the middle, not the answer. '
-        'Check: %d &times; 5 + 8 = %d.</div>' % (a2, secret, result),
+        '  <div class="walk">',
+        '    <h2>How to solve it: undo the steps</h2>',
+        '    <div class="prompt"><i>%s thinks of a number. He multiplies it by 5, then adds 8. '
+        'He gets %d. What was his number?</i></div>' % (ex["who"], result),
+        _undo_walk(secret, ops, True),
+        '    <div class="wtrap"><b>The trap:</b> after the first undo you have %d. That is the '
+        '<b>middle</b> of the machine, not the start. Keep going until there are no arrows '
+        'left. His number is %d.</div>' % (middle, secret),
         '  </div>', ''])
 
 
 def _chip(text, fill):
     return ('<span style="display:inline-block;border:1.5px solid #1e3a8a;'
             'border-radius:4px;padding:0 6px;margin:0 1px;background:%s;'
-            'font-size:12px">%s</span>' % (fill, text))
+            'font-size:12.5px">%s</span>' % (fill, text))
+
+
+def _trade_walk(names, a, b, k, T, c, d, solved):
+    a1, am, b1, bm = names
+    n, m = a * k + b, c * k + d
+    pb = T // n
+    big = lambda: _chip(a1, "#fff")
+    small = lambda: _chip(b1, "#fde68a")
+    grp = lambda: '<span class="grp">%s</span>' % " ".join([small()] * k)
+    v = (lambda val: str(val)) if solved else (lambda val: BL)
+    pic = (lambda html: '<div class="wpic">%s</div>' % html) if solved else \
+          (lambda html: '<div class="drawbox"></div>')
+    out = [
+        _step(1, "<b>Draw what you buy.</b>"),
+        pic("%s &nbsp; %s &nbsp; = $%d" % (" ".join([big()] * a), " ".join([small()] * b), T)),
+        _step(2, "<b>Trade every %s for %d %s.</b> Now there is only ONE kind of thing." % (a1, k, bm)),
+        pic("%s &nbsp; %s &nbsp; = $%d" % (" ".join([grp()] * a), " ".join([small()] * b), T)),
+        '<div class="wmath">%s %s + %s = $%d &nbsp; <i>(%d %s &times; %d = %s)</i></div>'
+        % (v(a * k), bm, _plural(b, b1, bm), T, a, am if a != 1 else a1, k, v(a * k)),
+        _step(3, "<b>Count them, then share the money.</b>"),
+        '<div class="wmath">%s %s = $%d<br>1 %s = $%d &divide; %s = $%s</div>'
+        % (v(n), bm, T, b1, T, v(n), v(pb)),
+        _step(4, "<b>Answer the question the same way: trade, count, multiply.</b>"),
+        '<div class="wmath">%s + %s<br>= %s %s + %s <i>(trade)</i><br>= %s %s<br>'
+        '= %s &times; $%s = $%s</div>'
+        % (_plural(c, a1, am), _plural(d, b1, bm), v(c * k), bm, _plural(d, b1, bm),
+           v(m), bm, v(m), v(pb), v(m * pb)),
+        _step(5, "<b>Check.</b> 1 %s = %d &times; $%s = $%s. Do the prices make $%d?"
+              % (a1, k, v(pb), v(k * pb), T)),
+        '<div class="wmath">%d &times; $%s + %d &times; $%s = $%d %s</div>'
+        % (a, v(k * pb), b, v(pb), T, "&#10004;" if solved else ""),
+    ]
+    return "\n".join(out)
 
 
 def _trade_example_html(ex):
-    """Worked example, every number computed from the same (a,b,k,T,c,d) the problems use."""
     a, b, k, T, c, d = (ex[x] for x in "abkTcd")
-    n = a * k + b
-    pb = T // n
-    assert T % n == 0 and a * k * pb + b * pb == T
-    jar, quill = _chip("jar", "#fff"), _chip("quill", "#fde68a")
-    unit, asked = trade_ladders(("jar", "jars", "quill", "quills"), a, b, k, T, c, d)
+    assert T % (a * k + b) == 0
     return "\n".join([
-        '  <div class="teach">',
-        '    <div class="teach-title">HOW IT WORKS &mdash; ONE STEP PER LINE</div>',
-        '    <div class="prompt">Sana buys %d jars of ink and %d quills for $%d. One jar costs '
-        'the same as %d quills. How much do %d jars and %d quill cost?</div>' % (a, b, T, k, c, d),
-        '    <div class="step">The trade: %s = %s</div>' % (jar, " ".join([quill] * k)),
-        '    <div class="ladder-cols"><div class="rungs"><b>Find one quill</b><br>%s</div>'
-        '<div class="rungs"><b>Answer the question</b><br>%s</div></div>'
-        % (_rungs_html(unit), _rungs_html(asked)),
-        '    <div class="punch"><b>The rule:</b> copy the line and change <b>ONE</b> thing. '
-        'Do not divide $%d by the %d items you can see: a jar is not one quill.</div>' % (T, a + b),
+        '  <div class="walk">',
+        '    <h2>How to solve it: trade it</h2>',
+        '    <div class="prompt"><i>Sana buys %d jars of ink and %d quills for $%d. One jar costs '
+        'the same as %d quills. How much do %d jars and %d quill cost?</i></div>' % (a, b, T, k, c, d),
+        _trade_walk(("jar", "jars", "quill", "quills"), a, b, k, T, c, d, True),
+        '    <div class="wtrap"><b>The trap:</b> do not split $%d over the %d things you see. '
+        'A jar is not one quill. Trade first, then count.</div>' % (T, a + b),
         '  </div>', ''])
+
+
+def _guided(i, p, kind):
+    """Problem 1: the same steps as the worked example, with blanks to fill and space to draw."""
+    if kind == "trade":
+        walk = _trade_walk(p["names"], p["a_n"], p["b_n"], p["k"], p["T"], p["c_n"], p["d_n"], False)
+    else:
+        walk = _undo_walk(p["secret"], p["ops"], False)
+    return "\n".join([
+        '  <div class="problem guided">',
+        '    <span class="qnum">%d.</span> <span class="tag">GUIDED &mdash; follow the steps</span>' % i,
+        '    <div class="qtext">%s</div>' % p["q"],
+        '    <div class="scaffold walk-g">%s</div>' % walk,
+        '    <div class="answer">Answer:<span class="line"></span></div>',
+        '    <div class="fact"><b>Did you know?</b> %s</div>' % p["fact"],
+        '  </div>'])
 
 
 def _problem(i, p, kind):
     """build_sheets._problem, with the work box swapped for a big OPEN space (no ruled lines:
     Asif 2026-10-25, lines make them write too small or too big). The step count is
     enforced in the key's rubric, not by the page."""
-    html = build_sheets._problem(i, p)
     if p.get("guided"):
-        if kind == "trade":
-            html = html.replace('<div class="scaffold">', '<div class="scaffold two">')
-        return html
+        return _guided(i, p, kind)
+    html = build_sheets._problem(i, p)
     label = ("Find ONE first, then answer the question. One step per line."
              if kind == "trade" else "Line 1: the story as arrows. Then ONE undo per line.")
     old = '<div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>'
@@ -160,7 +293,7 @@ def _key_steps(p, kind):
 
 
 def _sheet_head(spec, name, grade, cont=False):
-    title = spec["title"] + (" &mdash; page 2" if cont else "")
+    title = spec["title"]
     return ['<div class="sheet">',
             '  <div class="header">', "    <div>",
             "      <h1>%s</h1>" % title,
@@ -173,9 +306,10 @@ def _sheet_head(spec, name, grade, cont=False):
 
 
 def build_student(spec, name, grade):
-    """TWO pages, one .sheet each (both carry the Name, so print-worksheet.sh --kid and its
-    page-count check work): page 1 = worked example + problems 1-2, page 2 = problems 3-4.
-    One page could not hold four ladders at a height a child can write on (2026-10-25)."""
+    """FOUR pages, one .sheet each (all carry the Name, so print-worksheet.sh --kid and its
+    page-count check work): 1 = the worked example, drawn and in math, step by step;
+    2 = guided #1, the same steps with blanks; 3 = #2-3; 4 = #4-5. Two problems per page
+    so there is room to write every step (Asif, 2026-10-25)."""
     h = ['<!DOCTYPE html>', '<html lang="en">', "<head>", '<meta charset="UTF-8">',
          "<title>%s</title>" % spec["title_plain"], "<style>", build_sheets.CSS, LADDER_CSS,
          "</style>", "</head>", "<body>", ""]
@@ -183,7 +317,8 @@ def build_student(spec, name, grade):
     h.append((_trade_example_html if spec.get("kind") == "trade" else _example_html)(
         spec["example"]))
     for i, p in enumerate(spec["problems"], 1):
-        if i == 3:  # page 1: example + 1-2; page 2: 3-5
+        # page 1: the worked example; page 2: guided #1; then two problems per page
+        if i in (1, 2, 4):
             h += ["</div>", ""] + _sheet_head(spec, name, grade, cont=True)
         h.append(_problem(i, p, spec.get("kind")))
         h.append("")
