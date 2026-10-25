@@ -1,8 +1,8 @@
-"""build_fracmul.py -- render the simple-fraction MULTIPLICATION practice set (one kid).
+"""build_fracmul.py -- render the kid2 fraction packet: 10 multiply + 10 add/subtract (20 problems).
 
-    python3 build_fracmul.py          # writes worksheet-focus-<date>-fracmul.html + -key.html
+    python3 build_fracmul.py          # writes worksheet-focus-<date>-fractions.html + -key.html
     python3 verify_fracmul.py         # MUST exit 0 before anything is rendered or printed
-    ./print-worksheet.sh worksheet-focus-2026-10-25-fracmul.html --dry-run   # page check
+    ./print-worksheet.sh worksheet-focus-2026-10-25-fractions.html --dry-run   # page check
 
 Same pattern as build_focus.py: one kid per spec, student sheet and key as two separate
 files, build_sheets.CSS reused byte-for-byte (print-worksheet.sh rewrites its literals),
@@ -10,9 +10,9 @@ child name from kids.local.json via kids_config. Outputs match the gitignored
 worksheet-focus-*.html glob because they carry a real name. Not folded into build_focus.py
 because that builder is hard-wired to its two methods (undo / trade) and four-page layout.
 
-Student file = 2 pages (one .sheet each, both carry Name:): 1 = worked example + Part A
-(12 bare problems), 2 = Part B (3 compound word problems). Key file = 2 pages too, so
-each stays one printed page.
+Student file = 4 pages (one .sheet each, all carry Name:): 1 = Multiply worked example +
+problems 1-7, 2 = Multiply word problems 8-10, 3 = Add and subtract worked example + 11-17,
+4 = add/subtract word problems 18-20. Key file = separate, same four sheets.
 
 ONE STEP PER LINE (Asif, 2026-10-25): every worked line and key line changes one thing.
 """
@@ -43,7 +43,7 @@ CSS_EXTRA = """
   .parta { font-size: 15px; font-weight: bold; color: #fff; background: #1e3a8a;
            padding: 3px 10px; border-radius: 4px; margin: 10px 0 6px 0; }
   .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-  .cell { border: 1.5px solid #c7d2fe; border-radius: 6px; padding: 6px 10px; height: 126px;
+  .cell { border: 1.5px solid #c7d2fe; border-radius: 6px; padding: 6px 10px; height: 178px;
           position: relative; }
   .cell .q { font-size: 18px; }
   .cell .qn { font-weight: bold; color: #1e3a8a; font-size: 14px; margin-right: 6px; }
@@ -108,12 +108,48 @@ def ladder_mul(factors):
     return lines, x
 
 
+def ladder_as(op, operands):
+    """Key lines for a sum/difference of two fractions, ONE change per line.
+    operands: two (n, d) tuples (a whole number is (n, 1)). Returns (lines, result)."""
+    (an, ad), (bn, bd) = operands
+    a, b = Fraction(an, ad), Fraction(bn, bd)
+    x = a + b if op == "+" else a - b
+    sign = "+" if op == "+" else "&minus;"
+    lines = [((" %s " % sign).join(fr(f) for f in operands), "")]
+    lcm = ad * bd // gcd(ad, bd)
+    ra, rb = an * (lcm // ad), bn * (lcm // bd)
+    if ad != bd:
+        def renamed(n, d):
+            k = lcm // d
+            if d == 1:
+                return fr((n * lcm, lcm))
+            if k == 1:
+                return fr((n, d))
+            return ('<span class="fr"><span>%d &times; %d</span><span>%d &times; %d</span></span>'
+                    % (n, k, d, k))
+        lines.append(("= %s %s %s" % (renamed(an, ad), sign, renamed(bn, bd)),
+                      "common denominator %d" % lcm))
+        lines.append(("= %s %s %s" % (fr((ra, lcm)), sign, fr((rb, lcm))), "rename both fractions"))
+    rn = ra + rb if op == "+" else ra - rb
+    lines.append(("= %s" % fr((rn, lcm)),
+                  "%s the tops: %d %s %d = %d" % ("add" if op == "+" else "subtract", ra,
+                                                  "+" if op == "+" else "&minus;", rb, rn)))
+    g = gcd(rn, lcm)
+    if g > 1:
+        lines.append(("= %s" % fr((rn // g, lcm // g)), "&divide;%d top and bottom" % g))
+    if x.denominator > 1 and x.numerator > x.denominator:
+        lines.append(("= %s" % mixed(x), "%d &divide; %d = %d remainder %d"
+                      % (x.numerator, x.denominator, x.numerator // x.denominator,
+                         x.numerator % x.denominator)))
+    return lines, x
+
+
 def _lines_html(lines):
     return "<br>".join("%s%s" % (l, (" &nbsp; <i>(%s)</i>" % why) if why else "")
                        for l, why in lines)
 
 
-def _example(ex):
+def _mul_example(ex):
     f_lines, _ = ladder_mul(ex["fraction"])
     w_lines, _ = ladder_mul(ex["whole"])
     return "\n".join([
@@ -129,12 +165,32 @@ def _example(ex):
         "  </div>", ""])
 
 
+def _as_example(ex):
+    a_lines, _ = ladder_as("+", ex["add"])
+    s_lines, _ = ladder_as("-", ex["sub"])
+    return "\n".join([
+        '  <div class="walk">',
+        "    <h2>How to add and subtract fractions: one step on each line</h2>",
+        '    <div class="cols">',
+        '      <div class="ex"><b>Add</b><br>%s</div>' % _lines_html(a_lines),
+        '      <div class="ex"><b>Subtract</b><br>%s</div>' % _lines_html(s_lines),
+        "    </div>",
+        '    <div class="tip"><b>Remember:</b> the bottoms must match first. Find a number both '
+        "bottoms go into, rename BOTH fractions, then add or subtract the TOPS only. The bottom "
+        "stays the same. Simplify. If the top is bigger than the bottom, write a mixed number.</div>",
+        "  </div>", ""])
+
+
 def _cell(i, p):
+    if "op" in p:
+        sym, hint = (" + " if p["op"] == "+" else " &minus; "), "common bottom &middot; tops &middot; simplify"
+    else:
+        sym, hint = " &times; ", "tops &middot; bottoms &middot; simplify"
     return "\n".join([
         '    <div class="cell">',
         '      <div class="q"><span class="qn">%d.</span>%s =</div>'
-        % (i, " &times; ".join(fr(f) for f in p["f"])),
-        '      <div class="hint">tops &middot; bottoms &middot; simplify</div>',
+        % (i, sym.join(fr(f) for f in p["f"])),
+        '      <div class="hint">%s</div>' % hint,
         '      <div class="ans-line">Answer:<span></span></div>',
         "    </div>"])
 
@@ -150,13 +206,7 @@ def _wlines(p):
     k = p["kind"]
     if k == "fof_left":
         used_lines, used = ladder_mul([p["p"], p["q"]])
-        pp = Fraction(*p["p"])
-        left = pp - used
-        lcm = pp.denominator * used.denominator // gcd(pp.denominator, used.denominator)
-        a, b = pp * lcm, used * lcm
-        sub = [("%s &minus; %s" % (fr(p["p"]), improper(used)), "had &minus; poured"),
-               ("= %s &minus; %s" % (fr((int(a), lcm)), fr((int(b), lcm))), "common denominator %d" % lcm),
-               ("= %s" % improper(left), "subtract the tops")]
+        sub, left = ladder_as("-", [p["p"], (used.numerator, used.denominator)])
         return [("Step 1: how much of the whole pot did she pour?", used_lines),
                 ("Step 2: how much is left?", sub)], left
     if k == "whole_chain":
@@ -169,16 +219,30 @@ def _wlines(p):
         l2, x2 = ladder_mul([(p["n"], 1), (x1.numerator, x1.denominator)])
         return [("Step 1: area of one pane = length &times; width", l1),
                 ("Step 2: %d panes" % p["n"], l2)], x2
+    if k == "left_of_whole":
+        l1, x1 = ladder_as("+", [p["a"], p["b"]])
+        l2, x2 = ladder_as("-", [(1, 1), (x1.numerator, x1.denominator)])
+        return [("Step 1: how much has she painted?", l1),
+                ("Step 2: how much is not painted? (the whole frame is 1)", l2)], x2
+    if k == "left_of_total":
+        l1, x1 = ladder_as("+", [p["a"], p["b"]])
+        l2, x2 = ladder_as("-", [p["t"], (x1.numerator, x1.denominator)])
+        return [("Step 1: how much trim did he use in all?", l1),
+                ("Step 2: how much is left?", l2)], x2
+    if k == "add_then_sub":
+        l1, x1 = ladder_as("+", [p["a"], p["b"]])
+        l2, x2 = ladder_as("-", [(x1.numerator, x1.denominator), p["c"]])
+        return [("Step 1: how much glaze in the bowl?", l1),
+                ("Step 2: how much is left after the vase?", l2)], x2
     raise ValueError(k)
 
 
-def _problem_b(i, p):
+def _problem_w(i, p, work):
     return "\n".join([
         '  <div class="problem">',
         '    <span class="qnum">%d.</span>' % i,
         '    <div class="qtext">%s</div>' % _story(p),
-        '    <div class="space"><span class="work-label">One step per line. Multiply, then '
-        "simplify. Write what each line is for.</span></div>",
+        '    <div class="space"><span class="work-label">%s</span></div>' % work,
         '    <div class="answer">Answer:<span class="line"></span> %s</div>' % p["unit"],
         '    <div class="fact"><b>Did you know?</b> %s</div>' % p["fact"],
         "  </div>"])
@@ -202,17 +266,37 @@ def _doc_open(title):
 
 
 def build_student(spec, name, grade):
+    n_mb, n_mw, n_ab = len(spec["mul_bare"]), len(spec["mul_word"]), len(spec["as_bare"])
     h = _doc_open(spec["title_plain"]) + _head(spec, name, grade)
-    h.append(_example(spec["example"]))
-    h.append('  <div class="parta">Part A &mdash; Multiply. Show every step. '
-             "Answers in simplest form.</div>")
+    h.append('  <div class="parta">Multiply &mdash; problems 1-%d. Show every step. '
+             "Answers in simplest form.</div>" % n_mb)
+    h.append(_mul_example(spec["mul_example"]))
     h.append('  <div class="grid">')
-    h += [_cell(i, p) for i, p in enumerate(spec["part_a"], 1)]
+    h += [_cell(i, p) for i, p in enumerate(spec["mul_bare"], 1)]
+    h += ["  </div>", "</div>", ""]
+    n = n_mb
+    h += _head(spec, name, grade)
+    h.append('  <div class="parta">Multiply &mdash; glass &amp; mirrors. Two steps each.</div>')
+    for p in spec["mul_word"]:
+        n += 1
+        h += [_problem_w(n, p, "One step per line. Multiply, then simplify. Write what each "
+                               "line is for."), ""]
+    h += ["</div>", ""]
+    h += _head(spec, name, grade)
+    h.append('  <div class="parta">Add and subtract &mdash; problems %d-%d. Show every step. '
+             "Answers in simplest form.</div>" % (n + 1, n + n_ab))
+    h.append(_as_example(spec["as_example"]))
+    h.append('  <div class="grid">')
+    for p in spec["as_bare"]:
+        n += 1
+        h.append(_cell(n, p))
     h += ["  </div>", "</div>", ""]
     h += _head(spec, name, grade)
-    h.append('  <div class="parta">Part B &mdash; Glass &amp; mirrors. Two steps each.</div>')
-    for i, p in enumerate(spec["part_b"], 1):
-        h += [_problem_b(i, p), ""]
+    h.append('  <div class="parta">Add and subtract &mdash; glass &amp; mirrors. Two steps each.</div>')
+    for p in spec["as_word"]:
+        n += 1
+        h += [_problem_w(n, p, "One step per line. Find a common bottom, add or subtract the "
+                               "tops, simplify. Write what each line is for."), ""]
     h += ["</div>", "", "</body>", "</html>", ""]
     return "\n".join(h)
 
@@ -224,31 +308,51 @@ def build_key(spec, name, grade):
                 '      <div class="sub">%s &mdash; %s</div>' % (spec["title_plain"], sub),
                 "    </div>", '    <div class="grade">Coach</div>', "  </div>", ""]
 
-    h = _doc_open(spec["title_plain"] + " - key") + key_head("Part A, worked steps")
-    h.append('  <div class="section-title">%s &mdash; %s</div>' % (grade, name))
-    h.append('  <div class="kgrid">')
-    for i, p in enumerate(spec["part_a"], 1):
-        lines, x = ladder_mul(p["f"])
-        h += ['    <div class="ans"><b>%d. <em class="answer-val">%s</em></b>' % (i, mixed(x)),
-              '      <div class="steps ex">%s</div>' % _lines_html(lines), "    </div>"]
-    h += ["  </div>",
-          '  <div class="watch"><b>Grade the LINES first, the answer second.</b> Tops, bottoms, '
-          "simplify, each on its own line. A right answer with no lines is UNSHOWN, not a pass. "
-          "Watch for: adding tops and bottoms; leaving 6/12 unsimplified; forgetting to turn an "
-          "improper fraction into a mixed number.</div>",
-          "</div>", ""]
-    h += key_head("Part B, worked steps")
-    for i, p in enumerate(spec["part_b"], 1):
-        groups, x = _wlines(p)
-        h += ['  <div class="ans"><b>%d. <em class="answer-val">%s</em> %s</b>'
-              % (i, mixed(x), p["unit"]), '    <div class="cols">']
-        for head, lines in groups:
-            h.append('      <div class="steps ex"><b>%s</b><br>%s</div>' % (head, _lines_html(lines)))
-        h += ["    </div>", "  </div>"]
-    vals = lambda p: {k: (fr(v) if isinstance(v, tuple) else v) for k, v in p.items()}
-    h.append('  <div class="watch"><b>Watch for:</b><br>%s</div>' % "<br>".join(
-        "<b>#%d</b> %s" % (i, p["watch"].format(**vals(p))) for i, p in enumerate(spec["part_b"], 1)))
-    h += ["", "</div>", "", "</body>", "</html>", ""]
+    def bare_page(sub, probs, start, ladder, watch):
+        h = key_head(sub)
+        h.append('  <div class="section-title">%s &mdash; %s</div>' % (grade, name))
+        h.append('  <div class="kgrid">')
+        for i, p in enumerate(probs, start):
+            lines, x = ladder(p)
+            h += ['    <div class="ans"><b>%d. <em class="answer-val">%s</em></b>' % (i, mixed(x)),
+                  '      <div class="steps ex">%s</div>' % _lines_html(lines), "    </div>"]
+        h += ["  </div>", '  <div class="watch">%s</div>' % watch, "</div>", ""]
+        return h
+
+    def word_page(sub, probs, start):
+        h = key_head(sub)
+        for i, p in enumerate(probs, start):
+            groups, x = _wlines(p)
+            h += ['  <div class="ans"><b>%d. <em class="answer-val">%s</em> %s</b>'
+                  % (i, mixed(x), p["unit"]), '    <div class="cols">']
+            for head, lines in groups:
+                h.append('      <div class="steps ex"><b>%s</b><br>%s</div>'
+                         % (head, _lines_html(lines)))
+            h += ["    </div>", "  </div>"]
+        vals = lambda p: {k: (fr(v) if isinstance(v, tuple) else v) for k, v in p.items()}
+        h.append('  <div class="watch"><b>Watch for:</b><br>%s</div>' % "<br>".join(
+            "<b>#%d</b> %s" % (i, p["watch"].format(**vals(p))) for i, p in enumerate(probs, start)))
+        h += ["", "</div>", ""]
+        return h
+
+    n_mb, n_mw, n_ab = len(spec["mul_bare"]), len(spec["mul_word"]), len(spec["as_bare"])
+    h = _doc_open(spec["title_plain"] + " - key")
+    h += bare_page("Multiply, worked steps", spec["mul_bare"], 1,
+                   lambda p: ladder_mul(p["f"]),
+                   "<b>Grade the LINES first, the answer second.</b> Tops, bottoms, simplify, each "
+                   "on its own line. A right answer with no lines is UNSHOWN, not a pass. Watch "
+                   "for: adding tops and bottoms; leaving 6/12 unsimplified; forgetting to turn an "
+                   "improper fraction into a mixed number.")
+    h += word_page("Multiply word problems, worked steps", spec["mul_word"], n_mb + 1)
+    h += bare_page("Add and subtract, worked steps", spec["as_bare"], n_mb + n_mw + 1,
+                   lambda p: ladder_as(p["op"], p["f"]),
+                   "<b>Grade the LINES first, the answer second.</b> Common bottom, rename BOTH "
+                   "fractions, add or subtract the tops, simplify. Watch for: adding the bottoms "
+                   "(1/3 + 1/4 is NOT 2/7); renaming only one fraction; leaving an improper "
+                   "fraction instead of a mixed number.")
+    h += word_page("Add and subtract word problems, worked steps", spec["as_word"],
+                   n_mb + n_mw + n_ab + 1)
+    h += ["</body>", "</html>", ""]
     return "\n".join(h)
 
 
