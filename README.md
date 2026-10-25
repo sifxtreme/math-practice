@@ -98,10 +98,12 @@ A full day is **three sheets per kid**: word problems, logic, and a drill.
 ```bash
 # drills — generated, sized to five minutes
 python3 drill_gen.py --skill div --seed $(date +%Y%m%d)   # or --skill mul
+python3 drill_gen.py --skill zeros --stage 1             # kid1 Noetic prep: 2-minute trailing-zero probe (stages 1|2|3|mix)
 python3 verify_drills.py                                  # must exit 0
 ./print-worksheet.sh worksheet-division-drill.html --dry-run
 
 # word problems / logic — pick the day's sheet from PRACTICE-PLAN-2026.md
+python3 build_focus.py && python3 verify_focus.py       # Noetic-prep focus-track word sheets (one kid per spec; outputs gitignored)
 ./print-worksheet.sh worksheet-sailing-ships.html --date today
 ```
 
