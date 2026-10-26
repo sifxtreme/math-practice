@@ -104,6 +104,7 @@ python3 verify_drills.py                                  # must exit 0
 
 # word problems / logic — pick the day's sheet from PRACTICE-PLAN-2026.md
 python3 build_focus.py && python3 verify_focus.py       # Noetic-prep focus-track word sheets (one kid per spec; outputs gitignored)
+python3 build_fracmul.py && python3 verify_fracmul.py   # kid2 fraction packet: 10 multiply + 10 add/subtract, student + key files
 ./print-worksheet.sh worksheet-sailing-ships.html --date today
 ```
 
@@ -123,6 +124,8 @@ themselves. `--seed` makes a sheet reproducible — same seed, same problems.
 | `verify_drills.py` | audits the rendered HTML independently. Run before printing |
 | `build_sheets.py` | generates the word-problem and logic sheets from `specs_*.py` |
 | `verify_sheets.py` | re-derives every word-problem answer. Must exit 0 |
+| `build_focus.py` / `specs_focus.py` / `verify_focus.py` | one-kid Noetic-prep focus sheets; student sheet and key are separate files. The verifier finds each answer by brute force and must exit 0 |
+| `build_fracmul.py` / `specs_fracmul.py` / `verify_fracmul.py` | kid2's 20-problem fraction packet (10 multiply, 10 add/subtract), student and key files. The verifier recomputes every answer with `Fraction` and must exit 0 |
 | `print-worksheet.sh` | render to a clean PDF and print |
 | `print-drill.sh` | same, for an external drill PDF |
 | `day-guard.sh` | the one-day-at-a-time print guard |
@@ -136,6 +139,7 @@ themselves. `--seed` makes a sheet reproducible — same seed, same problems.
 | `SPEED.md` | **the published fluency benchmarks** — what Kumon, Khan Academy and CBM each say, and the probe to run |
 | `speed_check.py` | scores a timed sheet in digits correct per minute against the CBM grade norms |
 | `PRACTICE-PLAN-2026.md` | the day-by-day schedule |
+| `KHAN-MAP.md` | where Khan Academy teaches and tests the algebraic-thinking skills (verified 2026-10-25) |
 
 **`AGENTS.md` is the file to read before changing anything.** It carries the rules that
 have already decayed once and been reinstated — why drills are one day at a time, why the
