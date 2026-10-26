@@ -62,6 +62,11 @@ LADDER_CSS = """
   .wtrap { margin-top: 10px; background: #fff7ed; border-left: 4px solid #b45309; padding: 6px 10px; font-size: 13.5px; }
   .drawbox { height: 90px; border: 1.5px dashed #c7d2fe; border-radius: 6px; margin: 4px 0 0 30px; }
   .bl { display: inline-block; min-width: 58px; border-bottom: 1.5px solid #1e3a8a; margin: 0 3px; }
+  .eqrow { margin: 3px 0 0 30px; display: flex; align-items: baseline; }
+  .eqrow .eq { display: inline-block; min-width: 300px; font-size: 19px; font-weight: 600; color: #14142b; }
+  .eqrow i { color: #6b7280; font-size: 13px; }
+  .letdef { margin: 4px 0 0 30px; font-size: 17px; font-weight: 600; color: #1e3a8a; }
+  .space .letdef { margin-left: 4px; margin-top: 18px; }
   .grp { display: inline-block; border: 1.5px dashed #b45309; border-radius: 6px; padding: 1px 2px; margin: 0 2px; }
 """
 
@@ -184,15 +189,26 @@ def _undo_walk(secret, ops, solved):
     return "\n".join(out)
 
 
+_OP_WORDS = {"+": "adds %d", "-": "takes away %d", "*": "multiplies it by %d",
+             "/": "divides it by %d"}
+
+
+def _example_story(ex):
+    result = specs_focus.run_forward(ex["secret"], ex["ops"])
+    parts = [_OP_WORDS[s_] % n_ for s_, n_ in ex["ops"]]
+    chain = ", ".join(parts[:-1]) + ", then " + parts[-1] if len(parts) > 1 else parts[0]
+    return "%s thinks of a number. He %s. He gets %d. What was his number?" % (
+        ex["who"], chain, result), result
+
+
 def _example_html(ex):
     secret, ops = ex["secret"], ex["ops"]
-    result = specs_focus.run_forward(secret, ops)
+    story, result = _example_story(ex)
     middle = specs_focus.undo_trail(result, ops)[0][3]
     return "\n".join([
         '  <div class="walk">',
         '    <h2>How to solve it: undo the steps</h2>',
-        '    <div class="prompt"><i>%s thinks of a number. He multiplies it by 5, then adds 8. '
-        'He gets %d. What was his number?</i></div>' % (ex["who"], result),
+        '    <div class="prompt"><i>%s</i></div>' % story,
         _undo_walk(secret, ops, True),
         '    <div class="wtrap"><b>The trap:</b> after the first undo you have %d. That is the '
         '<b>middle</b> of the machine, not the start. Keep going until there are no arrows '
@@ -253,9 +269,129 @@ def _trade_example_html(ex):
         '  </div>', ''])
 
 
+# ---------------------------------------------------------------------------
+# kind "eq" (kid2, Day 2+): letter equations with substitution, ONE step per line
+# (Asif, 2026-10-25: his own worked photo). mask=None gives the full lines; a mask
+# function turns every DERIVED number into a blank (guided problem), while the givens
+# (counts, total, the trade) stay printed.
+# ---------------------------------------------------------------------------
+def _eq_args(src):
+    """Normalise an eq worked example or problem dict into one tuple of raw numbers."""
+    if "a" in src and "rel" in src and "pb" in src and "a_n" not in src:   # worked example
+        a, b, r, pb, c, d = (src[x] for x in ("a", "b", "r", "pb", "c", "d"))
+        rel, names = src["rel"], src["names"]
+    else:
+        a, b, r, pb, c, d = (src[x] for x in ("a_n", "b_n", "r", "pb", "c_n", "d_n"))
+        rel, names = src["rel"], src["names"]
+    pa = r * pb if rel == "k" else pb + r
+    return names, rel, a, b, r, pa, pb, c, d, a * pa + b * pb
+
+
+def eq_lines(src, mask=None):
+    """[(step, equation, note)] for the whole problem, then the check as (5, eq, note)."""
+    names, rel, a, b, r, pa, pb, c, d, T = _eq_args(src)
+    a1, am, b1, bm = names
+    la, lb = a1[0], b1[0]
+    N = mask or (lambda x: x)
+    n, m = a + b, c + d
+    L = []
+    if rel == "k":
+        ak, ck = a * r, c * r
+        nn, mm = ak + b, ck + d
+        L = [(1, "%d%s + %d%s = %d" % (a, la, b, lb, T), "the story"),
+             (1, "1%s = %d%s" % (la, r, lb), "the trade: 1 %s costs the same as %d %s" % (a1, r, bm)),
+             (2, "%s%s + %d%s = %d" % (N(ak), lb, b, lb, T),
+              "substitute: %d%s = %d &times; %d%s = %s%s" % (a, la, a, r, lb, N(ak), lb)),
+             (2, "%s%s = %d" % (N(nn), lb, T), "%s + %d = %s" % (N(ak), b, N(nn))),
+             (3, "%s = %s" % (lb, N(pb)), "%d &divide; %s = %s" % (T, N(nn), N(pb))),
+             (3, "%s = %s" % (la, N(pa)), "%d &times; %s = %s" % (r, N(pb), N(pa))),
+             (4, "%d%s + %d%s" % (c, la, d, lb), "the question"),
+             (4, "= %s%s + %d%s" % (N(ck), lb, d, lb),
+              "substitute: %d%s = %d &times; %d%s = %s%s" % (c, la, c, r, lb, N(ck), lb)),
+             (4, "= %s%s" % (N(mm), lb), "%s + %d = %s" % (N(ck), d, N(mm))),
+             (4, "= %s &times; %s = $%s" % (N(mm), N(pb), N(mm * pb)),
+              "put in %s = %s" % (lb, N(pb)))]
+    else:
+        e = r
+        ae, ce = a * e, c * e
+        L = [(1, "%d%s + %d%s = %d" % (a, la, b, lb, T), "the story"),
+             (1, "1%s = 1%s + %d" % (la, lb, e), "the trade: 1 %s costs $%d more than 1 %s" % (a1, e, b1)),
+             (2, "%d(1%s + %d) + %d%s = %d" % (a, lb, e, b, lb, T),
+              "substitute: %s is 1%s + %d" % (la, lb, e)),
+             (2, "%d%s + %s + %d%s = %d" % (a, lb, N(ae), b, lb, T),
+              "%d &times; %d = %s" % (a, e, N(ae))),
+             (2, "%s%s + %s = %d" % (N(n), lb, N(ae), T), "%d + %d = %s" % (a, b, N(n))),
+             (2, "%s%s = %s" % (N(n), lb, N(T - ae)), "%d &minus; %s = %s" % (T, N(ae), N(T - ae))),
+             (3, "%s = %s" % (lb, N(pb)), "%s &divide; %s = %s" % (N(T - ae), N(n), N(pb))),
+             (3, "%s = %s" % (la, N(pa)), "%s + %d = %s" % (N(pb), e, N(pa))),
+             (4, "%d%s + %d%s" % (c, la, d, lb), "the question"),
+             (4, "= %d(1%s + %d) + %d%s" % (c, lb, e, d, lb), "substitute: %s is 1%s + %d" % (la, lb, e)),
+             (4, "= %d%s + %s + %d%s" % (c, lb, N(ce), d, lb), "%d &times; %d = %s" % (c, e, N(ce))),
+             (4, "= %s%s + %s" % (N(m), lb, N(ce)), "%d + %d = %s" % (c, d, N(m))),
+             (4, "= %s &times; %s + %s" % (N(m), N(pb), N(ce)), "put in %s = %s" % (lb, N(pb))),
+             (4, "= $%s" % N(m * pb + ce), "%s + %s = %s" % (N(m * pb), N(ce), N(m * pb + ce)))]
+    L.append((5, "%d &times; %s + %d &times; %s = %d" % (a, N(pa), b, N(pb), T), "does it make $%d?" % T))
+    return L
+
+
+EQ_STEPS = {1: "<b>Write what you know as equations.</b> One letter for each price.",
+            2: "<b>Substitute</b> for the letter that has a trade. Then combine, until ONE letter is left.",
+            3: "<b>Solve</b> for the one price, then the other.",
+            4: "<b>Answer the question the same way:</b> write it, substitute, combine, put in the price.",
+            5: "<b>Check.</b> Put both prices back in the first equation."}
+
+
+def _eq_row(eq, note, tick=""):
+    return '<div class="eqrow"><span class="eq">%s %s</span><i>(%s)</i></div>' % (eq, tick, note)
+
+
+def _letdef(names):
+    a1, am, b1, bm = names
+    return "Let %s = the price of 1 %s. &nbsp; Let %s = the price of 1 %s." % (a1[0], a1, b1[0], b1)
+
+
+def _eq_walk(src, solved):
+    names = _eq_args(src)[0]
+    lines = eq_lines(src, None if solved else (lambda x: BL))
+    out, last = [], 0
+    for step, eq, note in lines:
+        if step != last:
+            out.append(_step(step, EQ_STEPS[step]))
+            if step == 1:
+                out.append('<div class="letdef">%s</div>' % _letdef(names))
+            last = step
+        out.append(_eq_row(eq, note, "&#10004;" if (solved and step == 5) else ""))
+    return "\n".join(out)
+
+
+def _eq_example_html(ex):
+    names, rel, a, b, r, pa, pb, c, d, T = _eq_args(ex)
+    assert rel == "k"
+    a1, am, b1, bm = names
+    pic = ("%s &nbsp; %s &nbsp; = $%d &nbsp;&nbsp; <i style=\"font-size:12px;color:#6b7280\">"
+           "(a picture, just to help)</i>" % (
+               " ".join([_chip(a1, "#fff")] * a), " ".join([_chip(b1, "#fde68a")] * b), T))
+    body = _eq_walk(ex, True)
+    marker = _step(2, EQ_STEPS[2])
+    body = body.replace(marker, '<div class="wpic">%s</div>\n%s' % (pic, marker), 1)
+    return "\n".join([
+        '  <div class="walk">',
+        '    <h2>How to solve it: letters and substitution</h2>',
+        '    <div class="prompt"><i>Sana buys %d %s and %d %s for $%d. One %s costs the same as %d '
+        '%s. How much do %d %s and %d %s cost?</i></div>' % (
+            a, am, b, bm, T, a1, r, bm, c, am, d, b1 if d == 1 else bm),
+        body,
+        '    <div class="wtrap"><b>The trap:</b> do not split $%d over the %d things you see. '
+        'A %s is not one %s. Substitute first, then solve. Keep every step on its own line.</div>'
+        % (T, a + b, a1, b1),
+        '  </div>', ''])
+
+
 def _guided(i, p, kind):
     """Problem 1: the same steps as the worked example, with blanks to fill and space to draw."""
-    if kind == "trade":
+    if kind == "eq":
+        walk = _eq_walk(p, False)
+    elif kind == "trade":
         walk = _trade_walk(p["names"], p["a_n"], p["b_n"], p["k"], p["T"], p["c_n"], p["d_n"], False)
     else:
         walk = _undo_walk(p["secret"], p["ops"], False)
@@ -278,12 +414,21 @@ def _problem(i, p, kind):
     html = build_sheets._problem(i, p)
     label = ("Find ONE first, then answer the question. One step per line."
              if kind == "trade" else "Line 1: the story as arrows. Then ONE undo per line.")
+    extra = ""
+    if kind == "eq":
+        label = "Letters first. Substitute. ONE step per line. Check at the end."
+        extra = '<div class="letdef">%s</div>' % _letdef(p["names"])
     old = '<div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>'
     assert old in html
-    return html.replace(old, '<div class="space"><span class="work-label">%s</span></div>' % label)
+    return html.replace(old, '<div class="space"><span class="work-label">%s</span>%s</div>'
+                        % (label, extra))
 
 
 def _key_steps(p, kind):
+    if kind == "eq":
+        lines = eq_lines(p)
+        return "<b>%s</b><br>%s" % (_letdef(p["names"]), " &nbsp;|&nbsp; ".join(
+            ("<b>%s</b>" % eq) if st != 5 else eq for st, eq, _ in lines))
     if kind == "trade":
         unit, asked = trade_ladders(p["names"], p["a_n"], p["b_n"], p["k"], p["T"],
                                     p["c_n"], p["d_n"])
@@ -314,8 +459,8 @@ def build_student(spec, name, grade):
          "<title>%s</title>" % spec["title_plain"], "<style>", build_sheets.CSS, LADDER_CSS,
          "</style>", "</head>", "<body>", ""]
     h += _sheet_head(spec, name, grade)
-    h.append((_trade_example_html if spec.get("kind") == "trade" else _example_html)(
-        spec["example"]))
+    h.append({"trade": _trade_example_html, "eq": _eq_example_html}.get(
+        spec.get("kind"), _example_html)(spec["example"]))
     for i, p in enumerate(spec["problems"], 1):
         # page 1: the worked example; page 2: guided #1; then two problems per page
         if i in (1, 2, 4):
@@ -341,7 +486,8 @@ def build_key(spec, name, grade):
               '    <div class="steps">%s</div>' % _key_steps(p, spec.get("kind")), "  </div>"]
     rows = []
     for i, p in enumerate(spec["problems"], 1):
-        n = 8 if spec.get("kind") == "trade" else len(p["ops"]) + 1
+        n = (8 if spec.get("kind") == "trade" else
+             len(eq_lines(p)) if spec.get("kind") == "eq" else len(p["ops"]) + 1)
         rows.append("<tr><td>#%d</td><td>%d lines</td><td>&#9744;</td><td>&#9744;</td></tr>" % (i, n))
     h.append('  <div class="watch"><b>Grade the LINES first, the answer second.</b> One step per line: '
              'each line copies the one above with ONE thing changed. A right answer without its lines '

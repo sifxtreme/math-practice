@@ -61,6 +61,10 @@ def problem(secret, ops, q, fact, guided=None, watch=""):
         nxt = OPS[sym][0](check_x, n)
         chk.append("%d %s %d = %d" % (check_x, OPS[sym][3], n, nxt))
         check_x = nxt
+    if watch == "auto":
+        stops = ", ".join(str(t[3]) for t in trail[:-1])
+        watch = ("Right answer %d. Expect %s if he stops early (middle values). An undo "
+                 "that does not come out even means the wrong order." % (answer, stops))
     d = {"secret": secret, "ops": ops, "result": result, "answer": answer,
          "q": q, "fact": fact, "a": "%d" % answer,
          "steps": "Arrows: %s. Undo from the LAST arrow: %s. Check: %s." % (
@@ -358,4 +362,257 @@ TRADE_DAY1_B = {
     ],
 }
 
-ALL = [DAY1, TRADE_DAY1, DAY1_B, TRADE_DAY1_B]
+# ---------------------------------------------------------------------------
+# DAY 2 (2026-10-26).
+#
+# kid1 (Musa): "undo the steps" with THREE arrows; the story never says "arrow", he draws
+# them. Same walk-through format as Day 1, so it reuses problem() and the undo ladder.
+#
+# kid2 (Yusuf): kind "eq". Asif, 2026-10-25 13:53 (AGENTS.md "kid2 format direction"):
+# explicit letter equations with substitution, ONE step per line, like his own worked
+# photo (2n + 3p = 21, n = 2p -> 4p + 3p = 21 -> 7p = 21 -> p = 3 -> 6p -> 18). A small
+# chip picture is only a side aid. The plan's Day 2 also asks for one "$e more"
+# relation (rel "more"); the rest are "k times" (rel "k").
+#
+# eq_problem() stores only the raw numbers plus the relation; build_focus.eq_lines()
+# derives every equation line from them, and verify_focus.py re-derives the prices by
+# brute-force search over both prices (not by the substitution the sheet teaches).
+# ---------------------------------------------------------------------------
+
+
+def eq_problem(names, tmpl, rel, a, b, r, price_b, c, d, fact, guided=None):
+    """rel 'k': 1 A = r B's.  rel 'more': 1 A = 1 B + r.  Prices come out whole dollars."""
+    a1, am, b1, bm = names
+    la, lb = a1[0], b1[0]
+    assert la != lb, "letters must differ"
+    pb = price_b
+    pa = r * pb if rel == "k" else pb + r
+    T = a * pa + b * pb
+    ans = c * pa + d * pb
+    q = tmpl.format(a=a, b=b, k=r, e=r, T=T, c=c, d=d)
+    if rel == "k":
+        slip = (c + d) * pb
+        slip_txt = ("Expect $%d if he forgets to swap the asked %s too (%d items at $%d)."
+                    % (slip, am, c + d, pb))
+    else:
+        # distribution slip: a(B + e) written as aB + e  ->  (a+b)B + e = T
+        num = T - r
+        slip_txt = ("Expect the distribution slip: %d(%s + %d) written as %d%s + %d, which "
+                    "gives %s = %s, not a whole price." % (
+                        a, lb, r, a, lb, r, lb,
+                        ("$%d" % (num // (a + b))) if num % (a + b) == 0
+                        else "%d/%d" % (num, a + b)))
+    watch = ("Right answer $%d. %s Also expect the right idea with LINES SKIPPED (jumps from "
+             "the story to '%s = %d'): send it back for the substitute line." % (ans, slip_txt, lb, pb))
+    d_ = {"names": names, "letters": (la, lb), "rel": rel, "r": r, "a_n": a, "b_n": b,
+          "T": T, "c_n": c, "d_n": d, "pa": pa, "pb": pb, "q": q, "fact": fact,
+          "answer": ans, "a": "$%d" % ans, "watch": watch}
+    if guided:
+        d_["guided"] = True
+    return d_
+
+
+UNDO_DAY2 = {
+    "file": "worksheet-focus-2026-10-26-undo.html",
+    "key_file": "worksheet-focus-2026-10-26-undo-key.html",
+    "pdf_stem": "focus-2026-10-26-undo-word",
+    "date": "October 26, 2026",
+    "title_plain": "Undo the Steps 2",
+    "title": "&#128167; Undo the Steps 2",
+    "sub": "Wells and water: three things happen to the number. Draw them, then undo them, one per line",
+    "example": {"who": "Tariq", "secret": 7, "ops": [("+", 4), ("*", 3), ("-", 5)]},
+    "problems": [
+        problem(
+            6, [("*", 3), ("+", 4), ("*", 2)],
+            "Layla draws water from a village well. She picks a secret number of buckets, "
+            "multiplies it by 3, adds 4, then multiplies by 2. She gets 44. What was her "
+            "secret number?",
+            "Rain soaks down through soil and rock into an underground layer called an "
+            "aquifer. A well is a hole that reaches down into it.",
+            guided=True,
+            watch="auto"),
+        problem(
+            5, [("+", 7), ("*", 4), ("-", 10)],
+            "Omar fills water jugs at a well. He starts with a secret number of jugs, adds "
+            "7, multiplies by 4, then takes away 10. He ends with 38. What was his secret "
+            "number?",
+            "Qanats are underground channels in Iran that carry water from the hills to "
+            "villages without any pump. Some are more than 2,000 years old.",
+            watch="auto"),
+        problem(
+            28, [("/", 4), ("+", 9), ("*", 3)],
+            "Aisha measures the water in a cistern. She divides her secret number of liters "
+            "by 4, adds 9, then multiplies by 3. She gets 48. What was her secret number?",
+            "A pulley over a well lets you pull DOWN on the rope to lift the bucket up, "
+            "which is easier than lifting straight up.",
+            watch="auto"),
+        problem(
+            9, [("*", 5), ("-", 12), ("/", 3)],
+            "Idris carries water jugs to the market. Each jug he starts with is swapped for "
+            "5 small cups. Then 12 cups break. The rest are shared equally among 3 families, "
+            "and each family gets 11 cups. How many jugs did he start with?",
+            "The Chand Baori stepwell in India has about 3,500 narrow steps that lead down "
+            "to the water.",
+            watch="auto"),
+        problem(
+            20, [("-", 8), ("*", 6), ("+", 9)],
+            "Yusra fills a water tank. She takes 8 away from her secret number of liters, "
+            "multiplies by 6, then adds 9. She gets 81. What was her secret number?",
+            "Most adults need about 2 liters of fluid a day, and more when it is hot.",
+            watch="auto"),
+    ],
+}
+
+UNDO_DAY2_B = {
+    "file": "worksheet-focus-2026-10-26-undo-b.html",
+    "key_file": "worksheet-focus-2026-10-26-undo-b-key.html",
+    "pdf_stem": "focus-2026-10-26-undo-b-word",
+    "date": "October 26, 2026",
+    "title_plain": "Undo the Steps 2 (B)",
+    "title": "&#129526; Undo the Steps 2 (B)",
+    "sub": "Silk and dye: three things happen to the number. Draw them, then undo them, one per line",
+    "example": {"who": "Tariq", "secret": 7, "ops": [("+", 4), ("*", 3), ("-", 5)]},
+    "problems": [
+        problem(
+            5, [("*", 4), ("-", 6), ("+", 9)],
+            "Hana raises silkworms. She picks a secret number of leaves, multiplies it by 4, "
+            "takes away 6, then adds 9. She gets 23. What was her secret number?",
+            "Silkworms eat mulberry leaves, and one cocoon is a single thread that can be "
+            "hundreds of meters long.",
+            guided=True,
+            watch="auto"),
+        problem(
+            12, [("+", 8), ("/", 2), ("*", 5)],
+            "Bilal has a secret number of spools of thread. He adds 8, divides by 2, then "
+            "multiplies by 5. He gets 50. What was his secret number?",
+            "Indigo, a deep blue dye, is made from the leaves of the indigo plant.",
+            watch="auto"),
+        problem(
+            4, [("*", 3), ("+", 7), ("*", 2)],
+            "Sara dyes cloth. She multiplies her secret number of meters by 3, adds 7, then "
+            "multiplies by 2. She gets 38. What was her secret number?",
+            "Tyrian purple was made from sea snails. It took thousands of snails to dye "
+            "one robe, so only the very rich could buy it.",
+            watch="auto"),
+        problem(
+            24, [("-", 6), ("*", 3), ("/", 9)],
+            "Noor has a number of silk cocoons. She uses 6 of them, and each of the rest "
+            "is spun into 3 skeins of thread. She packs the skeins into boxes of 9 and "
+            "fills exactly 6 boxes. How many cocoons did she start with?",
+            "Saffron, a bright yellow-orange dye and spice, comes from the threads inside a "
+            "crocus flower.",
+            watch="auto"),
+        problem(
+            35, [("/", 5), ("+", 13), ("*", 4)],
+            "Yahya divides his secret number of silk threads by 5, adds 13, then multiplies "
+            "by 4. He gets 80. What was his secret number?",
+            "Madder root gives a red dye and has been used for cloth for thousands of years.",
+            watch="auto"),
+    ],
+}
+
+TRADE_DAY2 = {
+    "kid": "kid2",
+    "kind": "eq",
+    "file": "worksheet-focus-2026-10-26-trade.html",
+    "key_file": "worksheet-focus-2026-10-26-trade-key.html",
+    "pdf_stem": "focus-2026-10-26-trade-word",
+    "date": "October 26, 2026",
+    "title_plain": "Trade It with Letters",
+    "title": "&#129351; Trade It with Letters",
+    "sub": "The Olympic shop: write each step as an equation, one step per line, like a mathematician",
+    # worked example: 2 jars + 2 quills = $18; 1 jar = 2 quills; ask 3 jars + 1 quill
+    "example": {"names": ("jar", "jars", "quill", "quills"), "rel": "k",
+                "a": 2, "b": 2, "r": 2, "pb": 3, "c": 3, "d": 1},
+    "problems": [
+        eq_problem(
+            ("ticket", "tickets", "badge", "badges"),
+            "Sumaya buys {a} tickets and {b} badges at the Olympic shop for ${T}. One ticket "
+            "costs the same as {k} badges. How much do {c} ticket and {d} badges cost?",
+            "k", 3, 2, 2, 2, 1, 3,
+            "The Olympic Games began in Olympia, Greece, more than 2,700 years ago. The "
+            "modern Games started in Athens in 1896.",
+            guided=True),
+        eq_problem(
+            ("flag", "flags", "pin", "pins"),
+            "Hamza buys {a} flags and {b} pins for ${T}. One flag costs the same as {k} pins. "
+            "How much do {c} flags and {d} pins cost?",
+            "k", 2, 4, 3, 2, 3, 2,
+            "The five Olympic rings link five parts of the world: the Americas, Africa, Asia, "
+            "Europe and Oceania."),
+        eq_problem(
+            ("jersey", "jerseys", "cap", "caps"),
+            "Zaid buys {a} jersey and {b} caps for ${T}. One jersey costs the same as {k} "
+            "caps. How much do {c} jerseys and {d} caps cost?",
+            "k", 1, 3, 4, 2, 2, 5,
+            "The torch for each Games is lit in Olympia with a curved mirror that focuses "
+            "the sun's rays."),
+        eq_problem(
+            ("scarf", "scarves", "button", "buttons"),
+            "Maryam buys {a} scarves and {b} buttons for ${T}. One scarf costs the same as "
+            "{k} buttons. How much do {c} scarves and {d} buttons cost?",
+            "k", 4, 3, 2, 3, 5, 2,
+            "The marathon is 42.195 kilometers (26.2 miles) long. It is named for a "
+            "famous run from Marathon to Athens."),
+        eq_problem(
+            ("towel", "towels", "bottle", "bottles"),
+            "Khadija buys {a} towels and {b} bottles for ${T}. One towel costs ${e} more than "
+            "one bottle. How much do {c} towels and {d} bottles cost?",
+            "more", 3, 2, 4, 3, 2, 4,
+            "Gold medals today are mostly silver with a thin coat of gold on the outside."),
+    ],
+}
+
+TRADE_DAY2_B = {
+    "kid": "kid2",
+    "kind": "eq",
+    "file": "worksheet-focus-2026-10-26-trade-b.html",
+    "key_file": "worksheet-focus-2026-10-26-trade-b-key.html",
+    "pdf_stem": "focus-2026-10-26-trade-b-word",
+    "date": "October 26, 2026",
+    "title_plain": "Trade It with Letters (B)",
+    "title": "&#127753; Trade It with Letters (B)",
+    "sub": "The bridge gift shop: write each step as an equation, one step per line",
+    "example": {"names": ("jar", "jars", "quill", "quills"), "rel": "k",
+                "a": 2, "b": 2, "r": 2, "pb": 3, "c": 3, "d": 1},
+    "problems": [
+        eq_problem(
+            ("book", "books", "magnet", "magnets"),
+            "Ilyas buys {a} books and {b} magnet at the bridge gift shop for ${T}. One book "
+            "costs the same as {k} magnets. How much do {c} books and {d} magnets cost?",
+            "k", 3, 1, 2, 4, 4, 1,
+            "The Brooklyn Bridge in New York opened in 1883. It was the longest suspension "
+            "bridge in the world at the time.",
+            guided=True),
+        eq_problem(
+            ("mug", "mugs", "sticker", "stickers"),
+            "Amina buys {a} mugs and {b} stickers for ${T}. One mug costs the same as {k} "
+            "stickers. How much do {c} mug and {d} stickers cost?",
+            "k", 2, 3, 3, 3, 1, 4,
+            "Some Roman arch bridges are still standing after almost 2,000 years."),
+        eq_problem(
+            ("model", "models", "postcard", "postcards"),
+            "Yusra buys {a} models and {b} postcards for ${T}. One model costs the same as "
+            "{k} postcards. How much do {c} models and {d} postcards cost?",
+            "k", 2, 3, 5, 2, 3, 2,
+            "The Ponte Vecchio in Florence, Italy, was rebuilt in 1345. It still has shops "
+            "built along both sides of the bridge."),
+        eq_problem(
+            ("puzzle", "puzzles", "ticket", "tickets"),
+            "Idris buys {a} puzzles and {b} tickets for ${T}. One puzzle costs the same as "
+            "{k} tickets. How much do {c} puzzles and {d} tickets cost?",
+            "k", 5, 2, 2, 3, 2, 6,
+            "The Millau Viaduct in France is taller than the Eiffel Tower at its highest "
+            "tower."),
+        eq_problem(
+            ("toy", "toys", "cap", "caps"),
+            "Layla buys {a} toys and {b} caps for ${T}. One toy costs ${e} more than one cap. "
+            "How much do {c} toys and {d} cap cost?",
+            "more", 2, 4, 3, 4, 3, 1,
+            "The Akashi Kaikyo Bridge in Japan has the longest central span of any "
+            "suspension bridge, about 2 kilometers."),
+    ],
+}
+
+ALL = [DAY1, TRADE_DAY1, DAY1_B, TRADE_DAY1_B,
+       UNDO_DAY2, TRADE_DAY2, UNDO_DAY2_B, TRADE_DAY2_B]

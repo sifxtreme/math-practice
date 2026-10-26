@@ -64,12 +64,52 @@ def trade_search(a, b, k, T, c, d):
     return sols, [c * pa + d * pb for pa, pb in sols]
 
 
+def eq_search(rel, a, b, r, T, c, d):
+    """kind 'eq': all whole-dollar (price_a, price_b) meeting the two stated equations, where
+    the trade is 'A costs r times B' (rel k) or 'A costs r dollars more than B' (rel more)."""
+    sols = [(pa, pb) for pb in range(1, 301) for pa in range(1, 301)
+            if (pa == r * pb if rel == "k" else pa == pb + r) and a * pa + b * pb == T]
+    return sols, [c * pa + d * pb for pa, pb in sols]
+
+
+def plain(h):
+    return re.sub(r"<[^>]+>", "", h).replace("&nbsp;", " ")
+
+
 for spec in specs_focus.ALL:
     tag = spec["file"]
     kind = spec.get("kind", "undo")
     ex = spec["example"]
     key_answers = []
-    if kind == "trade":
+    student = open(spec["file"]).read()
+    key = open(spec["key_file"]).read()
+    if kind == "eq":
+        T_ex = ex["a"] * (ex["r"] * ex["pb"]) + ex["b"] * ex["pb"]
+        sols, _ = eq_search(ex["rel"], ex["a"], ex["b"], ex["r"], T_ex, ex["c"], ex["d"])
+        check(tag + " worked example unique prices", sols, [(ex["r"] * ex["pb"], ex["pb"])])
+        la, lb = ex["names"][0][0], ex["names"][2][0]
+        check(tag + " example shows its unit line", ("%s = %d" % (lb, sols[0][1])) in plain(student), True)
+        for i, p in enumerate(spec["problems"], 1):
+            sols, asked = eq_search(p["rel"], p["a_n"], p["b_n"], p["r"], p["T"], p["c_n"], p["d_n"])
+            check("%s #%d unique prices" % (tag, i), len(sols), 1)
+            check("%s #%d asked total == key" % (tag, i), asked, [int(p["a"].lstrip("$"))])
+            nums = words(p["q"])
+            for n in (p["a_n"], p["b_n"], p["T"], p["c_n"], p["d_n"], p["r"]):
+                check("%s #%d story mentions %d" % (tag, i, n), n in nums, True)
+            check("%s #%d story says the right relation" % (tag, i),
+                  ("more than" if p["rel"] == "more" else "the same as") in p["q"], True)
+            pa_, pb_ = sols[0]
+            la, lb = p["names"][0][0], p["names"][2][0]
+            kp = plain(key)
+            check("%s #%d key states the searched prices" % (tag, i),
+                  ("%s = %d" % (lb, pb_) in kp, "%s = %d" % (la, pa_) in kp), (True, True))
+            check("%s #%d key states the story equation" % (tag, i),
+                  "%d%s + %d%s = %d" % (p["a_n"], la, p["b_n"], lb, p["T"]) in kp, True)
+            check("%s #%d key ends at the searched total" % (tag, i), "= $%d" % asked[0] in kp, True)
+            check("%s #%d student never prints the unit price" % (tag, i),
+                  ("%s = %d" % (lb, pb_)) in plain(student), False)
+            key_answers.append(p["answer"])
+    elif kind == "trade":
         sols, asked = trade_search(*(ex[x] for x in "abkTcd"))
         check(tag + " worked example unique prices", len(sols), 1)
         for i, p in enumerate(spec["problems"], 1):
@@ -84,7 +124,7 @@ for spec in specs_focus.ALL:
         ex_result = forward(ex["secret"], ex["ops"])
         found = [s for s in range(10000) if forward(s, ex["ops"]) == ex_result]
         check(tag + " worked example unique start", found, [ex["secret"]])
-    for i, p in enumerate(spec["problems"] if kind != "trade" else [], 1):
+    for i, p in enumerate(spec["problems"] if kind == "undo" else [], 1):
         found = [s for s in range(10000) if forward(s, p["ops"]) == p["result"]]
         check("%s #%d unique start" % (tag, i), len(found), 1)
         check("%s #%d start == answer" % (tag, i), found[0] if found else None,
@@ -97,8 +137,6 @@ for spec in specs_focus.ALL:
               forward(found[0], p["ops"]) is not None if found else False, True)
         key_answers.append(int(p["a"]))
 
-    student = open(spec["file"]).read()
-    key = open(spec["key_file"]).read()
     check(tag + " student: 4 sheet blocks (pages)", student.count('class="sheet'), 4)
     check(tag + " key: 1 sheet block", key.count('class="sheet'), 1)
     check(tag + " student is not a key", 'class="sheet key"' in student, False)
