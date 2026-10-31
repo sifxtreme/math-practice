@@ -72,6 +72,11 @@ def eq_search(rel, a, b, r, T, c, d):
     return sols, [c * pa + d * pb for pa, pb in sols]
 
 
+def unit_line(letter, price, text):
+    """True if '<letter> = <price>' appears as its own equation ('2b = 20' is not 'b = 2')."""
+    return re.search(r"(?<![\w.])%s = %d(?!\d)" % (letter, price), text) is not None
+
+
 def plain(h):
     return re.sub(r"<[^>]+>", "", h).replace("&nbsp;", " ")
 
@@ -84,11 +89,12 @@ for spec in specs_focus.ALL:
     student = open(spec["file"]).read()
     key = open(spec["key_file"]).read()
     if kind == "eq":
-        T_ex = ex["a"] * (ex["r"] * ex["pb"]) + ex["b"] * ex["pb"]
+        pa_ex = ex["r"] * ex["pb"] if ex["rel"] == "k" else ex["pb"] + ex["r"]
+        T_ex = ex["a"] * pa_ex + ex["b"] * ex["pb"]
         sols, _ = eq_search(ex["rel"], ex["a"], ex["b"], ex["r"], T_ex, ex["c"], ex["d"])
-        check(tag + " worked example unique prices", sols, [(ex["r"] * ex["pb"], ex["pb"])])
+        check(tag + " worked example unique prices", sols, [(pa_ex, ex["pb"])])
         la, lb = ex["names"][0][0], ex["names"][2][0]
-        check(tag + " example shows its unit line", ("%s = %d" % (lb, sols[0][1])) in plain(student), True)
+        check(tag + " example shows its unit line", unit_line(lb, sols[0][1], plain(student)), True)
         for i, p in enumerate(spec["problems"], 1):
             sols, asked = eq_search(p["rel"], p["a_n"], p["b_n"], p["r"], p["T"], p["c_n"], p["d_n"])
             check("%s #%d unique prices" % (tag, i), len(sols), 1)
@@ -107,7 +113,7 @@ for spec in specs_focus.ALL:
                   "%d%s + %d%s = %d" % (p["a_n"], la, p["b_n"], lb, p["T"]) in kp, True)
             check("%s #%d key ends at the searched total" % (tag, i), "= $%d" % asked[0] in kp, True)
             check("%s #%d student never prints the unit price" % (tag, i),
-                  ("%s = %d" % (lb, pb_)) in plain(student), False)
+                  unit_line(lb, pb_, plain(student)), False)
             key_answers.append(p["answer"])
     elif kind == "trade":
         sols, asked = trade_search(*(ex[x] for x in "abkTcd"))
@@ -151,6 +157,10 @@ for spec in specs_focus.ALL:
            + student.count('class="scaffold')), (5, 5))
     check(tag + " student: 5 Did-you-know facts", student.count("Did you know?"), 5)
     check(tag + " student: 5 answer lines", student.count('class="answer"'), 5)
+    if spec.get("answer_lines"):
+        check(tag + " student: 3 answer lines per problem (both prices + answer)",
+              (student.count('= $<span class="line">'), student.count("<b>Answer:</b> $"),
+               student.count("GUIDED")), (10, 5, 0))
     missing = [l for l in LITERALS if l not in student or l not in key]
     check(tag + " CSS literals intact", missing, [])
     kid = spec.get("kid", "kid1")

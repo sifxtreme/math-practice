@@ -366,7 +366,7 @@ def _eq_walk(src, solved):
 
 def _eq_example_html(ex):
     names, rel, a, b, r, pa, pb, c, d, T = _eq_args(ex)
-    assert rel == "k"
+    assert rel in ("k", "more")
     a1, am, b1, bm = names
     pic = ("%s &nbsp; %s &nbsp; = $%d &nbsp;&nbsp; <i style=\"font-size:12px;color:#6b7280\">"
            "(a picture, just to help)</i>" % (
@@ -374,16 +374,27 @@ def _eq_example_html(ex):
     body = _eq_walk(ex, True)
     marker = _step(2, EQ_STEPS[2])
     body = body.replace(marker, '<div class="wpic">%s</div>\n%s' % (pic, marker), 1)
+    if rel == "k":
+        who = "Sana"
+        rel_txt = "the same as %d %s" % (r, bm)
+        trap = ('<b>The trap:</b> do not split $%d over the %d things you see. '
+                'A %s is not one %s. Substitute first, then solve. Keep every step on its own line.'
+                % (T, a + b, a1, b1))
+    else:
+        who = "Khadija"
+        rel_txt = "$%d more than one %s" % (r, b1)
+        trap = ('<b>The trap:</b> do not write %d(%s + %d) as %d%s + %d. Multiply BOTH parts: '
+                '%d &times; %s and %d &times; %d. Then keep going until the answer line.'
+                % (a, b1[0], r, a, b1[0], r, a, b1[0], a, r))
+    # rel "k" prompt stays byte-identical to the original text
+    prompt = ('%s buys %d %s and %d %s for $%d. One %s costs %s. How much do %d %s and %d %s cost?'
+              % (who, a, am, b, bm, T, a1, rel_txt, c, am, d, b1 if d == 1 else bm))
     return "\n".join([
         '  <div class="walk">',
         '    <h2>How to solve it: letters and substitution</h2>',
-        '    <div class="prompt"><i>Sana buys %d %s and %d %s for $%d. One %s costs the same as %d '
-        '%s. How much do %d %s and %d %s cost?</i></div>' % (
-            a, am, b, bm, T, a1, r, bm, c, am, d, b1 if d == 1 else bm),
+        '    <div class="prompt"><i>%s</i></div>' % prompt,
         body,
-        '    <div class="wtrap"><b>The trap:</b> do not split $%d over the %d things you see. '
-        'A %s is not one %s. Substitute first, then solve. Keep every step on its own line.</div>'
-        % (T, a + b, a1, b1),
+        '    <div class="wtrap">%s</div>' % trap,
         '  </div>', ''])
 
 
@@ -405,7 +416,7 @@ def _guided(i, p, kind):
         '  </div>'])
 
 
-def _problem(i, p, kind):
+def _problem(i, p, kind, answer_lines=False):
     """build_sheets._problem, with the work box swapped for a big OPEN space (no ruled lines:
     Asif 2026-10-25, lines make them write too small or too big). The step count is
     enforced in the key's rubric, not by the page."""
@@ -420,8 +431,18 @@ def _problem(i, p, kind):
         extra = '<div class="letdef">%s</div>' % _letdef(p["names"])
     old = '<div class="work"><span class="work-label">SHOW YOUR THINKING</span></div>'
     assert old in html
-    return html.replace(old, '<div class="space"><span class="work-label">%s</span>%s</div>'
+    html = html.replace(old, '<div class="space"><span class="work-label">%s</span>%s</div>'
                         % (label, extra))
+    if answer_lines:
+        # three lines: both prices, then the asked total (Asif, 2026-10-31: he stopped
+        # before the end, so the sheet makes him write each result on a line).
+        a1, b1 = p["names"][0], p["names"][2]
+        old_a = '<div class="answer">Answer:<span class="line"></span></div>'
+        assert old_a in html
+        html = html.replace(old_a, '<div class="answer">1 %s = $<span class="line"></span><br>'
+                            '1 %s = $<span class="line"></span><br>'
+                            '<b>Answer:</b> $<span class="line"></span></div>' % (a1, b1))
+    return html
 
 
 def _key_steps(p, kind):
@@ -461,11 +482,13 @@ def build_student(spec, name, grade):
     h += _sheet_head(spec, name, grade)
     h.append({"trade": _trade_example_html, "eq": _eq_example_html}.get(
         spec.get("kind"), _example_html)(spec["example"]))
+    # no guided problem: example, then 1-2, 3-4, 5. Guided: example, #1, #2-3, #4-5.
+    breaks = (1, 2, 4) if any(p.get("guided") for p in spec["problems"]) else (1, 3, 5)
     for i, p in enumerate(spec["problems"], 1):
         # page 1: the worked example; page 2: guided #1; then two problems per page
-        if i in (1, 2, 4):
+        if i in breaks:
             h += ["</div>", ""] + _sheet_head(spec, name, grade, cont=True)
-        h.append(_problem(i, p, spec.get("kind")))
+        h.append(_problem(i, p, spec.get("kind"), spec.get("answer_lines", False)))
         h.append("")
     h += ["</div>", "", "</body>", "</html>", ""]
     return "\n".join(h)

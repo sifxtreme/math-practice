@@ -664,5 +664,59 @@ TRADE_MORE_PRACTICE = {
     ],
 }
 
+# 2026-10-31, Asif: "Yusuf needs more examples of problems 5. 5 fresh problems." Same method as Day 2 #5
+# (rel "more"), no guided problem: he knows the setup, the point is FINISHING (5b = 15, b = 3, t = 7,
+# then the question) and writing each result on an answer line. Theme: chess (new, Oct 31).
+TRADE_MORE_1031 = {
+    "kid": "kid2",
+    "kind": "eq",
+    "answer_lines": True,
+    "file": "worksheet-focus-2026-10-31-more.html",
+    "key_file": "worksheet-focus-2026-10-31-more-key.html",
+    "pdf_stem": "focus-2026-10-31-more-word",
+    "date": "October 31, 2026",
+    "title_plain": "Finish the Trade: Chess Club",
+    "title": "&#9822; Finish the Trade: Chess Club",
+    "sub": "The chess club shop: go all the way, one step per line, then write each price on its line",
+    # worked example = Day 2 #5, solved fully: 3 towels + 2 bottles = $27; 1 towel = 1 bottle + $4
+    "example": {"names": ("towel", "towels", "bottle", "bottles"), "rel": "more",
+                "a": 3, "b": 2, "r": 4, "pb": 3, "c": 2, "d": 4},
+    "problems": [
+        eq_problem(
+            ("board", "boards", "clock", "clocks"),
+            "Zainab buys {a} boards and {b} clocks at the chess club shop for ${T}. One board "
+            "costs ${e} more than one clock. How much do {c} boards and {d} clock cost?",
+            "more", 2, 3, 3, 4, 4, 1,
+            "Chess came to Europe from Persia. The word checkmate comes from the Persian "
+            "words shah mat, which can mean the king is helpless."),
+        eq_problem(
+            ("book", "books", "pin", "pins"),
+            "Omar buys {a} books and {b} pins for ${T}. One book costs ${e} more than one pin. "
+            "How much do {c} book and {d} pins cost?",
+            "more", 4, 2, 2, 2, 1, 5,
+            "A chess board has 64 squares, and each player starts with 16 pieces."),
+        eq_problem(
+            ("set", "sets", "bag", "bags"),
+            "Samira buys {a} sets and {b} bags for ${T}. One set costs ${e} more than one bag. "
+            "How much do {c} sets and {d} bags cost?",
+            "more", 3, 4, 5, 2, 5, 2,
+            "The shortest possible chess game ends in checkmate after just two moves by each "
+            "player. It is called the fool's mate."),
+        eq_problem(
+            ("trophy", "trophies", "ribbon", "ribbons"),
+            "Hassan buys {a} trophies and {b} ribbons for ${T}. One trophy costs ${e} more than "
+            "one ribbon. How much do {c} trophies and {d} ribbons cost?",
+            "more", 2, 2, 6, 3, 3, 5,
+            "The longest official tournament game lasted 269 moves and took more than 20 hours."),
+        eq_problem(
+            ("mat", "mats", "timer", "timers"),
+            "Mariam buys {a} mats and {b} timers for ${T}. One mat costs ${e} more than one "
+            "timer. How much do {c} mat and {d} timers cost?",
+            "more", 4, 3, 3, 6, 1, 4,
+            "There are more possible chess games than there are atoms in the whole universe "
+            "that we can see."),
+    ],
+}
+
 ALL = [DAY1, TRADE_DAY1, DAY1_B, TRADE_DAY1_B,
-       UNDO_DAY2, TRADE_DAY2, UNDO_DAY2_B, TRADE_DAY2_B, TRADE_MORE_PRACTICE]
+       UNDO_DAY2, TRADE_DAY2, UNDO_DAY2_B, TRADE_DAY2_B, TRADE_MORE_PRACTICE, TRADE_MORE_1031]
