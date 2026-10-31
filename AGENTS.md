@@ -129,7 +129,7 @@ variable equations with substitution. Write them line by line, as in the photo.
 5. **3 pages, in this order:** page 1 = kid1 (3rd), page 2 = kid2 (4th), page 3 = **separate answer key** with worked steps for the grown-up.
 6. **5 problems per kid** on a PRACTICE sheet — **4** on a TEACH sheet (the worked example eats one problem's worth of page; 5 overflows to a 2nd page).
 7. **Paper only.** No Khan Academy, no app, no screen. The sheet has to carry the teaching itself — see **Two sheet types** below.
-8. **Copy (handwriting) sheets: plain solid lines, no dashed midline.** Asif, 2026-10-31, on the first Fatihah copy sheet: "next time we remove the guidelines." Reference: `worksheet-fatihah-english-copy.html` (one page, model text then lines under it).
+8. **Copy (handwriting) sheets: plain solid lines, no dashed midline.** Asif, 2026-10-31, on the first Fatihah copy sheet: "next time we remove the guidelines." Reference: `worksheet-fatihah-english-copy.html` (one page, model text then lines under it). A guided version (dashed midline) is kept on purpose in bifrost `family/sunday-school/fatihah-english-copy.{html,pdf}`; Asif wants both ready (2026-10-31). Do not merge or delete either.
 
 ## A full day = THREE sheets per child
 
