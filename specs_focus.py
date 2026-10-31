@@ -614,5 +614,55 @@ TRADE_DAY2_B = {
     ],
 }
 
+# 2026-10-31, Asif via Instinct: "Yusuf needs more examples of problems 5. 5 fresh problems." Day 2 #5
+# (towels and bottles, rel "more") he set up and substituted to 5b + 12 = 27, then stopped. Five fresh
+# rel-"more" problems, so the practice is finishing: solve for the letter, find the other price, answer
+# the question asked, write it on the answer line. Theme: farmers market.
+TRADE_MORE_PRACTICE = {
+    "kid": "kid2",
+    "kind": "eq",
+    "file": "worksheet-focus-2026-10-31-trade-more.html",
+    "key_file": "worksheet-focus-2026-10-31-trade-more-key.html",
+    "pdf_stem": "focus-2026-10-31-trade-more-word",
+    "date": "October 31, 2026",
+    "title_plain": "Finish the Trade",
+    "title": "&#127819; Finish the Trade",
+    "sub": "The farmers market: every step on its own line, all the way to the answer line",
+    "example": {"names": ("jar", "jars", "quill", "quills"), "rel": "k",
+                "a": 2, "b": 2, "r": 2, "pb": 3, "c": 3, "d": 1},
+    "problems": [
+        eq_problem(
+            ("melon", "melons", "peach", "peaches"),
+            "Amina buys {a} melons and {b} peaches for ${T}. One melon costs ${e} more than "
+            "one peach. How much do {c} melons and {d} peaches cost?",
+            "more", 2, 3, 3, 2, 3, 2,
+            "A watermelon is about 92 percent water."),
+        eq_problem(
+            ("pie", "pies", "jar", "jars"),
+            "Bilal buys {a} pies and {b} jar of honey for ${T}. One pie costs ${e} more than "
+            "one jar. How much do {c} pies and {d} jars cost?",
+            "more", 3, 1, 2, 4, 2, 3,
+            "Honey bees visit about two million flowers to make one pound of honey."),
+        eq_problem(
+            ("pumpkin", "pumpkins", "gourd", "gourds"),
+            "Layla buys {a} pumpkins and {b} gourds for ${T}. One pumpkin costs ${e} more "
+            "than one gourd. How much do {c} pumpkin and {d} gourds cost?",
+            "more", 2, 4, 5, 3, 1, 5,
+            "The heaviest pumpkin ever grown weighed more than 2,700 pounds."),
+        eq_problem(
+            ("loaf", "loaves", "muffin", "muffins"),
+            "Idris buys {a} loaves and {b} muffins for ${T}. One loaf costs ${e} more than "
+            "one muffin. How much do {c} loaves and {d} muffins cost?",
+            "more", 4, 2, 1, 5, 3, 3,
+            "People have baked bread for at least 14,000 years."),
+        eq_problem(
+            ("candle", "candles", "soap", "soaps"),
+            "Noor buys {a} candles and {b} soaps for ${T}. One candle costs ${e} more than "
+            "one soap. How much do {c} candles and {d} soaps cost?",
+            "more", 3, 3, 2, 4, 2, 5,
+            "Beeswax candles burn longer than most other candles."),
+    ],
+}
+
 ALL = [DAY1, TRADE_DAY1, DAY1_B, TRADE_DAY1_B,
-       UNDO_DAY2, TRADE_DAY2, UNDO_DAY2_B, TRADE_DAY2_B]
+       UNDO_DAY2, TRADE_DAY2, UNDO_DAY2_B, TRADE_DAY2_B, TRADE_MORE_PRACTICE]
