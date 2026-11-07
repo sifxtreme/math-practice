@@ -86,10 +86,14 @@ def solve(p):
                 "%d − %d = %d" % (p["a"], p["b"], ans),
                 "Check by adding back: %d + %d = %d ✓" % (ans, p["b"], p["a"])])
         if p["op"] == "mix1":
-            return dict(ans=43, lines=["4 × 7 = 28", "5 × 3 = 15", "28 + 15 = 43"])
+            a, b, c, d = p.get("vals", (4, 7, 5, 3))
+            return dict(ans=a * b + c * d, lines=["%d × %d = %d" % (a, b, a * b), "%d × %d = %d" % (c, d, c * d),
+                                                   "%d + %d = %d" % (a * b, c * d, a * b + c * d)])
         if p["op"] == "mix2":
-            return dict(ans=47, lines=["Bracket first: 10 − 3 = 7",
-                                       "4 × 3 = 12 and 5 × 7 = 35", "12 + 35 = 47"])
+            a, b, c, d, e = p.get("vals", (4, 3, 5, 10, 3))
+            return dict(ans=a * b + c * (d - e), lines=["Bracket first: %d − %d = %d" % (d, e, d - e),
+                                                         "%d × %d = %d and %d × %d = %d" % (a, b, a * b, c, d - e, c * (d - e)),
+                                                         "%d + %d = %d" % (a * b, c * (d - e), a * b + c * (d - e))])
     if k == "t18":
         a, b, c = p["names"]
         a_ = p["ab"] - p["b"]
@@ -193,9 +197,11 @@ def verify(p, s):
                 steps += 1
             return steps == s["ans"]
         if p["op"] == "mix1":
-            return sum([4] * 7) + sum([5] * 3) == s["ans"]
+            a, b, c, d = p.get("vals", (4, 7, 5, 3))
+            return sum([a] * b) + sum([c] * d) == s["ans"]
         if p["op"] == "mix2":
-            return sum([4] * 3) + sum([5] * (10 - 3)) == s["ans"]
+            a, b, c, d, e = p.get("vals", (4, 3, 5, 10, 3))
+            return sum([a] * b) + sum([c] * (d - e)) == s["ans"]
     if k == "t18":
         sols = [(a, c) for a in range(0, p["ab"] + 1) for c in range(0, p["cb"] + 1)
                 if a + p["b"] == p["ab"] and c + p["b"] == p["cb"]]
@@ -273,7 +279,7 @@ def statement(p):
                     "and collected %s in all." % (p["item_lo"], money(lo), p["item_hi"], money(hi), n, money(tot)))
         else:
             body = ("%s sells %s for %s each and %s for %s each. %s buys %d %s and pays %s in all." % (
-                {"plain buns": "A bakery", "gel pens": "A shop", "small notebooks": "A store",
+                p.get("shop") or {"plain buns": "A bakery", "gel pens": "A shop", "small notebooks": "A store",
                  "mangoes": "A fruit stand"}[p["item_lo"]],
                 p["item_lo"], money(lo), p["item_hi"], money(hi), p["buyer"], n, p["noun"], money(tot)))
         which = p["item_hi"] if p["ask"] == "hi" else p["item_lo"]
@@ -368,7 +374,7 @@ def frame_for(p):
 
 def student_problem(idx, p):
     unit = unit_of(p)
-    return ('<div class="prob"><div class="q"><b class="n">%d</b>%s</div>%s'
+    return ('<div class="prob"><div class="q"><b class="n">%d</b></div><div class="q qt">%s</div>%s'
             '<div class="ans">Answer: <span class="blank"></span> %s</div></div>' % (
                 idx, statement(p), frame_for(p), html.escape(unit)))
 

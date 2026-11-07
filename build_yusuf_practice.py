@@ -135,7 +135,50 @@ def crypt_solutions(p):
     return out
 
 
+def lin(word):
+    """A column word like 'KK', 'N7' or '1NN' as (letter coefficients, constant): place value times digit."""
+    co, const = {}, 0
+    for i, ch in enumerate(word):
+        place = 10 ** (len(word) - 1 - i)
+        if ch.isdigit():
+            const += place * int(ch)
+        else:
+            co[ch] = co.get(ch, 0) + place
+    return co, const
+
+
+def fmt(co, const):
+    parts = ["%s%s" % ("" if v == 1 else v, k) for k, v in sorted(co.items()) if v]
+    if const or not parts:
+        parts.append(str(const))
+    return " + ".join(parts)
+
+
+def crypt_lines_generic(p, sol):
+    """Taught steps for any 'two numbers = a three-digit sum' puzzle, computed (not hand-typed)."""
+    a, b, s = p["a"], p["b"], p["s"]
+    (ca, ka), (cb, kb), (cs, ks) = lin(a), lin(b), lin(s)
+    left = {}
+    for d in (ca, cb):
+        for k, v in d.items():
+            left[k] = left.get(k, 0) + v
+    for k, v in cs.items():
+        left[k] = left.get(k, 0) - v
+    rhs = ks - ka - kb
+    ask = p["ask"]
+    other = [k for k in sorted(sol) if k != ask][0]
+    return ["Each number is tens and ones: %s = %s, %s = %s, %s = %s. The leading 1 in the sum is a carry, so the sum is 100 or more." % (
+                a, fmt(ca, ka), b, fmt(cb, kb), s, fmt(cs, ks)),
+            "Equation: (%s) + (%s) = %s." % (fmt(ca, ka), fmt(cb, kb), fmt(cs, ks)),
+            "Collect the letters on one side: %s = %d." % (fmt({k: v for k, v in left.items() if v}, 0), rhs),
+            "A digit makes this true: %s = %d and %s = %d (all other digit choices fail; the program tried every one)." % (
+                other, sol[other], ask, sol[ask]),
+            "Check with real numbers: %d + %d = %d ✓ (different letters, different digits)." % (val(a, sol), val(b, sol), val(s, sol))]
+
+
 def crypt_lines(p, sol):
+    if p["id"] not in (7, 8):
+        return crypt_lines_generic(p, sol)
     a, b, s = p["a"], p["b"], p["s"]
     if p["id"] == 7:   # MM + N3 = 1M1
         return ["Two 2-digit numbers add to at most 198, so the leading 1 in the sum is a carry. Units column: M + 3 ends in 1, so M = 8 (8 + 3 = 11, carry 1).",
@@ -200,6 +243,8 @@ UNIT = {"bus": lambda p: p["plural"], "posts": lambda p: "lamp posts",
 
 
 def unit(p):
+    if p.get("unit") is not None:
+        return p["unit"]
     if p["kind"] == "cut":
         return "inches" if p["id"] == 5 else "feet"
     return UNIT[p["kind"]](p)
@@ -249,7 +294,7 @@ PRIMERS = {
 
 
 def prob_html(p, with_hint=True):
-    blocks = ['<div class="q"><b class="n">%d</b>%s</div>' % (p["id"], statement(p))]
+    blocks = ['<div class="q"><b class="n">%d</b></div><div class="q">%s</div>' % (p["id"], statement(p))]
     if p["kind"] == "crypt":
         blocks.append(crypt_art(p))
     k = p["kind"]
