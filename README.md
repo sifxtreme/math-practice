@@ -105,6 +105,7 @@ python3 verify_drills.py                                  # must exit 0
 # word problems / logic — pick the day's sheet from PRACTICE-PLAN-2026.md
 python3 build_focus.py && python3 verify_focus.py       # Noetic-prep focus-track word sheets (one kid per spec; outputs gitignored)
 python3 build_exam_practice.py                         # 20-problem two-day practice set + parent key (verifies every answer a second way; never prints)
+python3 build_yusuf_practice.py <outdir>               # 10-problem choose-a-model set (kid2) + parent key PDF (verifies every answer a second way; never prints)
 python3 build_fracmul.py && python3 verify_fracmul.py   # kid2 fraction packet: 10 multiply + 10 add/subtract, student + key files
 ./print-worksheet.sh worksheet-sailing-ships.html --date today
 ```
@@ -127,6 +128,7 @@ themselves. `--seed` makes a sheet reproducible — same seed, same problems.
 | `verify_sheets.py` | re-derives every word-problem answer. Must exit 0 |
 | `build_focus.py` / `specs_focus.py` / `verify_focus.py` | one-kid Noetic-prep focus sheets; student sheet and key are separate files. The verifier finds each answer by brute force and must exit 0 |
 | `build_exam_practice.py` | one-off 2026-11-06 set: 20 problems over two days (pair-totals, fewest-in-a-group, two-price, arithmetic), student file (Day 1 = pp 1-3, Day 2 = pp 4-6) and parent key. Self-verifying: exits 1 if any answer fails the brute-force re-solve |
+| `build_yusuf_practice.py` | one-off 2026-11-06 set for kid2: 4 problem types (events vs intervals, worst case, a cut makes new edges, letter addition), one worked model each, 2 practice problems each, then 2 no-hint problems. Student PDF (3 pages) and separate parent key PDF. Takes an output dir; name from `kids.local.json`. Self-verifying: every answer is re-derived by a brute-force route before anything is written |
 | `build_fracmul.py` / `specs_fracmul.py` / `verify_fracmul.py` | kid2's 20-problem fraction packet (10 multiply, 10 add/subtract), student and key files. The verifier recomputes every answer with `Fraction` and must exit 0 |
 | `print-worksheet.sh` | render to a clean PDF and print |
 | `print-drill.sh` | same, for an external drill PDF |
