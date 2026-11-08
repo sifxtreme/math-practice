@@ -148,10 +148,13 @@ def lin(word):
 
 
 def fmt(co, const):
-    parts = ["%s%s" % ("" if v == 1 else v, k) for k, v in sorted(co.items()) if v]
-    if const or not parts:
-        parts.append(str(const))
-    return " + ".join(parts)
+    terms = [(v, "%s%s" % ("" if abs(v) == 1 else abs(v), k)) for k, v in sorted(co.items(), key=lambda kv: -kv[1]) if v]
+    if const or not terms:
+        terms.append((const, str(abs(const))))
+    out = ("−" if terms[0][0] < 0 else "") + terms[0][1]   # 11H − W, never 11H + -1W (fixed 2026-11-08)
+    for v, t in terms[1:]:
+        out += (" − " if v < 0 else " + ") + t
+    return out
 
 
 def crypt_lines_generic(p, sol):

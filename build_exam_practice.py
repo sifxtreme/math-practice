@@ -173,6 +173,15 @@ def solve(p):
                          "Check: %d boys + 0 girls = %d seats ✓" % (kk, kk)]
             return dict(ans=ans, lines=lines)
         ans = min(kk, g)
+        if g < kk:   # not every seat can be a girl: the girls run out first (fixed 2026-11-08)
+            lines = ["The %s has %d seats%s. There are only %d girls in the class." % (
+                        p["club"], kk, " (half of %d)" % n if p["half"] else "", g),
+                     "Put every girl in the club: %d girls. Seats still empty: %d − %d = %d; boys fill them." % (
+                         g, kk, g, kk - g),
+                     "Boys in the class: %d − %d = %d, enough for %d seats. Most girls: %d" % (n, g, boys, kk - g, ans),
+                     "Check: %d girls + %d boys = %d seats ✓; %d girls is impossible, there are only %d." % (
+                         ans, kk - g, kk, ans + 1, g)]
+            return dict(ans=ans, lines=lines)
         lines = ["The %s has %d seats%s. There are %d girls." % (
                     p["club"], kk, " (half of %d)" % n if p["half"] else "", g),
                  "Fill the seats with girls: %d girls are enough for %d seats, so all %d seats can be girls." % (
